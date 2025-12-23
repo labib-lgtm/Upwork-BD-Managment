@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RolePermissionsProvider } from '@/contexts/RolePermissionsContext';
 import { Sidebar } from '@/components/Sidebar';
 import { Dashboard } from '@/components/Dashboard';
 import { Proposals } from '@/components/Proposals';
@@ -11,7 +12,7 @@ import { getSettings } from '@/services/dataService';
 import { useBDProfiles, useAccessibleProfiles } from '@/hooks/useBDProfiles';
 import { useUserRole } from '@/hooks/useUserRole';
 
-const Index = () => {
+const IndexContent = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { profiles: bdProfiles, loading: profilesLoading } = useBDProfiles();
@@ -132,6 +133,14 @@ const Index = () => {
         {renderContent()}
       </main>
     </div>
+  );
+};
+
+const Index = () => {
+  return (
+    <RolePermissionsProvider>
+      <IndexContent />
+    </RolePermissionsProvider>
   );
 };
 

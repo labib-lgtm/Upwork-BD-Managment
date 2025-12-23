@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavigationTab, User, UserRole } from '@/types';
-import { useRolePermissions } from '@/hooks/useRolePermissions';
+import { useRolePermissionsContext } from '@/contexts/RolePermissionsContext';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -49,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSignOut,
 }) => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const { hasTabAccess, loading: permissionsLoading } = useRolePermissions();
+  const { hasTabAccess, loading: permissionsLoading } = useRolePermissionsContext();
 
   // Map UserRole enum to database role string
   const getRoleString = (role: UserRole): 'admin' | 'manager' | 'bd_member' => {

@@ -5,7 +5,7 @@ import { useBDProfiles, BDProfile } from '@/hooks/useBDProfiles';
 import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfileAccess } from '@/hooks/useProfileAccess';
-import { useRolePermissions } from '@/hooks/useRolePermissions';
+import { useRolePermissionsContext } from '@/contexts/RolePermissionsContext';
 import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,7 +20,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const { members, loading: membersLoading, updateMemberRole } = useTeamMembers();
   const { role: currentUserRole } = useUserRole();
   const { accessList, loading: accessLoading, getUserAccess, updateUserAccess } = useProfileAccess();
-  const { permissions, loading: permissionsLoading, hasTabAccess, updatePermission } = useRolePermissions();
+  const { permissions, loading: permissionsLoading, hasTabAccess, updatePermission } = useRolePermissionsContext();
   const isAdmin = currentUserRole === UserRole.ADMIN;
   
   // Profile management state
