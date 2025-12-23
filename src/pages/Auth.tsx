@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { validateInvitation, redeemInvitation, TeamInvitation } from '@/hooks/useTeamInvitations';
+import { Loader2, UserPlus } from 'lucide-react';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -22,21 +24,56 @@ const LynxLogo = () => (
 );
 
 const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite');
+  
+  const [isSignUp, setIsSignUp] = useState(!!inviteToken);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
+  const [invitation, setInvitation] = useState<TeamInvitation | null>(null);
+  const [validatingInvite, setValidatingInvite] = useState(!!inviteToken);
   
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
+  // Validate invitation token on mount
+  useEffect(() => {
+    const checkInvitation = async () => {
+      if (inviteToken) {
+        setValidatingInvite(true);
+        const inv = await validateInvitation(inviteToken);
+        if (inv && !inv.used_at && new Date(inv.expires_at) > new Date()) {
+          setInvitation(inv);
+          if (inv.email) {
+            setEmail(inv.email);
+          }
+        } else {
+          toast.error('This invitation link is invalid or has expired.');
+        }
+        setValidatingInvite(false);
+      }
+    };
+    checkInvitation();
+  }, [inviteToken]);
+
   useEffect(() => {
     if (user) {
-      navigate('/', { replace: true });
+      // If user just signed up with an invite, redeem it
+      if (inviteToken && invitation) {
+        redeemInvitation(inviteToken, user.id).then((success) => {
+          if (success) {
+            toast.success(`Welcome! You've been assigned the ${invitation.role} role.`);
+          }
+          navigate('/', { replace: true });
+        });
+      } else {
+        navigate('/', { replace: true });
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, inviteToken, invitation]);
 
   const validateForm = (): boolean => {
     const newErrors: { email?: string; password?: string; name?: string } = {};
@@ -102,9 +139,31 @@ const Auth = () => {
     }
   };
 
+  if (validatingInvite) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Validating invitation...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        {/* Invitation Banner */}
+        {invitation && (
+          <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-xl flex items-center gap-3">
+            <UserPlus className="w-5 h-5 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">You've been invited to join the team!</p>
+              <p className="text-xs text-muted-foreground">Role: <span className="capitalize font-medium">{invitation.role.replace('_', ' ')}</span></p>
+            </div>
+          </div>
+        )}
+
         {/* Logo & Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -119,7 +178,7 @@ const Auth = () => {
             </div>
           </div>
           <p className="text-muted-foreground">
-            {isSignUp ? 'Create your team account' : 'Sign in to your team account'}
+            {invitation ? 'Complete your registration' : isSignUp ? 'Create your team account' : 'Sign in to your team account'}
           </p>
         </div>
 
