@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavigationTab, User, UserRole } from '@/types';
-import { MOCK_USERS, MOCK_PROFILES } from '@/data/constants';
+import { useRolePermissions } from '@/hooks/useRolePermissions';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -19,7 +19,7 @@ interface SidebarProps {
   onSignOut?: () => void;
 }
 
-const navItems: { id: NavigationTab; label: string; icon: React.ReactNode }[] = [
+const allNavItems: { id: NavigationTab; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { id: 'proposals', label: 'Proposals', icon: <FileText className="w-5 h-5" /> },
   { id: 'inbound', label: 'Inbound', icon: <Inbox className="w-5 h-5" /> },
@@ -49,6 +49,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSignOut,
 }) => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const { hasTabAccess, loading: permissionsLoading } = useRolePermissions();
+
+  // Map UserRole enum to database role string
+  const getRoleString = (role: UserRole): 'admin' | 'manager' | 'bd_member' => {
+    switch (role) {
+      case UserRole.ADMIN:
+        return 'admin';
+      case UserRole.MANAGER:
+        return 'manager';
+      case UserRole.BD_MEMBER:
+      default:
+        return 'bd_member';
+    }
+  };
+
+  const roleString = getRoleString(currentUser.role);
+
+  // Filter nav items based on user's role permissions
+  const navItems = allNavItems.filter(item => hasTabAccess(roleString, item.id));
 
   return (
     <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-screen">
