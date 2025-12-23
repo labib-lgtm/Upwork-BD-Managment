@@ -92,6 +92,37 @@ export const RolePermissionsProvider: React.FC<{ children: ReactNode }> = ({ chi
   useEffect(() => {
     if (user) {
       fetchPermissions();
+
+      // Subscribe to real-time permission changes
+      const channel = supabase
+        .channel('role-permissions-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'role_permissions'
+          },
+          (payload) => {
+            logger.info('Role permission change detected:', payload);
+            if (payload.eventType === 'UPDATE' && payload.new) {
+              const updated = payload.new as RolePermission;
+              setPermissions(prev => 
+                prev.map(p => 
+                  p.id === updated.id ? updated : p
+                )
+              );
+            } else {
+              // For INSERT/DELETE, refetch all
+              fetchPermissions();
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user, fetchPermissions]);
 
