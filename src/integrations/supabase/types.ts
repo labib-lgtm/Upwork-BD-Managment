@@ -182,6 +182,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profile_access: {
+        Row: {
+          bd_profile_id: string
+          created_at: string
+          granted_by: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bd_profile_id: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bd_profile_id?: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profile_access_bd_profile_id_fkey"
+            columns: ["bd_profile_id"]
+            isOneToOne: false
+            referencedRelation: "bd_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -208,6 +240,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_accessible_profile_names: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
+      has_profile_access: {
+        Args: { _bd_profile_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
