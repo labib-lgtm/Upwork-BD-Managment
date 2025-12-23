@@ -14,7 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      proposals: {
+        Row: {
+          boosted: boolean | null
+          budget: number | null
+          client_country: string | null
+          client_rating: number | null
+          client_reviews: number | null
+          client_total_spent: number | null
+          connects_used: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          interviewing_at_submission: number | null
+          invite_sent: number | null
+          job_title: string
+          job_type: string
+          last_viewed_text: string | null
+          notes: string | null
+          payment_status: string
+          profile_name: string
+          proposed_amount: number | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          boosted?: boolean | null
+          budget?: number | null
+          client_country?: string | null
+          client_rating?: number | null
+          client_reviews?: number | null
+          client_total_spent?: number | null
+          connects_used?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          interviewing_at_submission?: number | null
+          invite_sent?: number | null
+          job_title: string
+          job_type?: string
+          last_viewed_text?: string | null
+          notes?: string | null
+          payment_status?: string
+          profile_name: string
+          proposed_amount?: number | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          boosted?: boolean | null
+          budget?: number | null
+          client_country?: string | null
+          client_rating?: number | null
+          client_reviews?: number | null
+          client_total_spent?: number | null
+          connects_used?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          interviewing_at_submission?: number | null
+          invite_sent?: number | null
+          job_title?: string
+          job_type?: string
+          last_viewed_text?: string | null
+          notes?: string | null
+          payment_status?: string
+          profile_name?: string
+          proposed_amount?: number | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,0 +1,148 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+export interface Proposal {
+  id: string;
+  user_id: string;
+  profile_name: string;
+  job_title: string;
+  job_type: string;
+  status: string;
+  payment_status: string;
+  budget: number;
+  proposed_amount: number;
+  connects_used: number;
+  boosted: boolean;
+  invite_sent: number;
+  interviewing_at_submission: number;
+  last_viewed_text: string | null;
+  client_country: string | null;
+  client_rating: number | null;
+  client_reviews: number | null;
+  client_total_spent: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+}
+
+export interface ProposalFormData {
+  profile_name: string;
+  job_title: string;
+  job_type: string;
+  status: string;
+  payment_status: string;
+  budget: number;
+  proposed_amount: number;
+  connects_used: number;
+  boosted: boolean;
+  invite_sent: number;
+  interviewing_at_submission: number;
+  last_viewed_text: string | null;
+  client_country: string | null;
+  client_rating: number | null;
+  client_reviews: number | null;
+  client_total_spent: number | null;
+  notes: string | null;
+}
+
+export const useProposals = () => {
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  const fetchProposals = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('proposals')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast.error('Failed to fetch proposals');
+      console.error('Error fetching proposals:', error);
+    } else {
+      setProposals(data || []);
+    }
+    setLoading(false);
+  };
+
+  const addProposal = async (formData: ProposalFormData): Promise<boolean> => {
+    if (!user) return false;
+
+    const { error } = await supabase.from('proposals').insert({
+      user_id: user.id,
+      created_by: user.id,
+      ...formData,
+    });
+
+    if (error) {
+      toast.error('Failed to add proposal');
+      console.error('Error adding proposal:', error);
+      return false;
+    }
+
+    toast.success('Proposal added successfully');
+    await fetchProposals();
+    return true;
+  };
+
+  const updateProposal = async (id: string, formData: Partial<ProposalFormData>): Promise<boolean> => {
+    if (!user) return false;
+
+    const { error } = await supabase
+      .from('proposals')
+      .update({
+        ...formData,
+        updated_by: user.id,
+      })
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Failed to update proposal');
+      console.error('Error updating proposal:', error);
+      return false;
+    }
+
+    toast.success('Proposal updated successfully');
+    await fetchProposals();
+    return true;
+  };
+
+  const deleteProposal = async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('proposals')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Failed to delete proposal');
+      console.error('Error deleting proposal:', error);
+      return false;
+    }
+
+    toast.success('Proposal deleted');
+    await fetchProposals();
+    return true;
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchProposals();
+    }
+  }, [user]);
+
+  return {
+    proposals,
+    loading,
+    fetchProposals,
+    addProposal,
+    updateProposal,
+    deleteProposal,
+  };
+};
