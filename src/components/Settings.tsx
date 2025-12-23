@@ -3,10 +3,8 @@ import { AppSettings, UserRole } from '@/types';
 import { updateSettings } from '@/services/dataService';
 import { useBDProfiles, BDProfile } from '@/hooks/useBDProfiles';
 import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
-import { useTeamInvitations } from '@/hooks/useTeamInvitations';
 import { useUserRole } from '@/hooks/useUserRole';
-import { getAppUrl } from '@/lib/appUrl';
-import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Link, Copy, Mail } from 'lucide-react';
+import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SettingsProps {
@@ -18,7 +16,6 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const { profiles, loading: profilesLoading, addProfile, updateProfile, deleteProfile } = useBDProfiles();
   const { members, loading: membersLoading, updateMemberRole } = useTeamMembers();
-  const { invitations, loading: invitationsLoading, createInvitation, deleteInvitation } = useTeamInvitations();
   const { role: currentUserRole } = useUserRole();
   const isAdmin = currentUserRole === UserRole.ADMIN;
   
@@ -28,13 +25,6 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const [profileForm, setProfileForm] = useState({ name: '', description: '', is_active: true });
   const [submitting, setSubmitting] = useState(false);
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
-  
-  // Invite state
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteRole, setInviteRole] = useState<'bd_member' | 'manager' | 'admin'>('bd_member');
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [creatingInvite, setCreatingInvite] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
 
   const handleSave = () => {
     updateSettings(localSettings);
@@ -91,28 +81,6 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
     setUpdatingRole(userId);
     await updateMemberRole(userId, newRole);
     setUpdatingRole(null);
-  };
-
-  const handleCreateInvite = async () => {
-    setCreatingInvite(true);
-    const token = await createInvitation(inviteRole, inviteEmail || undefined);
-    if (token) {
-      const link = `${getAppUrl()}/auth?invite=${token}`;
-      setGeneratedLink(link);
-    }
-    setCreatingInvite(false);
-  };
-
-  const copyInviteLink = (link: string) => {
-    navigator.clipboard.writeText(link);
-    toast.success('Invite link copied to clipboard!');
-  };
-
-  const closeInviteModal = () => {
-    setShowInviteModal(false);
-    setGeneratedLink(null);
-    setInviteEmail('');
-    setInviteRole('bd_member');
   };
 
   const getRoleBadgeColor = (role: TeamMember['role']) => {
@@ -281,92 +249,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               )}
               <p className="mt-4 text-xs text-muted-foreground">
                 Admins can see all proposals and manage team roles. Managers and BD Members can only see their own proposals.
-              </p>
-            </div>
-          )}
-
-          {/* Team Invitations - Admin Only */}
-          {isAdmin && (
-            <div className="bg-card border border-border rounded-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Mail className="w-5 h-5 text-primary" />
-                  Team Invitations
-                </h3>
-                <button
-                  onClick={() => setShowInviteModal(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create Invite
-                </button>
-              </div>
-
-              {invitationsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-              ) : invitations.filter(i => !i.used_at).length === 0 ? (
-                <p className="text-muted-foreground text-sm py-4">No pending invitations. Create one to invite team members.</p>
-              ) : (
-                <div className="space-y-3">
-                  {invitations
-                    .filter(i => !i.used_at)
-                    .map((inv) => {
-                      const isExpired = new Date(inv.expires_at) < new Date();
-                      const inviteLink = `${getAppUrl()}/auth?invite=${inv.token}`;
-                      
-                      return (
-                        <div
-                          key={inv.id}
-                          className={`p-4 bg-secondary/50 rounded-lg border border-border/50 ${isExpired ? 'opacity-50' : ''}`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-1 text-xs font-medium rounded border capitalize ${getRoleBadgeColor(inv.role)}`}>
-                                {inv.role.replace('_', ' ')}
-                              </span>
-                              {inv.email && (
-                                <span className="text-sm text-muted-foreground">for {inv.email}</span>
-                              )}
-                              {isExpired && (
-                                <span className="text-xs text-destructive font-medium">Expired</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => copyInviteLink(inviteLink)}
-                                disabled={isExpired}
-                                className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
-                                title="Copy invite link"
-                              >
-                                <Copy className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => deleteInvitation(inv.id)}
-                                className="p-2 hover:bg-destructive/20 rounded-lg transition-colors text-muted-foreground hover:text-destructive"
-                                title="Delete invitation"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Link className="w-3 h-3" />
-                            <code className="bg-muted px-2 py-0.5 rounded text-[10px] truncate max-w-[300px]">
-                              {inviteLink}
-                            </code>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Expires: {new Date(inv.expires_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-              <p className="mt-4 text-xs text-muted-foreground">
-                Share invite links with new team members. They'll be assigned the specified role when they sign up.
+                New team members should sign up at the site, then an admin can assign their role here.
               </p>
             </div>
           )}
@@ -554,107 +437,6 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
         </div>
       )}
 
-      {/* Invite Modal */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-fade-in">
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-foreground">
-                {generatedLink ? 'Share Invite Link' : 'Create Team Invitation'}
-              </h3>
-              <button
-                onClick={closeInviteModal}
-                className="p-2 hover:bg-secondary rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {generatedLink ? (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    Share this link with the new team member. It will expire in 7 days.
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={generatedLink}
-                      readOnly
-                      className="flex-1 px-3 py-2 bg-input border border-border rounded-lg text-sm"
-                    />
-                    <button
-                      onClick={() => copyInviteLink(generatedLink)}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
-                    >
-                      <Copy className="w-4 h-4" />
-                      Copy
-                    </button>
-                  </div>
-                  <button
-                    onClick={closeInviteModal}
-                    className="w-full py-2 bg-secondary text-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors mt-4"
-                  >
-                    Done
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Role</label>
-                    <select
-                      value={inviteRole}
-                      onChange={(e) => setInviteRole(e.target.value as 'bd_member' | 'manager' | 'admin')}
-                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                    >
-                      <option value="bd_member">BD Member</option>
-                      <option value="manager">Manager</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      The role that will be assigned when they sign up.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Email (optional)
-                    </label>
-                    <input
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                      placeholder="user@example.com"
-                    />
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Pre-fill the email for the invitee (optional).
-                    </p>
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={closeInviteModal}
-                      className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleCreateInvite}
-                      className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
-                      disabled={creatingInvite}
-                    >
-                      {creatingInvite && <Loader2 className="w-4 h-4 animate-spin" />}
-                      Generate Link
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
