@@ -325,9 +325,9 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
           {isAdmin && (
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Lock className="w-5 h-5 text-primary" />
-                  Role Permissions
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Lock className="w-5 h-5 text-foreground" />
+                Role Permissions
                 </h3>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Shield className="w-4 h-4" />
@@ -343,10 +343,10 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                 <div className="space-y-6">
                   {/* Manager Permissions */}
                   <div>
-                    <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-                      <span className="px-2 py-1 text-xs font-medium rounded border bg-primary/20 text-primary border-primary/30">
-                        Manager
-                      </span>
+                  <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                    <span className="px-2 py-1 text-xs font-medium rounded border bg-primary/20 text-foreground border-primary/30">
+                      Manager
+                    </span>
                       Navigation Access
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
