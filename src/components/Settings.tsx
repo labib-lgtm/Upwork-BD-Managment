@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { AppSettings } from '@/types';
 import { updateSettings } from '@/services/dataService';
-import { Save, DollarSign, Target, Calendar } from 'lucide-react';
+import { useBDProfiles, BDProfile } from '@/hooks/useBDProfiles';
+import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SettingsProps {
@@ -11,11 +12,63 @@ interface SettingsProps {
 
 export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }) => {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
+  const { profiles, loading: profilesLoading, addProfile, updateProfile, deleteProfile } = useBDProfiles();
+  
+  // Profile management state
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<BDProfile | null>(null);
+  const [profileForm, setProfileForm] = useState({ name: '', description: '', is_active: true });
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSave = () => {
     updateSettings(localSettings);
     onSettingsChange();
     toast.success('Settings saved successfully!');
+  };
+
+  const openNewProfileModal = () => {
+    setEditingProfile(null);
+    setProfileForm({ name: '', description: '', is_active: true });
+    setShowProfileModal(true);
+  };
+
+  const openEditProfileModal = (profile: BDProfile) => {
+    setEditingProfile(profile);
+    setProfileForm({
+      name: profile.name,
+      description: profile.description || '',
+      is_active: profile.is_active,
+    });
+    setShowProfileModal(true);
+  };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const formData = {
+      name: profileForm.name,
+      description: profileForm.description || null,
+      is_active: profileForm.is_active,
+    };
+
+    let success = false;
+    if (editingProfile) {
+      success = await updateProfile(editingProfile.id, formData);
+    } else {
+      success = await addProfile(formData);
+    }
+
+    setSubmitting(false);
+    if (success) {
+      setShowProfileModal(false);
+    }
+  };
+
+  const handleDeleteProfile = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this profile? This may affect existing proposals.')) {
+      await deleteProfile(id);
+    }
   };
 
   const months = [
@@ -31,7 +84,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
           <div>
             <h2 className="text-2xl font-bold text-foreground">Settings</h2>
             <p className="text-sm text-muted-foreground">
-              Configure global metrics and preferences
+              Configure global metrics, preferences, and manage BD profiles
             </p>
           </div>
           <button
@@ -47,6 +100,68 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
       {/* Settings Content */}
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-2xl space-y-6">
+          
+          {/* BD Profiles Management */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                BD Profiles
+              </h3>
+              <button
+                onClick={openNewProfileModal}
+                className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                <Plus className="w-4 h-4" />
+                Add Profile
+              </button>
+            </div>
+
+            {profilesLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : profiles.length === 0 ? (
+              <p className="text-muted-foreground text-sm py-4">No profiles yet. Add your first BD profile above.</p>
+            ) : (
+              <div className="space-y-3">
+                {profiles.map((profile) => (
+                  <div
+                    key={profile.id}
+                    className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${profile.is_active ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                      <div>
+                        <p className="font-medium text-foreground">{profile.name}</p>
+                        {profile.description && (
+                          <p className="text-xs text-muted-foreground">{profile.description}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openEditProfileModal(profile)}
+                        className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProfile(profile.id)}
+                        className="p-2 hover:bg-destructive/20 rounded-lg transition-colors text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="mt-4 text-xs text-muted-foreground">
+              BD profiles represent different Upwork accounts or business profiles your team works on.
+            </p>
+          </div>
+
           {/* Global Metrics */}
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
@@ -144,6 +259,91 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
           </div>
         </div>
       </div>
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-fade-in">
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h3 className="text-xl font-bold text-foreground">
+                {editingProfile ? 'Edit Profile' : 'New BD Profile'}
+              </h3>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="p-2 hover:bg-secondary rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleProfileSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Profile Name</label>
+                <input
+                  type="text"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  placeholder="e.g. Main Profile, Design Profile"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+                <input
+                  type="text"
+                  value={profileForm.description}
+                  onChange={(e) => setProfileForm({ ...profileForm, description: e.target.value })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  placeholder="Optional description"
+                />
+              </div>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={profileForm.is_active}
+                    onChange={(e) => setProfileForm({ ...profileForm, is_active: e.target.checked })}
+                    className="sr-only"
+                  />
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                    profileForm.is_active 
+                      ? 'bg-primary border-primary' 
+                      : 'border-border'
+                  }`}>
+                    {profileForm.is_active && (
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    )}
+                  </div>
+                </div>
+                <span className="text-sm text-foreground">Active profile</span>
+              </label>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                  disabled={submitting}
+                >
+                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {editingProfile ? 'Update' : 'Create'} Profile
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

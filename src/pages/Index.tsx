@@ -6,18 +6,26 @@ import { Dashboard } from '@/components/Dashboard';
 import { Proposals } from '@/components/Proposals';
 import { Settings } from '@/components/Settings';
 import { PlaceholderView } from '@/components/PlaceholderView';
-import { NavigationTab, User, Job, BDProfile, AppSettings, UserRole } from '@/types';
-import { getJobs, getProfiles, getSettings, getUsers } from '@/services/dataService';
-import { useProposals } from '@/hooks/useProposals';
+import { NavigationTab, User, AppSettings, UserRole } from '@/types';
+import { getSettings } from '@/services/dataService';
+import { useBDProfiles } from '@/hooks/useBDProfiles';
 
 const Index = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
+  const { profiles: bdProfiles, loading: profilesLoading } = useBDProfiles();
   
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
-  const [jobs, setJobs] = useState<Job[]>(getJobs());
-  const [profiles] = useState<BDProfile[]>(getProfiles());
   const [settings, setSettings] = useState<AppSettings>(getSettings());
+
+  // Convert DB profiles to the format expected by components
+  const profiles = bdProfiles.filter(p => p.is_active).map(p => ({
+    id: p.id,
+    name: p.name,
+    specialization: p.description || '',
+    hourly_rate: 0,
+    active: p.is_active,
+  }));
 
   // Create a user object from auth profile
   const currentUser: User = {
@@ -33,16 +41,12 @@ const Index = () => {
     }
   }, [authLoading, user, navigate]);
 
-  const refreshJobs = () => {
-    setJobs(getJobs());
-  };
-
   const refreshSettings = () => {
     setSettings(getSettings());
   };
 
-  // Show loading state while checking auth
-  if (authLoading) {
+  // Show loading state while checking auth or loading profiles
+  if (authLoading || profilesLoading) {
     return (
       <div className="flex h-screen bg-background items-center justify-center">
         <div className="text-center">
