@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppSettings, UserRole, NavigationTab } from '@/types';
-import { updateSettings } from '@/services/dataService';
 import { useBDProfiles, BDProfile } from '@/hooks/useBDProfiles';
 import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -10,9 +9,16 @@ import { GoalSettingsSection } from '@/components/goals/GoalSettingsSection';
 import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface AppSettingsData {
+  fiscal_year_start: number;
+  connect_cost: number;
+  target_roas: number;
+  currency: string;
+}
+
 interface SettingsProps {
   settings: AppSettings;
-  onSettingsChange: () => void;
+  onSettingsChange: (updates: Partial<AppSettingsData>) => Promise<void>;
 }
 
 export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }) => {
@@ -23,6 +29,11 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const { accessList, loading: accessLoading, getUserAccess, updateUserAccess } = useProfileAccess();
   const { permissions, loading: permissionsLoading, hasTabAccess, updatePermission } = useRolePermissionsContext();
   const isAdmin = currentUserRole === UserRole.ADMIN;
+  
+  // Sync local settings when props change (real-time updates)
+  useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
   
   // Profile management state
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -37,10 +48,13 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const [selectedProfileAccess, setSelectedProfileAccess] = useState<string[]>([]);
   const [savingAccess, setSavingAccess] = useState(false);
 
-  const handleSave = () => {
-    updateSettings(localSettings);
-    onSettingsChange();
-    toast.success('Settings saved successfully!');
+  const handleSave = async () => {
+    await onSettingsChange({
+      fiscal_year_start: localSettings.fiscal_year_start_month,
+      connect_cost: localSettings.connect_cost,
+      target_roas: localSettings.target_roas,
+      currency: localSettings.currency,
+    });
   };
 
   const openNewProfileModal = () => {
@@ -451,7 +465,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-                  <Target className="w-4 h-4 text-primary" />
+                  <Target className="w-4 h-4 text-foreground" />
                   Target ROAS
                 </label>
                 <input
@@ -486,7 +500,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
           {/* Fiscal Year */}
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
+              <Calendar className="w-5 h-5 text-foreground" />
               Fiscal Year Configuration
             </h3>
             
