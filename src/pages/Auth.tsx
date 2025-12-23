@@ -9,25 +9,14 @@ const passwordSchema = z.string().min(6, 'Password must be at least 6 characters
 const nameSchema = z.string().min(2, 'Name must be at least 2 characters');
 
 const LynxLogo = () => (
-  <svg viewBox="0 0 40 40" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 40 40" className="w-7 h-7" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M20 4L36 20L20 36L4 20L20 4Z"
-      className="fill-primary"
-      stroke="currentColor"
-      strokeWidth="2"
+      className="fill-primary-foreground"
     />
     <path
       d="M20 10L30 20L20 30L10 20L20 10Z"
-      className="fill-background"
-    />
-    <circle cx="16" cy="18" r="2" className="fill-primary" />
-    <circle cx="24" cy="18" r="2" className="fill-primary" />
-    <path
-      d="M16 24C16 24 18 26 20 26C22 26 24 24 24 24"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      className="stroke-primary"
+      className="fill-primary"
     />
   </svg>
 );
@@ -119,12 +108,14 @@ const Auth = () => {
         {/* Logo & Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <LynxLogo />
+            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+              <LynxLogo />
+            </div>
             <div className="text-left">
-              <h1 className="text-2xl font-display font-bold tracking-tight text-primary">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 LYNX MEDIA
               </h1>
-              <p className="text-xs text-muted-foreground tracking-widest">BD TRACKER PRO</p>
+              <p className="text-xs text-muted-foreground tracking-widest font-medium">BD TRACKER PRO</p>
             </div>
           </div>
           <p className="text-muted-foreground">
@@ -133,7 +124,7 @@ const Auth = () => {
         </div>
 
         {/* Form Card */}
-        <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div>
@@ -203,7 +194,7 @@ const Auth = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 glow-primary-sm"
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50"
             >
               {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
             </button>
