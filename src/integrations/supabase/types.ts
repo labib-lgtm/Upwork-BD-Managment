@@ -17,6 +17,7 @@ export type Database = {
       app_settings: {
         Row: {
           id: string
+          is_public: boolean
           key: string
           updated_at: string
           updated_by: string | null
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_public?: boolean
           key: string
           updated_at?: string
           updated_by?: string | null
@@ -31,6 +33,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_public?: boolean
           key?: string
           updated_at?: string
           updated_by?: string | null
@@ -354,6 +357,24 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      redeem_invitation: {
+        Args: { _token: string; _user_id: string }
+        Returns: boolean
+      }
+      validate_invitation: {
+        Args: { _token: string }
+        Returns: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+          used_at: string
+          used_by: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "bd_member"
