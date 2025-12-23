@@ -10,6 +10,7 @@ import {
   ChevronDown,
   LogOut,
 } from 'lucide-react';
+import lynxLogo from '@/assets/lynx-logo.png';
 
 interface SidebarProps {
   activeTab: NavigationTab;
@@ -26,20 +27,6 @@ const allNavItems: { id: NavigationTab; label: string; icon: React.ReactNode }[]
   { id: 'catalogs', label: 'Catalogs', icon: <Package className="w-5 h-5" /> },
   { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
 ];
-
-// Lynx Media Logo SVG Component - Simple diamond shape
-const LynxLogo: React.FC = () => (
-  <svg viewBox="0 0 40 40" className="w-5 h-5">
-    <path
-      d="M20 4L36 20L20 36L4 20L20 4Z"
-      className="fill-primary-foreground"
-    />
-    <path
-      d="M20 12L28 20L20 28L12 20L20 12Z"
-      className="fill-primary"
-    />
-  </svg>
-);
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
@@ -74,9 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Lynx Media Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-            <LynxLogo />
-          </div>
+          <img src={lynxLogo} alt="Lynx Media" className="w-10 h-10 rounded-xl object-cover" />
           <div>
             <h1 className="font-bold text-lg text-sidebar-foreground tracking-tight">LYNX MEDIA</h1>
             <p className="text-xs text-sidebar-foreground/60 font-medium">BD Tracker</p>
