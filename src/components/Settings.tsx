@@ -163,7 +163,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
           <div className="bg-card border border-border rounded-lg p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
+                <Users className="w-5 h-5 text-foreground" />
                 BD Profiles
               </h3>
               <button
@@ -224,9 +224,9 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
           {isAdmin && (
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <UserCog className="w-5 h-5 text-primary" />
-                  Team Members
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <UserCog className="w-5 h-5 text-foreground" />
+                Team Members
                 </h3>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Shield className="w-4 h-4" />
@@ -381,7 +381,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                   {/* BD Member Permissions */}
                   <div>
                     <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-                      <span className="px-2 py-1 text-xs font-medium rounded border bg-muted text-muted-foreground border-border">
+                      <span className="px-2 py-1 text-xs font-medium rounded border bg-muted text-foreground border-border">
                         BD Member
                       </span>
                       Navigation Access
@@ -428,7 +428,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
           {/* Global Metrics */}
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-primary" />
+              <DollarSign className="w-5 h-5 text-foreground" />
               Global Metrics Configuration
             </h3>
             
