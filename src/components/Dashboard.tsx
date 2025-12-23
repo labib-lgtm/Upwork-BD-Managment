@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { BDProfile, AppSettings, KPIMetrics, UserRole, User } from '@/types';
 import { useProposals, Proposal } from '@/hooks/useProposals';
+import { useGoals } from '@/hooks/useGoals';
+import { GoalProgressGrid } from '@/components/goals/GoalProgressGrid';
 import { TrendingUp, TrendingDown, DollarSign, Eye, MessageSquare, Award, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 interface DashboardProps {
@@ -131,6 +133,7 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
 
 export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }) => {
   const { proposals, loading } = useProposals();
+  const { goals, loading: goalsLoading } = useGoals();
   const isRestricted = user.role === UserRole.BD_MEMBER && !!user.linked_profile_id;
 
   const [selectedProfileNames, setSelectedProfileNames] = useState<string[]>(
@@ -247,7 +250,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }
     },
   ];
 
-  if (loading) {
+  if (loading || goalsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -306,6 +309,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }
           ))}
         </div>
       </header>
+
+      {/* Goal Progress Grid */}
+      <div className="px-6 py-4">
+        <GoalProgressGrid
+          goals={goals}
+          metrics={metrics}
+          fiscalYear={fiscalYear}
+          fiscalYearStart={settings.fiscal_year_start_month}
+          currency={settings.currency}
+        />
+      </div>
 
       {/* Summary Cards */}
       <div className="px-6 py-4 grid grid-cols-4 gap-4">

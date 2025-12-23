@@ -6,6 +6,7 @@ import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfileAccess } from '@/hooks/useProfileAccess';
 import { useRolePermissionsContext } from '@/contexts/RolePermissionsContext';
+import { GoalSettingsSection } from '@/components/goals/GoalSettingsSection';
 import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -420,6 +421,9 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               </p>
             </div>
           )}
+
+          {/* Goal Settings */}
+          <GoalSettingsSection currency={localSettings.currency} />
 
           {/* Global Metrics */}
           <div className="bg-card border border-border rounded-lg p-6">

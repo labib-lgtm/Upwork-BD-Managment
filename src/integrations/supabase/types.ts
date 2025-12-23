@@ -41,6 +41,53 @@ export type Database = {
         }
         Relationships: []
       }
+      goals: {
+        Row: {
+          bd_profile_id: string | null
+          closes_target: number | null
+          created_at: string | null
+          fiscal_year: number
+          id: string
+          month: number
+          proposal_target: number | null
+          revenue_target: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bd_profile_id?: string | null
+          closes_target?: number | null
+          created_at?: string | null
+          fiscal_year: number
+          id?: string
+          month: number
+          proposal_target?: number | null
+          revenue_target?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bd_profile_id?: string | null
+          closes_target?: number | null
+          created_at?: string | null
+          fiscal_year?: number
+          id?: string
+          month?: number
+          proposal_target?: number | null
+          revenue_target?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_bd_profile_id_fkey"
+            columns: ["bd_profile_id"]
+            isOneToOne: false
+            referencedRelation: "bd_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
