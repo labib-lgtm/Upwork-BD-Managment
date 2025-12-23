@@ -62,7 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-            <LynxLogo className="w-6 h-6 text-primary" />
+            <LynxLogo className="w-6 h-6 text-primary-foreground" />
           </div>
           <div>
             <h1 className="font-bold text-lg text-sidebar-foreground tracking-tight">LYNX MEDIA</h1>
