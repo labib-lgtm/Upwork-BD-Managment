@@ -107,62 +107,29 @@ export const useTeamInvitations = () => {
 // Separate function to validate and use an invitation (can be called without auth)
 export const validateInvitation = async (token: string): Promise<TeamInvitation | null> => {
   const { data, error } = await supabase
-    .from('team_invitations')
-    .select('*')
-    .eq('token', token)
-    .maybeSingle();
+    .rpc('validate_invitation', { _token: token });
 
   if (error) {
     logger.error('Error validating invitation:', error);
     return null;
   }
 
-  return data as TeamInvitation | null;
+  // RPC returns an array, get the first result
+  const invitation = Array.isArray(data) ? data[0] : data;
+  return invitation as TeamInvitation | null;
 };
 
 export const redeemInvitation = async (token: string, userId: string): Promise<boolean> => {
   try {
-    // Get the invitation first
-    const { data: invitation, error: fetchError } = await supabase
-      .from('team_invitations')
-      .select('*')
-      .eq('token', token)
-      .is('used_at', null)
-      .gt('expires_at', new Date().toISOString())
-      .maybeSingle();
+    const { data, error } = await supabase
+      .rpc('redeem_invitation', { _token: token, _user_id: userId });
 
-    if (fetchError || !invitation) {
-      logger.error('Invalid or expired invitation');
+    if (error) {
+      logger.error('Error redeeming invitation:', error);
       return false;
     }
 
-    // Assign the role to the user
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({
-        user_id: userId,
-        role: invitation.role,
-      });
-
-    if (roleError) {
-      logger.error('Error assigning role:', roleError);
-      return false;
-    }
-
-    // Mark invitation as used
-    const { error: updateError } = await supabase
-      .from('team_invitations')
-      .update({
-        used_at: new Date().toISOString(),
-        used_by: userId,
-      })
-      .eq('id', invitation.id);
-
-    if (updateError) {
-      logger.error('Error marking invitation as used:', updateError);
-    }
-
-    return true;
+    return data === true;
   } catch (error) {
     logger.error('Error redeeming invitation:', error);
     return false;
