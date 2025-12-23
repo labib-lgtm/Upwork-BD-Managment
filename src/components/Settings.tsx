@@ -5,6 +5,7 @@ import { useBDProfiles, BDProfile } from '@/hooks/useBDProfiles';
 import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { useTeamInvitations } from '@/hooks/useTeamInvitations';
 import { useUserRole } from '@/hooks/useUserRole';
+import { getAppUrl } from '@/lib/appUrl';
 import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Link, Copy, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -96,7 +97,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
     setCreatingInvite(true);
     const token = await createInvitation(inviteRole, inviteEmail || undefined);
     if (token) {
-      const link = `${window.location.origin}/auth?invite=${token}`;
+      const link = `${getAppUrl()}/auth?invite=${token}`;
       setGeneratedLink(link);
     }
     setCreatingInvite(false);
@@ -313,7 +314,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                     .filter(i => !i.used_at)
                     .map((inv) => {
                       const isExpired = new Date(inv.expires_at) < new Date();
-                      const inviteLink = `${window.location.origin}/auth?invite=${inv.token}`;
+                      const inviteLink = `${getAppUrl()}/auth?invite=${inv.token}`;
                       
                       return (
                         <div
