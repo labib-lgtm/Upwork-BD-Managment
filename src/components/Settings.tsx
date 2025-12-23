@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { AppSettings } from '@/types';
+import { AppSettings, UserRole } from '@/types';
 import { updateSettings } from '@/services/dataService';
 import { useBDProfiles, BDProfile } from '@/hooks/useBDProfiles';
-import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2 } from 'lucide-react';
+import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SettingsProps {
@@ -13,12 +15,16 @@ interface SettingsProps {
 export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }) => {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const { profiles, loading: profilesLoading, addProfile, updateProfile, deleteProfile } = useBDProfiles();
+  const { members, loading: membersLoading, updateMemberRole } = useTeamMembers();
+  const { role: currentUserRole } = useUserRole();
+  const isAdmin = currentUserRole === UserRole.ADMIN;
   
   // Profile management state
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [editingProfile, setEditingProfile] = useState<BDProfile | null>(null);
   const [profileForm, setProfileForm] = useState({ name: '', description: '', is_active: true });
   const [submitting, setSubmitting] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState<string | null>(null);
 
   const handleSave = () => {
     updateSettings(localSettings);
@@ -68,6 +74,25 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const handleDeleteProfile = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this profile? This may affect existing proposals.')) {
       await deleteProfile(id);
+    }
+  };
+
+  const handleRoleChange = async (userId: string, newRole: 'admin' | 'manager' | 'bd_member') => {
+    setUpdatingRole(userId);
+    await updateMemberRole(userId, newRole);
+    setUpdatingRole(null);
+  };
+
+  const getRoleBadgeColor = (role: TeamMember['role']) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-destructive/20 text-destructive border-destructive/30';
+      case 'manager':
+        return 'bg-primary/20 text-primary border-primary/30';
+      case 'bd_member':
+        return 'bg-muted text-muted-foreground border-border';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -161,6 +186,72 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               BD profiles represent different Upwork accounts or business profiles your team works on.
             </p>
           </div>
+
+          {/* Team Members - Admin Only */}
+          {isAdmin && (
+            <div className="bg-card border border-border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <UserCog className="w-5 h-5 text-primary" />
+                  Team Members
+                </h3>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Shield className="w-4 h-4" />
+                  Admin Only
+                </div>
+              </div>
+
+              {membersLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : members.length === 0 ? (
+                <p className="text-muted-foreground text-sm py-4">No team members found.</p>
+              ) : (
+                <div className="space-y-3">
+                  {members.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                          <span className="text-sm font-bold text-primary">
+                            {(member.full_name || member.email || '?').charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{member.full_name || 'Unnamed User'}</p>
+                          <p className="text-xs text-muted-foreground">{member.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-1 text-xs font-medium rounded border ${getRoleBadgeColor(member.role)}`}>
+                          {member.role || 'No Role'}
+                        </span>
+                        <select
+                          value={member.role || ''}
+                          onChange={(e) => handleRoleChange(member.id, e.target.value as 'admin' | 'manager' | 'bd_member')}
+                          disabled={updatingRole === member.id}
+                          className="px-3 py-1.5 text-sm bg-input border border-border rounded-lg input-focus"
+                        >
+                          <option value="bd_member">BD Member</option>
+                          <option value="manager">Manager</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        {updatingRole === member.id && (
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="mt-4 text-xs text-muted-foreground">
+                Admins can see all proposals and manage team roles. Managers and BD Members can only see their own proposals.
+              </p>
+            </div>
+          )}
 
           {/* Global Metrics */}
           <div className="bg-card border border-border rounded-lg p-6">
