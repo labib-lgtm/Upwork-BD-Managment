@@ -88,7 +88,6 @@ export const useProposals = () => {
     }
 
     toast.success('Proposal added successfully');
-    await fetchProposals();
     return true;
   };
 
@@ -110,7 +109,6 @@ export const useProposals = () => {
     }
 
     toast.success('Proposal updated successfully');
-    await fetchProposals();
     return true;
   };
 
@@ -127,7 +125,6 @@ export const useProposals = () => {
     }
 
     toast.success('Proposal deleted');
-    await fetchProposals();
     return true;
   };
 
@@ -135,6 +132,47 @@ export const useProposals = () => {
     if (user) {
       fetchProposals();
     }
+  }, [user]);
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('Setting up real-time subscription for proposals');
+    
+    const channel = supabase
+      .channel('proposals-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'proposals'
+        },
+        (payload) => {
+          console.log('Proposals realtime update:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            setProposals(prev => [payload.new as Proposal, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setProposals(prev => 
+              prev.map(p => p.id === (payload.new as Proposal).id ? payload.new as Proposal : p)
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setProposals(prev => 
+              prev.filter(p => p.id !== (payload.old as Proposal).id)
+            );
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Proposals subscription status:', status);
+      });
+
+    return () => {
+      console.log('Cleaning up proposals realtime subscription');
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   return {
