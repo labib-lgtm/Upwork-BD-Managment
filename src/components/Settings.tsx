@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { AppSettings, UserRole } from '@/types';
+import { AppSettings, UserRole, NavigationTab } from '@/types';
 import { updateSettings } from '@/services/dataService';
 import { useBDProfiles, BDProfile } from '@/hooks/useBDProfiles';
 import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfileAccess } from '@/hooks/useProfileAccess';
-import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key } from 'lucide-react';
+import { useRolePermissions } from '@/hooks/useRolePermissions';
+import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SettingsProps {
@@ -19,6 +20,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const { members, loading: membersLoading, updateMemberRole } = useTeamMembers();
   const { role: currentUserRole } = useUserRole();
   const { accessList, loading: accessLoading, getUserAccess, updateUserAccess } = useProfileAccess();
+  const { permissions, loading: permissionsLoading, hasTabAccess, updatePermission } = useRolePermissions();
   const isAdmin = currentUserRole === UserRole.ADMIN;
   
   // Profile management state
@@ -314,6 +316,107 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               )}
               <p className="mt-4 text-xs text-muted-foreground">
                 Admins have access to all profiles. Other roles need explicit profile access to view dashboard and proposals for those profiles.
+              </p>
+            </div>
+          )}
+
+          {/* Role Permissions - Admin Only */}
+          {isAdmin && (
+            <div className="bg-card border border-border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-primary" />
+                  Role Permissions
+                </h3>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Shield className="w-4 h-4" />
+                  Admin Only
+                </div>
+              </div>
+
+              {permissionsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Manager Permissions */}
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                      <span className="px-2 py-1 text-xs font-medium rounded border bg-primary/20 text-primary border-primary/30">
+                        Manager
+                      </span>
+                      Navigation Access
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['dashboard', 'proposals', 'inbound', 'catalogs', 'settings'] as NavigationTab[]).map((tab) => (
+                        <label
+                          key={`manager-${tab}`}
+                          className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors"
+                        >
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={hasTabAccess('manager', tab)}
+                              onChange={(e) => updatePermission('manager', tab, e.target.checked)}
+                              className="sr-only"
+                            />
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              hasTabAccess('manager', tab)
+                                ? 'bg-primary border-primary' 
+                                : 'border-border'
+                            }`}>
+                              {hasTabAccess('manager', tab) && (
+                                <Check className="w-3 h-3 text-primary-foreground" />
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-sm text-foreground capitalize">{tab}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* BD Member Permissions */}
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                      <span className="px-2 py-1 text-xs font-medium rounded border bg-muted text-muted-foreground border-border">
+                        BD Member
+                      </span>
+                      Navigation Access
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['dashboard', 'proposals', 'inbound', 'catalogs', 'settings'] as NavigationTab[]).map((tab) => (
+                        <label
+                          key={`bd_member-${tab}`}
+                          className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors"
+                        >
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={hasTabAccess('bd_member', tab)}
+                              onChange={(e) => updatePermission('bd_member', tab, e.target.checked)}
+                              className="sr-only"
+                            />
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              hasTabAccess('bd_member', tab)
+                                ? 'bg-primary border-primary' 
+                                : 'border-border'
+                            }`}>
+                              {hasTabAccess('bd_member', tab) && (
+                                <Check className="w-3 h-3 text-primary-foreground" />
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-sm text-foreground capitalize">{tab}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <p className="mt-4 text-xs text-muted-foreground">
+                Configure which navigation tabs each role can access. Admins always have access to all tabs.
               </p>
             </div>
           )}

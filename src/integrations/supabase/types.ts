@@ -146,6 +146,33 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          has_access: boolean
+          id: string
+          role: string
+          tab_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          has_access?: boolean
+          id?: string
+          role: string
+          tab_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          has_access?: boolean
+          id?: string
+          role?: string
+          tab_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       team_invitations: {
         Row: {
           created_at: string
