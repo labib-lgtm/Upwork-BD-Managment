@@ -53,7 +53,7 @@ export const GoalProgressCard: React.FC<GoalProgressCardProps> = ({
   return (
     <div className={`bg-card border border-border rounded-xl p-5 shadow-lg ${getGlowClass()} transition-all hover:scale-[1.02]`}>
       <div className="flex items-center justify-between mb-3">
-        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+        <div className="p-2 rounded-lg bg-primary/10 [&>svg]:stroke-primary [&>svg]:fill-foreground">
           {icon}
         </div>
         <div className="flex items-center gap-1">
