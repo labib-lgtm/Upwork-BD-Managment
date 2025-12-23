@@ -8,7 +8,6 @@ import {
   Package, 
   Settings, 
   ChevronDown,
-  Zap
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,6 +25,26 @@ const navItems: { id: NavigationTab; label: string; icon: React.ReactNode }[] = 
   { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
 ];
 
+// Lynx Media Logo SVG Component
+const LynxLogo: React.FC<{ className?: string }> = ({ className }) => (
+  <svg 
+    viewBox="0 0 40 40" 
+    fill="currentColor" 
+    className={className}
+  >
+    {/* Shield shape */}
+    <path 
+      d="M20 2 L36 10 L36 24 C36 32 28 38 20 40 C12 38 4 32 4 24 L4 10 Z" 
+      fill="currentColor"
+    />
+    {/* Lynx head silhouette */}
+    <path 
+      d="M20 8 L28 14 L26 18 L30 22 L28 24 L24 22 L22 26 L20 24 L18 26 L16 22 L12 24 L10 22 L14 18 L12 14 L20 8 Z M16 16 L18 18 L17 20 L19 19 L20 21 L21 19 L23 20 L22 18 L24 16 L20 12 L16 16 Z" 
+      fill="hsl(var(--primary-foreground))"
+    />
+  </svg>
+);
+
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabChange,
@@ -36,15 +55,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-screen">
-      {/* Logo */}
+      {/* Lynx Media Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center glow-primary-sm">
-            <Zap className="w-6 h-6 text-primary-foreground" />
+            <LynxLogo className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="font-bold text-lg text-foreground">BD Tracker</h1>
-            <p className="text-xs text-muted-foreground">Pro Edition</p>
+            <h1 className="font-display font-bold text-lg text-foreground tracking-tight">LYNX MEDIA</h1>
+            <p className="text-xs text-muted-foreground font-medium">BD Tracker</p>
           </div>
         </div>
       </div>

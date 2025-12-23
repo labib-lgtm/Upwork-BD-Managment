@@ -15,6 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Montserrat', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -63,21 +64,23 @@ export default {
         brand: {
           lime: "hsl(var(--brand-lime))",
           "lime-glow": "hsl(var(--brand-lime-glow))",
+          charcoal: "hsl(var(--brand-charcoal))",
+          "charcoal-light": "hsl(var(--brand-charcoal-light))",
         },
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
         info: "hsl(var(--info))",
-        slate: {
-          50: "hsl(var(--slate-50))",
-          100: "hsl(var(--slate-100))",
-          200: "hsl(var(--slate-200))",
-          300: "hsl(var(--slate-300))",
-          400: "hsl(var(--slate-400))",
-          500: "hsl(var(--slate-500))",
-          600: "hsl(var(--slate-600))",
-          700: "hsl(var(--slate-700))",
-          800: "hsl(var(--slate-800))",
-          900: "hsl(var(--slate-900))",
+        gray: {
+          50: "hsl(var(--gray-50))",
+          100: "hsl(var(--gray-100))",
+          200: "hsl(var(--gray-200))",
+          300: "hsl(var(--gray-300))",
+          400: "hsl(var(--gray-400))",
+          500: "hsl(var(--gray-500))",
+          600: "hsl(var(--gray-600))",
+          700: "hsl(var(--gray-700))",
+          800: "hsl(var(--gray-800))",
+          900: "hsl(var(--gray-900))",
         },
       },
       borderRadius: {
