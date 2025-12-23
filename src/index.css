@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -126,13 +126,13 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
 
   /* Custom scrollbar */
@@ -171,7 +171,7 @@
 
   .data-table th {
     @apply p-3 text-xs font-bold text-muted-foreground uppercase tracking-wider bg-muted/50 border-b border-border;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'DM Sans', sans-serif;
   }
 
   .data-table td {
@@ -227,7 +227,7 @@
   /* KPI Table specific */
   .kpi-section-header {
     @apply bg-muted/50 text-xs font-extrabold text-foreground uppercase tracking-widest;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'DM Sans', sans-serif;
   }
 
   /* Form input focus ring */
@@ -238,7 +238,7 @@
   /* Lynx brand button */
   .btn-lynx {
     @apply bg-primary text-primary-foreground font-bold px-5 py-2.5 rounded-xl transition-all duration-200;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'DM Sans', sans-serif;
   }
 
   .btn-lynx:hover {
