@@ -58,6 +58,15 @@ export const RolePermissionsProvider: React.FC<{ children: ReactNode }> = ({ chi
   const updatePermission = useCallback(async (role: 'admin' | 'manager' | 'bd_member', tabId: NavigationTab, hasAccess: boolean): Promise<boolean> => {
     if (!user) return false;
 
+    // Optimistic update - update local state immediately for instant UI feedback
+    setPermissions(prev => 
+      prev.map(p => 
+        p.role === role && p.tab_id === tabId 
+          ? { ...p, has_access: hasAccess, updated_at: new Date().toISOString(), updated_by: user.id }
+          : p
+      )
+    );
+
     const { error } = await supabase
       .from('role_permissions')
       .update({ 
@@ -71,21 +80,14 @@ export const RolePermissionsProvider: React.FC<{ children: ReactNode }> = ({ chi
     if (error) {
       toast.error('Failed to update permission');
       logger.error('Error updating permission:', error);
+      // Revert on error
+      await fetchPermissions();
       return false;
     }
 
-    // Update local state immediately for instant UI feedback
-    setPermissions(prev => 
-      prev.map(p => 
-        p.role === role && p.tab_id === tabId 
-          ? { ...p, has_access: hasAccess, updated_at: new Date().toISOString(), updated_by: user.id }
-          : p
-      )
-    );
-
     toast.success('Permission updated');
     return true;
-  }, [user]);
+  }, [user, fetchPermissions]);
 
   useEffect(() => {
     if (user) {
