@@ -51,7 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   return (
-    <aside className="w-64 bg-sidebar-background border-r border-sidebar-border flex flex-col h-screen">
+    <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-screen">
       {/* Lynx Media Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
