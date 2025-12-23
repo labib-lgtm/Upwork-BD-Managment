@@ -53,7 +53,6 @@ export const useBDProfiles = () => {
     }
 
     toast.success('Profile added successfully');
-    await fetchProfiles();
     return true;
   };
 
@@ -72,7 +71,6 @@ export const useBDProfiles = () => {
     }
 
     toast.success('Profile updated successfully');
-    await fetchProfiles();
     return true;
   };
 
@@ -89,7 +87,6 @@ export const useBDProfiles = () => {
     }
 
     toast.success('Profile deleted');
-    await fetchProfiles();
     return true;
   };
 
@@ -97,6 +94,48 @@ export const useBDProfiles = () => {
     if (user) {
       fetchProfiles();
     }
+  }, [user]);
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('Setting up real-time subscription for bd_profiles');
+    
+    const channel = supabase
+      .channel('bd-profiles-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bd_profiles'
+        },
+        (payload) => {
+          console.log('BD Profiles realtime update:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            setProfiles(prev => [...prev, payload.new as BDProfile].sort((a, b) => a.name.localeCompare(b.name)));
+          } else if (payload.eventType === 'UPDATE') {
+            setProfiles(prev => 
+              prev.map(p => p.id === (payload.new as BDProfile).id ? payload.new as BDProfile : p)
+                .sort((a, b) => a.name.localeCompare(b.name))
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setProfiles(prev => 
+              prev.filter(p => p.id !== (payload.old as BDProfile).id)
+            );
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('BD Profiles subscription status:', status);
+      });
+
+    return () => {
+      console.log('Cleaning up bd_profiles realtime subscription');
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   return {
