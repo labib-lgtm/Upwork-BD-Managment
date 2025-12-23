@@ -8,9 +8,9 @@ import { Proposals } from '@/components/Proposals';
 import { Settings } from '@/components/Settings';
 import { PlaceholderView } from '@/components/PlaceholderView';
 import { NavigationTab, User, AppSettings, UserRole } from '@/types';
-import { getSettings } from '@/services/dataService';
 import { useBDProfiles, useAccessibleProfiles } from '@/hooks/useBDProfiles';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAppSettings } from '@/hooks/useAppSettings';
 
 const IndexContent = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
@@ -18,9 +18,17 @@ const IndexContent = () => {
   const { profiles: bdProfiles, loading: profilesLoading } = useBDProfiles();
   const { accessibleProfiles, loading: accessLoading } = useAccessibleProfiles();
   const { role: userRole, loading: roleLoading } = useUserRole();
+  const { settings: appSettings, loading: settingsLoading, updateSetting, updateMultipleSettings } = useAppSettings();
   
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
-  const [settings, setSettings] = useState<AppSettings>(getSettings());
+
+  // Map app settings from database to AppSettings type
+  const settings: AppSettings = {
+    fiscal_year_start_month: appSettings.fiscal_year_start,
+    connect_cost: appSettings.connect_cost,
+    target_roas: appSettings.target_roas,
+    currency: appSettings.currency,
+  };
 
   // All profiles (for settings/admin)
   const allProfiles = bdProfiles.filter(p => p.is_active).map(p => ({
@@ -54,12 +62,10 @@ const IndexContent = () => {
     }
   }, [authLoading, user, navigate]);
 
-  const refreshSettings = () => {
-    setSettings(getSettings());
-  };
+  // Settings are now synced via real-time from database
 
   // Show loading state while checking auth or loading profiles
-  if (authLoading || profilesLoading || roleLoading || accessLoading) {
+  if (authLoading || profilesLoading || roleLoading || accessLoading || settingsLoading) {
     return (
       <div className="flex h-screen bg-background items-center justify-center">
         <div className="text-center">
@@ -112,7 +118,7 @@ const IndexContent = () => {
         return (
           <Settings
             settings={settings}
-            onSettingsChange={refreshSettings}
+            onSettingsChange={updateMultipleSettings}
           />
         );
       default:
