@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface BDProfile {
   id: string;
@@ -34,7 +35,7 @@ export const useBDProfiles = () => {
 
     if (error) {
       toast.error('Failed to fetch profiles');
-      console.error('Error fetching profiles:', error);
+      logger.error('Error fetching profiles:', error);
     } else {
       setProfiles(data || []);
     }
@@ -48,7 +49,7 @@ export const useBDProfiles = () => {
 
     if (error) {
       toast.error('Failed to add profile');
-      console.error('Error adding profile:', error);
+      logger.error('Error adding profile:', error);
       return false;
     }
 
@@ -66,7 +67,7 @@ export const useBDProfiles = () => {
 
     if (error) {
       toast.error('Failed to update profile');
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', error);
       return false;
     }
 
@@ -82,7 +83,7 @@ export const useBDProfiles = () => {
 
     if (error) {
       toast.error('Failed to delete profile');
-      console.error('Error deleting profile:', error);
+      logger.error('Error deleting profile:', error);
       return false;
     }
 
@@ -100,7 +101,7 @@ export const useBDProfiles = () => {
   useEffect(() => {
     if (!user) return;
 
-    console.log('Setting up real-time subscription for bd_profiles');
+    logger.log('Setting up real-time subscription for bd_profiles');
     
     const channel = supabase
       .channel('bd-profiles-realtime')
@@ -112,7 +113,7 @@ export const useBDProfiles = () => {
           table: 'bd_profiles'
         },
         (payload) => {
-          console.log('BD Profiles realtime update:', payload);
+          logger.log('BD Profiles realtime update:', payload);
           
           if (payload.eventType === 'INSERT') {
             setProfiles(prev => [...prev, payload.new as BDProfile].sort((a, b) => a.name.localeCompare(b.name)));
@@ -129,11 +130,11 @@ export const useBDProfiles = () => {
         }
       )
       .subscribe((status) => {
-        console.log('BD Profiles subscription status:', status);
+        logger.log('BD Profiles subscription status:', status);
       });
 
     return () => {
-      console.log('Cleaning up bd_profiles realtime subscription');
+      logger.log('Cleaning up bd_profiles realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [user]);
