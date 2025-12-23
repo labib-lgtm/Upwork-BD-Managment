@@ -122,7 +122,7 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
     <div className="bg-card border border-border rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-          <Target className="w-5 h-5 text-primary" />
+          <Target className="w-5 h-5 text-foreground" />
           Monthly Goals
         </h3>
         
