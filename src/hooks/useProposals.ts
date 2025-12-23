@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface Proposal {
   id: string;
@@ -65,7 +66,7 @@ export const useProposals = () => {
 
     if (error) {
       toast.error('Failed to fetch proposals');
-      console.error('Error fetching proposals:', error);
+      logger.error('Error fetching proposals:', error);
     } else {
       setProposals(data || []);
     }
@@ -83,7 +84,7 @@ export const useProposals = () => {
 
     if (error) {
       toast.error('Failed to add proposal');
-      console.error('Error adding proposal:', error);
+      logger.error('Error adding proposal:', error);
       return false;
     }
 
@@ -104,7 +105,7 @@ export const useProposals = () => {
 
     if (error) {
       toast.error('Failed to update proposal');
-      console.error('Error updating proposal:', error);
+      logger.error('Error updating proposal:', error);
       return false;
     }
 
@@ -120,7 +121,7 @@ export const useProposals = () => {
 
     if (error) {
       toast.error('Failed to delete proposal');
-      console.error('Error deleting proposal:', error);
+      logger.error('Error deleting proposal:', error);
       return false;
     }
 
@@ -138,7 +139,7 @@ export const useProposals = () => {
   useEffect(() => {
     if (!user) return;
 
-    console.log('Setting up real-time subscription for proposals');
+    logger.log('Setting up real-time subscription for proposals');
     
     const channel = supabase
       .channel('proposals-realtime')
@@ -150,7 +151,7 @@ export const useProposals = () => {
           table: 'proposals'
         },
         (payload) => {
-          console.log('Proposals realtime update:', payload);
+          logger.log('Proposals realtime update:', payload);
           
           if (payload.eventType === 'INSERT') {
             setProposals(prev => [payload.new as Proposal, ...prev]);
@@ -166,11 +167,11 @@ export const useProposals = () => {
         }
       )
       .subscribe((status) => {
-        console.log('Proposals subscription status:', status);
+        logger.log('Proposals subscription status:', status);
       });
 
     return () => {
-      console.log('Cleaning up proposals realtime subscription');
+      logger.log('Cleaning up proposals realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [user]);

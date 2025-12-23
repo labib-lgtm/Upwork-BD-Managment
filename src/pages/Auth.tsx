@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
-const nameSchema = z.string().min(2, 'Name must be at least 2 characters');
+const nameSchema = z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name must be less than 100 characters');
 
 const LynxLogo = () => (
   <svg viewBox="0 0 40 40" className="w-7 h-7" fill="none" xmlns="http://www.w3.org/2000/svg">
