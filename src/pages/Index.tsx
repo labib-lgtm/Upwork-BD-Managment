@@ -9,11 +9,13 @@ import { PlaceholderView } from '@/components/PlaceholderView';
 import { NavigationTab, User, AppSettings, UserRole } from '@/types';
 import { getSettings } from '@/services/dataService';
 import { useBDProfiles } from '@/hooks/useBDProfiles';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const Index = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { profiles: bdProfiles, loading: profilesLoading } = useBDProfiles();
+  const { role: userRole, loading: roleLoading } = useUserRole();
   
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [settings, setSettings] = useState<AppSettings>(getSettings());
@@ -27,11 +29,11 @@ const Index = () => {
     active: p.is_active,
   }));
 
-  // Create a user object from auth profile
+  // Create a user object from auth profile with role from database
   const currentUser: User = {
     id: user?.id || 'guest',
     email: user?.email || '',
-    role: UserRole.MANAGER,
+    role: userRole,
     name: profile?.full_name || user?.email || 'Team Member',
   };
 
@@ -46,7 +48,7 @@ const Index = () => {
   };
 
   // Show loading state while checking auth or loading profiles
-  if (authLoading || profilesLoading) {
+  if (authLoading || profilesLoading || roleLoading) {
     return (
       <div className="flex h-screen bg-background items-center justify-center">
         <div className="text-center">
