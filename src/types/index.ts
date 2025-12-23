@@ -66,6 +66,8 @@ export interface Job {
   who_got_hired: string;
   notes: string;
   last_viewed_text: string;
+  invite_sent: number;
+  interviewing_at_submission: number;
 }
 
 export interface AppSettings {

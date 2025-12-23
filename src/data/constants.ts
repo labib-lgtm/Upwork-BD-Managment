@@ -94,6 +94,8 @@ const generateMockJobs = (): Job[] => {
       who_got_hired: isWin ? '' : Math.random() > 0.5 ? 'Competitor Agency' : '',
       notes: '',
       last_viewed_text: isViewed ? `${Math.floor(Math.random() * 7) + 1} days ago` : '',
+      invite_sent: Math.floor(Math.random() * 5),
+      interviewing_at_submission: Math.floor(Math.random() * 3),
     });
   }
 
