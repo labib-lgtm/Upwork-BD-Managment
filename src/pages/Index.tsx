@@ -72,9 +72,7 @@ const Index = () => {
       case 'proposals':
         return (
           <Proposals
-            jobs={jobs}
             profiles={profiles}
-            onJobsChange={refreshJobs}
             user={currentUser}
           />
         );

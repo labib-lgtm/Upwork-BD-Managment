@@ -1,89 +1,82 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Job, BDProfile, JobStatus, JobType, PaymentStatus, ProposalBucket, User, UserRole } from '@/types';
-import { addJob, updateJob, deleteJob } from '@/services/dataService';
-import { Plus, ExternalLink, Pencil, Trash2, X, Check, Video, Eye, MessageSquare, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
+import { BDProfile, User, UserRole } from '@/types';
+import { useProposals, Proposal, ProposalFormData } from '@/hooks/useProposals';
+import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 
 interface ProposalsProps {
-  jobs: Job[];
   profiles: BDProfile[];
-  onJobsChange: () => void;
   user: User;
 }
 
-interface JobFormData {
-  bd_profile_id: string;
+// Status and type options
+const STATUS_OPTIONS = ['pending', 'viewed', 'interviewed', 'won', 'lost', 'archived'] as const;
+const JOB_TYPE_OPTIONS = ['fixed', 'hourly'] as const;
+const PAYMENT_STATUS_OPTIONS = ['not_started', 'in_progress', 'completed', 'refunded'] as const;
+
+interface LocalFormData {
+  profile_name: string;
   job_title: string;
-  job_link: string;
-  payment_status: PaymentStatus;
-  job_type: JobType;
+  job_type: string;
+  status: string;
+  payment_status: string;
   budget: number;
-  proposal_competition_bucket: ProposalBucket;
+  proposed_amount: number;
   connects_used: number;
   boosted: boolean;
-  video_sent: boolean;
-  video_viewed: boolean;
-  date_submitted: string;
-  client_viewed: boolean;
-  interviewed: boolean;
-  job_status: JobStatus;
-  deal_value: number;
-  refund_amount: number;
-  who_got_hired: string;
-  notes: string;
-  last_viewed_text: string;
   invite_sent: number;
   interviewing_at_submission: number;
+  last_viewed_text: string;
+  client_country: string;
+  client_rating: number | null;
+  client_reviews: number | null;
+  client_total_spent: number | null;
+  notes: string;
 }
 
-const getDefaultFormData = (profileId: string): JobFormData => ({
-  bd_profile_id: profileId,
+const getDefaultFormData = (profileName: string): LocalFormData => ({
+  profile_name: profileName,
   job_title: '',
-  job_link: '',
-  payment_status: PaymentStatus.UNKNOWN,
-  job_type: JobType.FIXED,
+  job_type: 'fixed',
+  status: 'pending',
+  payment_status: 'not_started',
   budget: 0,
-  proposal_competition_bucket: ProposalBucket.BTWN_5_10,
+  proposed_amount: 0,
   connects_used: 6,
   boosted: false,
-  video_sent: false,
-  video_viewed: false,
-  date_submitted: new Date().toISOString().split('T')[0],
-  client_viewed: false,
-  interviewed: false,
-  job_status: JobStatus.OPEN,
-  deal_value: 0,
-  refund_amount: 0,
-  who_got_hired: '',
-  notes: '',
-  last_viewed_text: '',
   invite_sent: 0,
   interviewing_at_submission: 0,
+  last_viewed_text: '',
+  client_country: '',
+  client_rating: null,
+  client_reviews: null,
+  client_total_spent: null,
+  notes: '',
 });
 
-export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChange, user }) => {
+export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
+  const { proposals, loading, addProposal, updateProposal, deleteProposal } = useProposals();
   const isRestricted = user.role === UserRole.BD_MEMBER && !!user.linked_profile_id;
   const [showModal, setShowModal] = useState(false);
-  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
   const [showFullForm, setShowFullForm] = useState(false);
-  const [lastUsedProfileId, setLastUsedProfileId] = useState<string>(
-    isRestricted && user.linked_profile_id ? user.linked_profile_id : profiles[0]?.id || ''
-  );
+  const [lastUsedProfile, setLastUsedProfile] = useState<string>(profiles[0]?.name || '');
+  const [submitting, setSubmitting] = useState(false);
   
-  const [formData, setFormData] = useState<JobFormData>(() => 
-    getDefaultFormData(lastUsedProfileId)
+  const [formData, setFormData] = useState<LocalFormData>(() => 
+    getDefaultFormData(lastUsedProfile)
   );
-  const [filterStatus, setFilterStatus] = useState<JobStatus | 'all'>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterProfile, setFilterProfile] = useState<string>('all');
 
   // Auto-adjust connects when boosted changes
   useEffect(() => {
-    if (!editingJob) {
+    if (!editingProposal) {
       setFormData(prev => ({
         ...prev,
         connects_used: prev.boosted ? 8 : 6
       }));
     }
-  }, [formData.boosted, editingJob]);
+  }, [formData.boosted, editingProposal]);
 
   // Keyboard shortcut for new proposal
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -98,107 +91,129 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  const filteredJobs = jobs
-    .filter((j) => filterStatus === 'all' || j.job_status === filterStatus)
-    .filter((j) => {
+  const filteredProposals = proposals
+    .filter((p) => filterStatus === 'all' || p.status === filterStatus)
+    .filter((p) => {
       if (isRestricted && user.linked_profile_id) {
-        return j.bd_profile_id === user.linked_profile_id;
+        const linkedProfile = profiles.find(pr => pr.id === user.linked_profile_id);
+        return linkedProfile ? p.profile_name === linkedProfile.name : true;
       }
-      return filterProfile === 'all' || j.bd_profile_id === filterProfile;
+      return filterProfile === 'all' || p.profile_name === filterProfile;
     })
-    .sort((a, b) => new Date(b.date_submitted).getTime() - new Date(a.date_submitted).getTime());
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const openNewProposalModal = () => {
-    setEditingJob(null);
+    setEditingProposal(null);
     setShowFullForm(false);
-    setFormData(getDefaultFormData(lastUsedProfileId));
+    setFormData(getDefaultFormData(lastUsedProfile));
     setShowModal(true);
   };
 
-  const handleSubmit = (e: React.FormEvent, addAnother: boolean = false) => {
+  const handleSubmit = async (e: React.FormEvent, addAnother: boolean = false) => {
     e.preventDefault();
+    setSubmitting(true);
     
-    const jobData = {
-      ...formData,
+    const proposalData: ProposalFormData = {
+      profile_name: formData.profile_name,
+      job_title: formData.job_title,
+      job_type: formData.job_type,
+      status: formData.status,
+      payment_status: formData.payment_status,
+      budget: formData.budget,
+      proposed_amount: formData.proposed_amount,
+      connects_used: formData.connects_used,
+      boosted: formData.boosted,
+      invite_sent: formData.invite_sent,
+      interviewing_at_submission: formData.interviewing_at_submission,
+      last_viewed_text: formData.last_viewed_text || null,
+      client_country: formData.client_country || null,
+      client_rating: formData.client_rating,
+      client_reviews: formData.client_reviews,
+      client_total_spent: formData.client_total_spent,
+      notes: formData.notes || null,
     };
 
-    if (editingJob) {
-      updateJob({ ...editingJob, ...jobData });
+    let success = false;
+    if (editingProposal) {
+      success = await updateProposal(editingProposal.id, proposalData);
     } else {
-      addJob(jobData);
-      // Remember the profile for next entry
-      setLastUsedProfileId(formData.bd_profile_id);
+      success = await addProposal(proposalData);
+      if (success) {
+        setLastUsedProfile(formData.profile_name);
+      }
     }
     
-    onJobsChange();
+    setSubmitting(false);
     
-    if (addAnother) {
-      // Reset form but keep profile selection
-      setFormData(getDefaultFormData(formData.bd_profile_id));
-      setEditingJob(null);
-      setShowFullForm(false);
-      // Focus on job title
-      setTimeout(() => {
-        const titleInput = document.getElementById('job-title-input');
-        titleInput?.focus();
-      }, 100);
-    } else {
-      setShowModal(false);
-      setEditingJob(null);
+    if (success) {
+      if (addAnother) {
+        setFormData(getDefaultFormData(formData.profile_name));
+        setEditingProposal(null);
+        setShowFullForm(false);
+        setTimeout(() => {
+          const titleInput = document.getElementById('job-title-input');
+          titleInput?.focus();
+        }, 100);
+      } else {
+        setShowModal(false);
+        setEditingProposal(null);
+      }
     }
   };
 
-  const handleEdit = (job: Job) => {
-    setEditingJob(job);
-    setShowFullForm(true); // Show full form when editing
+  const handleEdit = (proposal: Proposal) => {
+    setEditingProposal(proposal);
+    setShowFullForm(true);
     setFormData({
-      bd_profile_id: job.bd_profile_id,
-      job_title: job.job_title,
-      job_link: job.job_link,
-      payment_status: job.payment_status,
-      job_type: job.job_type,
-      budget: job.budget,
-      proposal_competition_bucket: job.proposal_competition_bucket,
-      connects_used: job.connects_used,
-      boosted: job.boosted,
-      video_sent: job.video_sent,
-      video_viewed: job.video_viewed,
-      date_submitted: job.date_submitted,
-      client_viewed: job.client_viewed,
-      interviewed: job.interviewed,
-      job_status: job.job_status,
-      deal_value: job.deal_value,
-      refund_amount: job.refund_amount,
-      who_got_hired: job.who_got_hired,
-      notes: job.notes,
-      last_viewed_text: job.last_viewed_text,
-      invite_sent: job.invite_sent,
-      interviewing_at_submission: job.interviewing_at_submission,
+      profile_name: proposal.profile_name,
+      job_title: proposal.job_title,
+      job_type: proposal.job_type,
+      status: proposal.status,
+      payment_status: proposal.payment_status,
+      budget: proposal.budget,
+      proposed_amount: proposal.proposed_amount,
+      connects_used: proposal.connects_used,
+      boosted: proposal.boosted,
+      invite_sent: proposal.invite_sent,
+      interviewing_at_submission: proposal.interviewing_at_submission,
+      last_viewed_text: proposal.last_viewed_text || '',
+      client_country: proposal.client_country || '',
+      client_rating: proposal.client_rating,
+      client_reviews: proposal.client_reviews,
+      client_total_spent: proposal.client_total_spent,
+      notes: proposal.notes || '',
     });
     setShowModal(true);
   };
 
-  const handleDelete = (jobId: string) => {
+  const handleDelete = async (proposalId: string) => {
     if (window.confirm('Are you sure you want to delete this proposal?')) {
-      deleteJob(jobId);
-      onJobsChange();
+      await deleteProposal(proposalId);
     }
   };
 
-  const getStatusBadgeClass = (status: JobStatus) => {
+  const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case JobStatus.WON:
+      case 'won':
         return 'status-badge-success';
-      case JobStatus.LOST:
+      case 'lost':
         return 'status-badge-error';
-      case JobStatus.IN_PROGRESS:
+      case 'interviewed':
         return 'status-badge-info';
-      case JobStatus.ARCHIVED:
+      case 'archived':
         return 'status-badge-neutral';
       default:
         return 'status-badge-warning';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -208,7 +223,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
           <div>
             <h2 className="text-2xl font-bold text-foreground">Proposals</h2>
             <p className="text-sm text-muted-foreground">
-              {filteredJobs.length} proposals • <span className="text-muted-foreground/70">Ctrl+N to add</span>
+              {filteredProposals.length} proposals • <span className="text-muted-foreground/70">Ctrl+N to add</span>
             </p>
           </div>
           <button
@@ -224,11 +239,11 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
         <div className="mt-4 flex gap-4">
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as JobStatus | 'all')}
+            onChange={(e) => setFilterStatus(e.target.value)}
             className="px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="all">All Status</option>
-            {Object.values(JobStatus).map((status) => (
+            {STATUS_OPTIONS.map((status) => (
               <option key={status} value={status}>{status}</option>
             ))}
           </select>
@@ -241,7 +256,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
             >
               <option value="all">All Profiles</option>
               {profiles.slice(0, 4).map((profile) => (
-                <option key={profile.id} value={profile.id}>{profile.name}</option>
+                <option key={profile.id} value={profile.name}>{profile.name}</option>
               ))}
             </select>
           )}
@@ -252,7 +267,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
       <div className="flex-1 overflow-auto p-6">
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="data-table min-w-[1400px]">
+            <table className="data-table min-w-[1200px]">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -261,87 +276,52 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
                   <th className="w-24">Status</th>
                   <th className="w-20">Type</th>
                   <th className="w-24 text-right">Budget</th>
+                  <th className="w-24 text-right">Proposed</th>
                   <th className="w-16 text-center">Connects</th>
-                  <th className="w-16 text-center" title="Invites at submission">Inv</th>
-                  <th className="w-16 text-center" title="Interviewing at submission">Int</th>
                   <th className="w-24 text-center">Last Viewed</th>
-                  <th className="w-32 text-center">Engagement</th>
-                  <th className="w-24 text-right">Deal Value</th>
                   <th className="w-24 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredJobs.map((job) => (
-                  <tr key={job.id}>
+                {filteredProposals.map((proposal) => (
+                  <tr key={proposal.id}>
                     <td className="text-muted-foreground tabular-nums">
-                      {new Date(job.date_submitted).toLocaleDateString()}
+                      {new Date(proposal.created_at).toLocaleDateString()}
                     </td>
                     <td>
                       <span className="px-2 py-1 bg-secondary rounded text-xs font-medium">
-                        {profiles.find((p) => p.id === job.bd_profile_id)?.name || 'Unknown'}
+                        {proposal.profile_name}
                       </span>
                     </td>
                     <td>
-                      <a
-                        href={job.job_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <span className="truncate max-w-[200px]">{job.job_title}</span>
-                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                      </a>
+                      <span className="truncate max-w-[200px] block">{proposal.job_title}</span>
                     </td>
                     <td>
-                      <span className={`status-badge ${getStatusBadgeClass(job.job_status)}`}>
-                        {job.job_status}
+                      <span className={`status-badge ${getStatusBadgeClass(proposal.status)}`}>
+                        {proposal.status}
                       </span>
                     </td>
-                    <td className="text-muted-foreground">{job.job_type}</td>
-                    <td className="text-right tabular-nums">${job.budget.toLocaleString()}</td>
+                    <td className="text-muted-foreground">{proposal.job_type}</td>
+                    <td className="text-right tabular-nums">${proposal.budget.toLocaleString()}</td>
+                    <td className="text-right tabular-nums">${proposal.proposed_amount.toLocaleString()}</td>
                     <td className="text-center">
-                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${job.boosted ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground'}`}>
-                        {job.connects_used}
+                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${proposal.boosted ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground'}`}>
+                        {proposal.connects_used}
                       </span>
-                    </td>
-                    <td className="text-center text-muted-foreground tabular-nums">
-                      {job.invite_sent || '-'}
-                    </td>
-                    <td className="text-center text-muted-foreground tabular-nums">
-                      {job.interviewing_at_submission || '-'}
                     </td>
                     <td className="text-center text-xs text-muted-foreground">
-                      {job.last_viewed_text || '-'}
-                    </td>
-                    <td>
-                      <div className="flex items-center justify-center gap-1">
-                        <span className={`p-1.5 rounded ${job.client_viewed ? 'bg-blue-500/20 text-blue-400' : 'bg-secondary text-muted-foreground/30'}`} title="Viewed">
-                          <Eye className="w-3.5 h-3.5" />
-                        </span>
-                        <span className={`p-1.5 rounded ${job.interviewed ? 'bg-green-500/20 text-green-400' : 'bg-secondary text-muted-foreground/30'}`} title="Interviewed">
-                          <MessageSquare className="w-3.5 h-3.5" />
-                        </span>
-                        <span className={`p-1.5 rounded ${job.video_sent ? 'bg-purple-500/20 text-purple-400' : 'bg-secondary text-muted-foreground/30'}`} title="Video Sent">
-                          <Video className="w-3.5 h-3.5" />
-                        </span>
-                        <span className={`p-1.5 rounded ${job.job_status === JobStatus.WON ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground/30'}`} title="Won">
-                          <Trophy className="w-3.5 h-3.5" />
-                        </span>
-                      </div>
-                    </td>
-                    <td className="text-right tabular-nums font-medium">
-                      {job.deal_value > 0 ? `$${job.deal_value.toLocaleString()}` : '-'}
+                      {proposal.last_viewed_text || '-'}
                     </td>
                     <td>
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => handleEdit(job)}
+                          onClick={() => handleEdit(proposal)}
                           className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(job.id)}
+                          onClick={() => handleDelete(proposal.id)}
                           className="p-2 hover:bg-destructive/20 rounded-lg transition-colors text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -350,6 +330,13 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
                     </td>
                   </tr>
                 ))}
+                {filteredProposals.length === 0 && (
+                  <tr>
+                    <td colSpan={10} className="text-center py-8 text-muted-foreground">
+                      No proposals found. Click "Add Proposal" to create one.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -363,10 +350,10 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
                 <h3 className="text-xl font-bold text-foreground">
-                  {editingJob ? 'Edit Proposal' : 'New Proposal'}
+                  {editingProposal ? 'Edit Proposal' : 'New Proposal'}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {editingJob ? 'Update proposal details' : 'Quick entry mode • Enter what you know now'}
+                  {editingProposal ? 'Update proposal details' : 'Quick entry mode • Enter what you know now'}
                 </p>
               </div>
               <button
@@ -383,26 +370,28 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Profile</label>
                   <select
-                    value={formData.bd_profile_id}
-                    onChange={(e) => setFormData({ ...formData, bd_profile_id: e.target.value })}
+                    value={formData.profile_name}
+                    onChange={(e) => setFormData({ ...formData, profile_name: e.target.value })}
                     disabled={isRestricted}
                     className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
                     required
                   >
                     {profiles.slice(0, 4).map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
+                      <option key={p.id} value={p.name}>{p.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Date Submitted</label>
-                  <input
-                    type="date"
-                    value={formData.date_submitted}
-                    onChange={(e) => setFormData({ ...formData, date_submitted: e.target.value })}
+                  <label className="block text-sm font-medium text-foreground mb-2">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                    required
-                  />
+                  >
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -420,26 +409,15 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Job Link</label>
-                <input
-                  type="url"
-                  value={formData.job_link}
-                  onChange={(e) => setFormData({ ...formData, job_link: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  placeholder="https://upwork.com/jobs/..."
-                />
-              </div>
-
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Type</label>
                   <select
                     value={formData.job_type}
-                    onChange={(e) => setFormData({ ...formData, job_type: e.target.value as JobType })}
+                    onChange={(e) => setFormData({ ...formData, job_type: e.target.value })}
                     className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
                   >
-                    {Object.values(JobType).map((type) => (
+                    {JOB_TYPE_OPTIONS.map((type) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
@@ -455,32 +433,18 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Payment</label>
-                  <select
-                    value={formData.payment_status}
-                    onChange={(e) => setFormData({ ...formData, payment_status: e.target.value as PaymentStatus })}
+                  <label className="block text-sm font-medium text-foreground mb-2">Proposed ($)</label>
+                  <input
+                    type="number"
+                    value={formData.proposed_amount}
+                    onChange={(e) => setFormData({ ...formData, proposed_amount: Number(e.target.value) })}
                     className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  >
-                    {Object.values(PaymentStatus).map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
+                    min="0"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Competition</label>
-                  <select
-                    value={formData.proposal_competition_bucket}
-                    onChange={(e) => setFormData({ ...formData, proposal_competition_bucket: e.target.value as ProposalBucket })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  >
-                    {Object.values(ProposalBucket).map((bucket) => (
-                      <option key={bucket} value={bucket}>{bucket}</option>
-                    ))}
-                  </select>
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Connects Used</label>
                   <input
@@ -490,6 +454,18 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
                     className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
                     min="0"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Payment Status</label>
+                  <select
+                    value={formData.payment_status}
+                    onChange={(e) => setFormData({ ...formData, payment_status: e.target.value })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  >
+                    {PAYMENT_STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>{status.replace('_', ' ')}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -534,31 +510,26 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
 
               {/* Quick Checkboxes */}
               <div className="flex flex-wrap gap-4">
-                {[
-                  { key: 'boosted', label: 'Boosted' },
-                  { key: 'video_sent', label: 'Video Sent' },
-                ].map((item) => (
-                  <label key={item.key} className="flex items-center gap-3 cursor-pointer">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        checked={formData[item.key as keyof JobFormData] as boolean}
-                        onChange={(e) => setFormData({ ...formData, [item.key]: e.target.checked })}
-                        className="sr-only"
-                      />
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                        formData[item.key as keyof JobFormData] 
-                          ? 'bg-primary border-primary' 
-                          : 'border-border'
-                      }`}>
-                        {formData[item.key as keyof JobFormData] && (
-                          <Check className="w-3 h-3 text-primary-foreground" />
-                        )}
-                      </div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={formData.boosted}
+                      onChange={(e) => setFormData({ ...formData, boosted: e.target.checked })}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                      formData.boosted 
+                        ? 'bg-primary border-primary' 
+                        : 'border-border'
+                    }`}>
+                      {formData.boosted && (
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                      )}
                     </div>
-                    <span className="text-sm text-foreground">{item.label}</span>
-                  </label>
-                ))}
+                  </div>
+                  <span className="text-sm text-foreground">Boosted</span>
+                </label>
               </div>
 
               {/* Expandable Full Form */}
@@ -569,87 +540,60 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showFullForm ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  {showFullForm ? 'Hide outcome fields' : 'Show outcome fields (status, deal value, etc.)'}
+                  {showFullForm ? 'Hide client details' : 'Show client details (country, rating, etc.)'}
                 </button>
 
                 {showFullForm && (
                   <div className="mt-4 space-y-4 animate-fade-in">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Status</label>
-                        <select
-                          value={formData.job_status}
-                          onChange={(e) => setFormData({ ...formData, job_status: e.target.value as JobStatus })}
-                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                        >
-                          {Object.values(JobStatus).map((status) => (
-                            <option key={status} value={status}>{status}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Who Got Hired</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">Client Country</label>
                         <input
                           type="text"
-                          value={formData.who_got_hired}
-                          onChange={(e) => setFormData({ ...formData, who_got_hired: e.target.value })}
+                          value={formData.client_country}
+                          onChange={(e) => setFormData({ ...formData, client_country: e.target.value })}
                           className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          placeholder="Leave empty if unknown"
+                          placeholder="e.g. United States"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Client Rating</label>
+                        <input
+                          type="number"
+                          value={formData.client_rating || ''}
+                          onChange={(e) => setFormData({ ...formData, client_rating: e.target.value ? Number(e.target.value) : null })}
+                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                          min="0"
+                          max="5"
+                          step="0.1"
+                          placeholder="0-5"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Deal Value ($)</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">Client Reviews</label>
                         <input
                           type="number"
-                          value={formData.deal_value}
-                          onChange={(e) => setFormData({ ...formData, deal_value: Number(e.target.value) })}
+                          value={formData.client_reviews || ''}
+                          onChange={(e) => setFormData({ ...formData, client_reviews: e.target.value ? Number(e.target.value) : null })}
                           className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
                           min="0"
+                          placeholder="Number of reviews"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Refund Amount ($)</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">Client Total Spent ($)</label>
                         <input
                           type="number"
-                          value={formData.refund_amount}
-                          onChange={(e) => setFormData({ ...formData, refund_amount: Number(e.target.value) })}
+                          value={formData.client_total_spent || ''}
+                          onChange={(e) => setFormData({ ...formData, client_total_spent: e.target.value ? Number(e.target.value) : null })}
                           className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
                           min="0"
+                          placeholder="Total spent on platform"
                         />
                       </div>
-                    </div>
-
-                    {/* Outcome Checkboxes */}
-                    <div className="flex flex-wrap gap-4">
-                      {[
-                        { key: 'video_viewed', label: 'Video Viewed' },
-                        { key: 'client_viewed', label: 'Client Viewed' },
-                        { key: 'interviewed', label: 'Interviewed' },
-                      ].map((item) => (
-                        <label key={item.key} className="flex items-center gap-3 cursor-pointer">
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={formData[item.key as keyof JobFormData] as boolean}
-                              onChange={(e) => setFormData({ ...formData, [item.key]: e.target.checked })}
-                              className="sr-only"
-                            />
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                              formData[item.key as keyof JobFormData] 
-                                ? 'bg-primary border-primary' 
-                                : 'border-border'
-                            }`}>
-                              {formData[item.key as keyof JobFormData] && (
-                                <Check className="w-3 h-3 text-primary-foreground" />
-                              )}
-                            </div>
-                          </div>
-                          <span className="text-sm text-foreground">{item.label}</span>
-                        </label>
-                      ))}
                     </div>
 
                     <div>
@@ -671,23 +615,27 @@ export const Proposals: React.FC<ProposalsProps> = ({ jobs, profiles, onJobsChan
                   type="button"
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={submitting}
                 >
                   Cancel
                 </button>
-                {!editingJob && (
+                {!editingProposal && (
                   <button
                     type="button"
                     onClick={(e) => handleSubmit(e as unknown as React.FormEvent, true)}
                     className="px-4 py-2 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors"
+                    disabled={submitting}
                   >
-                    Save & Add Another
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save & Add Another'}
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity"
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                  disabled={submitting}
                 >
-                  {editingJob ? 'Update' : 'Create'} Proposal
+                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {editingProposal ? 'Update' : 'Create'} Proposal
                 </button>
               </div>
             </form>
