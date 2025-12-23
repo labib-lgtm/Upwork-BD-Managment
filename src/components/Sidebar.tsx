@@ -57,16 +57,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   return (
-    <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-screen">
+    <aside className="w-64 bg-sidebar-background border-r border-sidebar-border flex flex-col h-screen">
       {/* Lynx Media Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center glow-primary-sm">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
             <LynxLogo className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="font-display font-bold text-lg text-foreground tracking-tight">LYNX MEDIA</h1>
-            <p className="text-xs text-muted-foreground font-medium">BD Tracker</p>
+            <h1 className="font-bold text-lg text-sidebar-foreground tracking-tight">LYNX MEDIA</h1>
+            <p className="text-xs text-sidebar-foreground/60 font-medium">BD Tracker</p>
           </div>
         </div>
       </div>
@@ -78,10 +78,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <li key={item.id}>
               <button
                 onClick={() => onTabChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   activeTab === item.id
-                    ? 'bg-primary text-primary-foreground glow-primary-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
                 }`}
               >
                 {item.icon}
@@ -97,20 +97,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="relative">
           <button
             onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-sidebar-accent hover:bg-muted transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-sidebar-accent hover:bg-sidebar-accent/80 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-primary">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-sm font-bold text-primary-foreground">
                   {currentUser.name.charAt(0)}
                 </span>
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-foreground">{currentUser.name}</p>
-                <p className="text-xs text-muted-foreground capitalize">{currentUser.role.replace('_', ' ')}</p>
+                <p className="text-sm font-medium text-sidebar-foreground">{currentUser.name}</p>
+                <p className="text-xs text-sidebar-foreground/60 capitalize">{currentUser.role.replace('_', ' ')}</p>
               </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-sidebar-foreground/60 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {userDropdownOpen && (
