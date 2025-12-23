@@ -148,3 +148,72 @@ export const useBDProfiles = () => {
     deleteProfile,
   };
 };
+
+// Hook to get accessible profiles for current user (filtered by access permissions)
+export const useAccessibleProfiles = () => {
+  const [accessibleProfiles, setAccessibleProfiles] = useState<BDProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  const fetchAccessibleProfiles = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+
+    // First check if user is admin
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const isAdmin = roleData?.role === 'admin';
+
+    // Get all profiles
+    const { data: allProfiles, error: profilesError } = await supabase
+      .from('bd_profiles')
+      .select('*')
+      .eq('is_active', true)
+      .order('name', { ascending: true });
+
+    if (profilesError) {
+      logger.error('Error fetching profiles:', profilesError);
+      setLoading(false);
+      return;
+    }
+
+    if (isAdmin) {
+      // Admins see all profiles
+      setAccessibleProfiles(allProfiles || []);
+    } else {
+      // Get user's profile access
+      const { data: accessData, error: accessError } = await supabase
+        .from('user_profile_access')
+        .select('bd_profile_id')
+        .eq('user_id', user.id);
+
+      if (accessError) {
+        logger.error('Error fetching profile access:', accessError);
+        setAccessibleProfiles([]);
+      } else {
+        const accessibleIds = accessData?.map(a => a.bd_profile_id) || [];
+        const filtered = (allProfiles || []).filter(p => accessibleIds.includes(p.id));
+        setAccessibleProfiles(filtered);
+      }
+    }
+    
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchAccessibleProfiles();
+    }
+  }, [user]);
+
+  return {
+    accessibleProfiles,
+    loading,
+    fetchAccessibleProfiles,
+  };
+};

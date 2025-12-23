@@ -4,7 +4,8 @@ import { updateSettings } from '@/services/dataService';
 import { useBDProfiles, BDProfile } from '@/hooks/useBDProfiles';
 import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog } from 'lucide-react';
+import { useProfileAccess } from '@/hooks/useProfileAccess';
+import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SettingsProps {
@@ -17,6 +18,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const { profiles, loading: profilesLoading, addProfile, updateProfile, deleteProfile } = useBDProfiles();
   const { members, loading: membersLoading, updateMemberRole } = useTeamMembers();
   const { role: currentUserRole } = useUserRole();
+  const { accessList, loading: accessLoading, getUserAccess, updateUserAccess } = useProfileAccess();
   const isAdmin = currentUserRole === UserRole.ADMIN;
   
   // Profile management state
@@ -25,6 +27,12 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const [profileForm, setProfileForm] = useState({ name: '', description: '', is_active: true });
   const [submitting, setSubmitting] = useState(false);
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
+  
+  // Access management state
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const [editingMemberAccess, setEditingMemberAccess] = useState<TeamMember | null>(null);
+  const [selectedProfileAccess, setSelectedProfileAccess] = useState<string[]>([]);
+  const [savingAccess, setSavingAccess] = useState(false);
 
   const handleSave = () => {
     updateSettings(localSettings);
@@ -81,6 +89,28 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
     setUpdatingRole(userId);
     await updateMemberRole(userId, newRole);
     setUpdatingRole(null);
+  };
+
+  const openAccessModal = (member: TeamMember) => {
+    setEditingMemberAccess(member);
+    setSelectedProfileAccess(getUserAccess(member.id));
+    setShowAccessModal(true);
+  };
+
+  const handleAccessChange = (profileId: string) => {
+    setSelectedProfileAccess(prev => 
+      prev.includes(profileId) 
+        ? prev.filter(id => id !== profileId)
+        : [...prev, profileId]
+    );
+  };
+
+  const handleSaveAccess = async () => {
+    if (!editingMemberAccess) return;
+    setSavingAccess(true);
+    await updateUserAccess(editingMemberAccess.id, selectedProfileAccess);
+    setSavingAccess(false);
+    setShowAccessModal(false);
   };
 
   const getRoleBadgeColor = (role: TeamMember['role']) => {
@@ -209,47 +239,81 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                 <p className="text-muted-foreground text-sm py-4">No team members found.</p>
               ) : (
                 <div className="space-y-3">
-                  {members.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                          <span className="text-sm font-bold text-primary">
-                            {(member.full_name || member.email || '?').charAt(0).toUpperCase()}
-                          </span>
+                  {members.map((member) => {
+                    const memberAccess = getUserAccess(member.id);
+                    const accessCount = memberAccess.length;
+                    const isAdminRole = member.role === 'admin';
+                    
+                    return (
+                      <div
+                        key={member.id}
+                        className="p-4 bg-secondary/50 rounded-lg border border-border/50"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                              <span className="text-sm font-bold text-primary">
+                                {(member.full_name || member.email || '?').charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground">{member.full_name || 'Unnamed User'}</p>
+                              <p className="text-xs text-muted-foreground">{member.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`px-2 py-1 text-xs font-medium rounded border ${getRoleBadgeColor(member.role)}`}>
+                              {member.role || 'No Role'}
+                            </span>
+                            <select
+                              value={member.role || ''}
+                              onChange={(e) => handleRoleChange(member.id, e.target.value as 'admin' | 'manager' | 'bd_member')}
+                              disabled={updatingRole === member.id}
+                              className="px-3 py-1.5 text-sm bg-input border border-border rounded-lg input-focus"
+                            >
+                              <option value="bd_member">BD Member</option>
+                              <option value="manager">Manager</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                            {updatingRole === member.id && (
+                              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-foreground">{member.full_name || 'Unnamed User'}</p>
-                          <p className="text-xs text-muted-foreground">{member.email}</p>
+                        
+                        {/* Profile Access Row */}
+                        <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Key className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Profile Access:</span>
+                            {isAdminRole ? (
+                              <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded">
+                                All Profiles (Admin)
+                              </span>
+                            ) : accessCount === 0 ? (
+                              <span className="text-xs text-destructive">No access assigned</span>
+                            ) : (
+                              <span className="text-xs text-foreground">
+                                {accessCount} profile{accessCount !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                          {!isAdminRole && (
+                            <button
+                              onClick={() => openAccessModal(member)}
+                              className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors"
+                            >
+                              Manage Access
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-2 py-1 text-xs font-medium rounded border ${getRoleBadgeColor(member.role)}`}>
-                          {member.role || 'No Role'}
-                        </span>
-                        <select
-                          value={member.role || ''}
-                          onChange={(e) => handleRoleChange(member.id, e.target.value as 'admin' | 'manager' | 'bd_member')}
-                          disabled={updatingRole === member.id}
-                          className="px-3 py-1.5 text-sm bg-input border border-border rounded-lg input-focus"
-                        >
-                          <option value="bd_member">BD Member</option>
-                          <option value="manager">Manager</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                        {updatingRole === member.id && (
-                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
               <p className="mt-4 text-xs text-muted-foreground">
-                Admins can see all proposals and manage team roles. Managers and BD Members can only see their own proposals.
-                New team members should sign up at the site, then an admin can assign their role here.
+                Admins have access to all profiles. Other roles need explicit profile access to view dashboard and proposals for those profiles.
               </p>
             </div>
           )}
@@ -433,6 +497,93 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Access Modal */}
+      {showAccessModal && editingMemberAccess && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-fade-in">
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <div>
+                <h3 className="text-xl font-bold text-foreground">Manage Profile Access</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {editingMemberAccess.full_name || editingMemberAccess.email}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAccessModal(false)}
+                className="p-2 hover:bg-secondary rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Select which BD profiles this user can access:
+              </p>
+              
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {profiles.map((profile) => (
+                  <label
+                    key={profile.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors"
+                  >
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={selectedProfileAccess.includes(profile.id)}
+                        onChange={() => handleAccessChange(profile.id)}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                        selectedProfileAccess.includes(profile.id)
+                          ? 'bg-primary border-primary' 
+                          : 'border-border'
+                      }`}>
+                        {selectedProfileAccess.includes(profile.id) && (
+                          <Check className="w-3 h-3 text-primary-foreground" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">{profile.name}</p>
+                      {profile.description && (
+                        <p className="text-xs text-muted-foreground">{profile.description}</p>
+                      )}
+                    </div>
+                    <div className={`w-2 h-2 rounded-full ${profile.is_active ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                  </label>
+                ))}
+              </div>
+
+              {profiles.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">
+                  No BD profiles available. Create profiles first.
+                </p>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setShowAccessModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={savingAccess}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveAccess}
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                  disabled={savingAccess}
+                >
+                  {savingAccess && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Save Access
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -8,20 +8,30 @@ import { Settings } from '@/components/Settings';
 import { PlaceholderView } from '@/components/PlaceholderView';
 import { NavigationTab, User, AppSettings, UserRole } from '@/types';
 import { getSettings } from '@/services/dataService';
-import { useBDProfiles } from '@/hooks/useBDProfiles';
+import { useBDProfiles, useAccessibleProfiles } from '@/hooks/useBDProfiles';
 import { useUserRole } from '@/hooks/useUserRole';
 
 const Index = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { profiles: bdProfiles, loading: profilesLoading } = useBDProfiles();
+  const { accessibleProfiles, loading: accessLoading } = useAccessibleProfiles();
   const { role: userRole, loading: roleLoading } = useUserRole();
   
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [settings, setSettings] = useState<AppSettings>(getSettings());
 
-  // Convert DB profiles to the format expected by components
-  const profiles = bdProfiles.filter(p => p.is_active).map(p => ({
+  // All profiles (for settings/admin)
+  const allProfiles = bdProfiles.filter(p => p.is_active).map(p => ({
+    id: p.id,
+    name: p.name,
+    specialization: p.description || '',
+    hourly_rate: 0,
+    active: p.is_active,
+  }));
+
+  // Accessible profiles (filtered by user access)
+  const userAccessibleProfiles = accessibleProfiles.map(p => ({
     id: p.id,
     name: p.name,
     specialization: p.description || '',
@@ -48,7 +58,7 @@ const Index = () => {
   };
 
   // Show loading state while checking auth or loading profiles
-  if (authLoading || profilesLoading || roleLoading) {
+  if (authLoading || profilesLoading || roleLoading || accessLoading) {
     return (
       <div className="flex h-screen bg-background items-center justify-center">
         <div className="text-center">
@@ -69,7 +79,7 @@ const Index = () => {
       case 'dashboard':
         return (
           <Dashboard
-            profiles={profiles}
+            profiles={userAccessibleProfiles}
             settings={settings}
             user={currentUser}
           />
@@ -77,7 +87,7 @@ const Index = () => {
       case 'proposals':
         return (
           <Proposals
-            profiles={profiles}
+            profiles={userAccessibleProfiles}
             user={currentUser}
           />
         );
