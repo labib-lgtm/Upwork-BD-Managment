@@ -8,6 +8,7 @@ import {
   Package, 
   Settings, 
   ChevronDown,
+  LogOut,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -15,6 +16,7 @@ interface SidebarProps {
   onTabChange: (tab: NavigationTab) => void;
   currentUser: User;
   onUserChange: (user: User) => void;
+  onSignOut?: () => void;
 }
 
 const navItems: { id: NavigationTab; label: string; icon: React.ReactNode }[] = [
@@ -50,6 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onTabChange,
   currentUser,
   onUserChange,
+  onSignOut,
 }) => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
@@ -113,37 +116,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {userDropdownOpen && (
             <div className="absolute bottom-full left-0 right-0 mb-2 bg-popover border border-border rounded-lg shadow-lg overflow-hidden animate-fade-in">
               <div className="p-2 border-b border-border">
-                <p className="text-xs text-muted-foreground px-2 py-1">Switch User (Demo)</p>
+                <p className="text-xs text-muted-foreground px-2 py-1">Account</p>
               </div>
-              {MOCK_USERS.map((user) => (
+              {onSignOut && (
                 <button
-                  key={user.id}
                   onClick={() => {
-                    onUserChange(user);
+                    onSignOut();
                     setUserDropdownOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors ${
-                    currentUser.id === user.id ? 'bg-muted' : ''
-                  }`}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-destructive/10 transition-colors text-destructive"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <span className="text-sm font-bold text-primary">
-                      {user.name.charAt(0)}
-                    </span>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-foreground">{user.name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {user.role.replace('_', ' ')}
-                      {user.linked_profile_id && (
-                        <span className="ml-1 text-primary">
-                          • {MOCK_PROFILES.find(p => p.id === user.linked_profile_id)?.name}
-                        </span>
-                      )}
-                    </p>
-                  </div>
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm font-medium">Sign Out</span>
                 </button>
-              ))}
+              )}
             </div>
           )}
         </div>
