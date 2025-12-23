@@ -63,7 +63,6 @@ const Index = () => {
       case 'dashboard':
         return (
           <Dashboard
-            jobs={jobs}
             profiles={profiles}
             settings={settings}
             user={currentUser}

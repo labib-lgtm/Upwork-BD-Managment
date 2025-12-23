@@ -1,50 +1,174 @@
-import React, { useState, useEffect } from 'react';
-import { Job, BDProfile, AppSettings, KPIMetrics, UserRole, User } from '@/types';
-import { calculateKPIMetrics, calculateTotals } from '@/services/dataService';
-import { TrendingUp, TrendingDown, DollarSign, Eye, MessageSquare, Award, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { BDProfile, AppSettings, KPIMetrics, UserRole, User } from '@/types';
+import { useProposals, Proposal } from '@/hooks/useProposals';
+import { TrendingUp, TrendingDown, DollarSign, Eye, MessageSquare, Award, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 interface DashboardProps {
-  jobs: Job[];
   profiles: BDProfile[];
   settings: AppSettings;
   user: User;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ jobs, profiles, settings, user }) => {
+// Calculate metrics from database proposals
+const calculateMetricsFromProposals = (
+  proposals: Proposal[],
+  selectedProfileNames: string[],
+  fiscalYearStart: number,
+  targetYear: number,
+  settings: AppSettings
+): KPIMetrics[] => {
+  const scopeProposals = proposals.filter((p) =>
+    selectedProfileNames.includes(p.profile_name)
+  );
+  
+  const months: KPIMetrics[] = [];
+  const monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  const fiscalMonthOrder: number[] = [];
+
+  for (let i = 0; i < 12; i++) {
+    fiscalMonthOrder.push((fiscalYearStart - 1 + i) % 12);
+  }
+
+  fiscalMonthOrder.forEach((monthIndex) => {
+    const isSecondHalf = monthIndex < fiscalYearStart - 1;
+    const year = isSecondHalf ? targetYear : targetYear - 1;
+
+    const proposalsInMonth = scopeProposals.filter((p) => {
+      const d = new Date(p.created_at);
+      return d.getMonth() === monthIndex && d.getFullYear() === year;
+    });
+
+    const sent = proposalsInMonth.length;
+    const connects = proposalsInMonth.reduce((sum, p) => sum + (p.connects_used || 0), 0);
+    const views = proposalsInMonth.filter((p) => p.status === 'viewed' || p.status === 'interviewed' || p.status === 'won').length;
+    const interviews = proposalsInMonth.filter((p) => p.status === 'interviewed' || p.status === 'won').length;
+    const closes = proposalsInMonth.filter((p) => p.status === 'won').length;
+
+    const revenue = proposalsInMonth
+      .filter((p) => p.status === 'won')
+      .reduce((sum, p) => sum + (p.proposed_amount || 0), 0);
+    const refunds = 0; // Not tracked in current schema
+    const spend = connects * settings.connect_cost;
+    const netRevenue = revenue - refunds;
+
+    months.push({
+      periodLabel: monthNames[monthIndex],
+      connects,
+      sent,
+      views,
+      interviews,
+      closes,
+      viewRate: sent > 0 ? (views / sent) * 100 : 0,
+      interviewRate: views > 0 ? (interviews / views) * 100 : 0,
+      closeRate: interviews > 0 ? (closes / interviews) * 100 : 0,
+      spend,
+      revenue: netRevenue,
+      refunds,
+      roas: spend > 0 ? netRevenue / spend : 0,
+      aov: closes > 0 ? netRevenue / closes : 0,
+      aovNeeded: settings.target_roas > 0 && closes > 0 
+        ? (spend * settings.target_roas) / closes 
+        : 0,
+      costPerProposal: sent > 0 ? spend / sent : 0,
+      costPerView: views > 0 ? spend / views : 0,
+      costPerInterview: interviews > 0 ? spend / interviews : 0,
+      costPerClose: closes > 0 ? spend / closes : 0,
+    });
+  });
+
+  return months;
+};
+
+const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
+  const total: KPIMetrics = {
+    periodLabel: 'TOTAL',
+    connects: 0,
+    sent: 0,
+    views: 0,
+    interviews: 0,
+    closes: 0,
+    viewRate: 0,
+    interviewRate: 0,
+    closeRate: 0,
+    spend: 0,
+    revenue: 0,
+    refunds: 0,
+    roas: 0,
+    aov: 0,
+    aovNeeded: 0,
+    costPerProposal: 0,
+    costPerView: 0,
+    costPerInterview: 0,
+    costPerClose: 0,
+  };
+
+  metrics.forEach((m) => {
+    total.connects += m.connects;
+    total.sent += m.sent;
+    total.views += m.views;
+    total.interviews += m.interviews;
+    total.closes += m.closes;
+    total.spend += m.spend;
+    total.revenue += m.revenue;
+    total.refunds += m.refunds;
+  });
+
+  total.viewRate = total.sent > 0 ? (total.views / total.sent) * 100 : 0;
+  total.interviewRate = total.views > 0 ? (total.interviews / total.views) * 100 : 0;
+  total.closeRate = total.interviews > 0 ? (total.closes / total.interviews) * 100 : 0;
+  total.roas = total.spend > 0 ? total.revenue / total.spend : 0;
+  total.aov = total.closes > 0 ? total.revenue / total.closes : 0;
+  total.costPerProposal = total.sent > 0 ? total.spend / total.sent : 0;
+  total.costPerView = total.views > 0 ? total.spend / total.views : 0;
+  total.costPerInterview = total.interviews > 0 ? total.spend / total.interviews : 0;
+  total.costPerClose = total.closes > 0 ? total.spend / total.closes : 0;
+
+  return total;
+};
+
+export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }) => {
+  const { proposals, loading } = useProposals();
   const isRestricted = user.role === UserRole.BD_MEMBER && !!user.linked_profile_id;
 
-  const [selectedProfileIds, setSelectedProfileIds] = useState<string[]>(
-    isRestricted && user.linked_profile_id
-      ? [user.linked_profile_id]
-      : profiles.map((p) => p.id)
+  const [selectedProfileNames, setSelectedProfileNames] = useState<string[]>(
+    profiles.map((p) => p.name)
   );
 
   const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     if (isRestricted && user.linked_profile_id) {
-      setSelectedProfileIds([user.linked_profile_id]);
+      const linkedProfile = profiles.find(p => p.id === user.linked_profile_id);
+      if (linkedProfile) {
+        setSelectedProfileNames([linkedProfile.name]);
+      }
     } else {
-      setSelectedProfileIds(profiles.map((p) => p.id));
+      setSelectedProfileNames(profiles.map((p) => p.name));
     }
   }, [user, profiles, isRestricted]);
 
-  const metrics = calculateKPIMetrics(
-    jobs,
-    selectedProfileIds,
-    settings.fiscal_year_start_month,
-    fiscalYear,
-    settings
+  const metrics = useMemo(() => 
+    calculateMetricsFromProposals(
+      proposals,
+      selectedProfileNames,
+      settings.fiscal_year_start_month,
+      fiscalYear,
+      settings
+    ),
+    [proposals, selectedProfileNames, settings, fiscalYear]
   );
 
-  const totals = calculateTotals(metrics);
+  const totals = useMemo(() => calculateTotals(metrics), [metrics]);
 
-  const toggleProfile = (profileId: string) => {
+  const toggleProfile = (profileName: string) => {
     if (isRestricted) return;
-    setSelectedProfileIds((prev) =>
-      prev.includes(profileId)
-        ? prev.filter((id) => id !== profileId)
-        : [...prev, profileId]
+    setSelectedProfileNames((prev) =>
+      prev.includes(profileName)
+        ? prev.filter((name) => name !== profileName)
+        : [...prev, profileName]
     );
   };
 
@@ -123,6 +247,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ jobs, profiles, settings, 
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
@@ -131,7 +263,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ jobs, profiles, settings, 
           <div>
             <h2 className="text-2xl font-bold text-foreground">Performance Dashboard</h2>
             <p className="text-sm text-muted-foreground">
-              Fiscal Year {fiscalYear - 1}/{fiscalYear}
+              Fiscal Year {fiscalYear - 1}/{fiscalYear} • {proposals.length} total proposals
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -161,10 +293,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ jobs, profiles, settings, 
           {profiles.slice(0, 4).map((profile) => (
             <button
               key={profile.id}
-              onClick={() => toggleProfile(profile.id)}
+              onClick={() => toggleProfile(profile.name)}
               disabled={isRestricted}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                selectedProfileIds.includes(profile.id)
+                selectedProfileNames.includes(profile.name)
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-secondary text-muted-foreground hover:bg-muted'
               } ${isRestricted ? 'opacity-50 cursor-not-allowed' : ''}`}
