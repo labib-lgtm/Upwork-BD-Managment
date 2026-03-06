@@ -1,86 +1,49 @@
 
 
-# Proposals Page Improvements Plan
+# Proposals Stats Timeline + Dashboard Data Fix
 
-## 1. Database Migration — Add Missing Columns
+## Problems Identified
 
-Add 6 new nullable/default columns to the `proposals` table so existing data is unaffected:
+1. **Proposals page has no timeline-based stats filtering** — the summary stats bar shows overall totals but cannot be filtered by date range or month, making it hard to evaluate performance over time.
 
-| Column | Type | Default |
-|--------|------|---------|
-| `job_link` | text | NULL |
-| `date_submitted` | date | NULL (fallback to `created_at`) |
-| `deal_value` | numeric | 0 |
-| `refund_amount` | numeric | 0 |
-| `competition_bucket` | text | NULL |
-| `video_sent` | boolean | false |
+2. **Dashboard uses `created_at` instead of `date_submitted`** — line 42 of Dashboard.tsx filters proposals by `new Date(p.created_at)`, but proposals now have a `date_submitted` field. This means the dashboard bins proposals into months based on when the record was created, not when the proposal was actually submitted.
 
-## 2. Fix Status Dropdowns
+3. **Dashboard ignores `deal_value` and `refund_amount`** — revenue is calculated from `proposed_amount` (line 53-54) instead of `deal_value`, and refunds are hardcoded to 0 (line 55) despite `refund_amount` being available.
 
-Replace current options to align with Upwork lifecycle and dashboard metrics:
+4. **Potential 1000-row limit** — `useProposals` fetches with `supabase.from('proposals').select('*')` which caps at 1000 rows. If the team has more, data will be silently truncated.
 
-- **Status**: `pending` → `viewed` → `interviewed` → `won` → `lost` → `archived` (keep as-is, these are correct)
-- **Payment Status**: Change from `not_started / in_progress / completed / refunded` to `Verified / Unverified / Unknown` — matching the Upwork client payment verification model used in the `Job` type
+---
 
-## 3. Update Hook & Types
+## Plan
 
-Update `useProposals.ts`:
-- Add new fields to `Proposal` interface and `ProposalFormData`
-- Include new fields in `addProposal` and `updateProposal` functions
+### 1. Add Timeline Filter to Proposals Page
 
-## 4. Update Proposal Form
+Add a date range filter (month/year picker or start/end date inputs) above the summary stats bar in `Proposals.tsx`:
+- Two date inputs: "From" and "To" (default: current month)
+- Filter `filteredAndSortedProposals` by `date_submitted` (fallback to `created_at`)
+- Summary stats recalculate based on the filtered date range
+- Add a quick-select for "This Month", "Last Month", "This Quarter", "This FY"
 
-Add new fields to the form in `Proposals.tsx`:
+### 2. Fix Dashboard Date Logic
 
-- **Quick Entry section**: Add `Job Link` (URL input), `Date Submitted` (date picker), `Competition Bucket` (select: `<5`, `5-10`, `10-15`, `20-50`, `50+`), `Video Sent` (checkbox alongside Boosted)
-- **Full Edit section**: Add `Deal Value` and `Refund Amount` number inputs (outcome fields, shown when expanding)
+In `Dashboard.tsx` `calculateMetricsFromProposals`:
+- Change line 42 from `new Date(p.created_at)` to `new Date(p.date_submitted || p.created_at)` so proposals are bucketed by submission date
 
-## 5. Add Search Bar
+### 3. Fix Dashboard Revenue Calculations
 
-Add a text search input in the header/filter area that filters proposals by `job_title`, `profile_name`, or `notes` (client-side filtering on loaded data).
+In `Dashboard.tsx` `calculateMetricsFromProposals`:
+- Change revenue calculation (line 53-54) to use `deal_value` instead of `proposed_amount`
+- Change refunds (line 55) to use `refund_amount` from proposals: `proposalsInMonth.filter(p => p.status === 'won').reduce((sum, p) => sum + (p.refund_amount || 0), 0)`
 
-## 6. Add Column Sorting
+### 4. Handle 1000-Row Limit
 
-Make table headers clickable to sort by that column (date, budget, proposed amount, connects, status). Track `sortField` and `sortDirection` in state. Toggle ascending/descending on click with a visual arrow indicator.
+In `useProposals.ts`:
+- Add `.limit(5000)` or implement pagination in the fetch query to avoid silent truncation
+- Alternatively, for the dashboard, create an RPC function for aggregated stats (future improvement)
 
-## 7. Add Pagination
+### Files to Change
 
-Add pagination below the table:
-- 25 rows per page default
-- Use the existing `Pagination` UI component from `src/components/ui/pagination.tsx`
-- Slice `filteredProposals` by current page
-
-## 8. Add Summary Stats Bar
-
-Add a stats row between filters and the table showing key metrics calculated from `filteredProposals`:
-- **Total Proposals** (count)
-- **Total Connects Spent** (sum of `connects_used`)
-- **Win Rate** (won / total %)
-- **View Rate** (viewed / total %)
-- **Total Deal Value** (sum of `deal_value` for won)
-- **Avg Budget** (average of `budget`)
-
-## 9. Add CSV Export
-
-Add a "Export CSV" button in the header next to "Add Proposal":
-- Generate CSV from current `filteredProposals` with all columns
-- Trigger browser download as `proposals-YYYY-MM-DD.csv`
-- No external library needed — use `Blob` + `URL.createObjectURL`
-
-## 10. Update Table Columns
-
-Update the table to show new columns:
-- Add `Job Link` as a clickable external link icon
-- Show `date_submitted` (or `created_at` fallback) in the Date column
-- Add `Competition` column
-- Add `Video` column (checkmark icon)
-- Keep Deal Value and Refund in the expandable edit form only (not in table, to avoid clutter)
-
-## Implementation Order
-
-1. Database migration (new columns)
-2. Update `useProposals.ts` hook and types
-3. Update form with new fields and fixed dropdowns
-4. Add search, sort, pagination, stats, CSV export to `Proposals.tsx`
-5. Update table columns display
+- `src/components/Proposals.tsx` — add timeline filter UI and date-based filtering
+- `src/components/Dashboard.tsx` — fix date field, revenue, and refund calculations
+- `src/hooks/useProposals.ts` — increase query limit
 
