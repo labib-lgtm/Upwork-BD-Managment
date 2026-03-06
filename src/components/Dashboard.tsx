@@ -142,7 +142,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }
     profiles.map((p) => p.name)
   );
 
-  const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear());
+  const [fiscalYear, setFiscalYear] = useState(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // 1-indexed
+    return currentMonth >= settings.fiscal_year_start_month
+      ? now.getFullYear() + 1
+      : now.getFullYear();
+  });
 
   useEffect(() => {
     if (isRestricted && user.linked_profile_id) {
