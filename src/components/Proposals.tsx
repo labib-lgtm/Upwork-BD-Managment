@@ -1,21 +1,32 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BDProfile, User, UserRole } from '@/types';
 import { useProposals, Proposal, ProposalFormData } from '@/hooks/useProposals';
-import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { format } from 'date-fns';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface ProposalsProps {
   profiles: BDProfile[];
   user: User;
 }
 
-// Status and type options
 const STATUS_OPTIONS = ['pending', 'viewed', 'interviewed', 'won', 'lost', 'archived'] as const;
 const JOB_TYPE_OPTIONS = ['fixed', 'hourly'] as const;
-const PAYMENT_STATUS_OPTIONS = ['not_started', 'in_progress', 'completed', 'refunded'] as const;
+const PAYMENT_STATUS_OPTIONS = ['Verified', 'Unverified', 'Unknown'] as const;
+const COMPETITION_BUCKET_OPTIONS = ['<5', '5-10', '10-15', '20-50', '50+'] as const;
+const ROWS_PER_PAGE = 25;
 
 interface LocalFormData {
   profile_name: string;
   job_title: string;
+  job_link: string;
   job_type: string;
   status: string;
   payment_status: string;
@@ -23,6 +34,7 @@ interface LocalFormData {
   proposed_amount: number;
   connects_used: number;
   boosted: boolean;
+  video_sent: boolean;
   invite_sent: number;
   interviewing_at_submission: number;
   last_viewed_text: string;
@@ -30,19 +42,25 @@ interface LocalFormData {
   client_rating: number | null;
   client_reviews: number | null;
   client_total_spent: number | null;
+  competition_bucket: string;
+  date_submitted: string;
+  deal_value: number;
+  refund_amount: number;
   notes: string;
 }
 
 const getDefaultFormData = (profileName: string): LocalFormData => ({
   profile_name: profileName,
   job_title: '',
+  job_link: '',
   job_type: 'fixed',
   status: 'pending',
-  payment_status: 'not_started',
+  payment_status: 'Verified',
   budget: 0,
   proposed_amount: 0,
   connects_used: 6,
   boosted: false,
+  video_sent: false,
   invite_sent: 0,
   interviewing_at_submission: 0,
   last_viewed_text: '',
@@ -50,8 +68,15 @@ const getDefaultFormData = (profileName: string): LocalFormData => ({
   client_rating: null,
   client_reviews: null,
   client_total_spent: null,
+  competition_bucket: '',
+  date_submitted: format(new Date(), 'yyyy-MM-dd'),
+  deal_value: 0,
+  refund_amount: 0,
   notes: '',
 });
+
+type SortField = 'date' | 'budget' | 'proposed_amount' | 'connects_used' | 'status' | 'profile_name' | 'job_title';
+type SortDirection = 'asc' | 'desc';
 
 export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
   const { proposals, loading, addProposal, updateProposal, deleteProposal } = useProposals();
@@ -61,14 +86,17 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
   const [showFullForm, setShowFullForm] = useState(false);
   const [lastUsedProfile, setLastUsedProfile] = useState<string>(profiles[0]?.name || '');
   const [submitting, setSubmitting] = useState(false);
-  
-  const [formData, setFormData] = useState<LocalFormData>(() => 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const [formData, setFormData] = useState<LocalFormData>(() =>
     getDefaultFormData(lastUsedProfile)
   );
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterProfile, setFilterProfile] = useState<string>('all');
 
-  // Auto-adjust connects when boosted changes
   useEffect(() => {
     if (!editingProposal) {
       setFormData(prev => ({
@@ -78,7 +106,6 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     }
   }, [formData.boosted, editingProposal]);
 
-  // Keyboard shortcut for new proposal
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'n' && !showModal) {
       e.preventDefault();
@@ -91,16 +118,103 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  const filteredProposals = proposals
-    .filter((p) => filterStatus === 'all' || p.status === filterStatus)
-    .filter((p) => {
-      if (isRestricted && user.linked_profile_id) {
-        const linkedProfile = profiles.find(pr => pr.id === user.linked_profile_id);
-        return linkedProfile ? p.profile_name === linkedProfile.name : true;
+  const filteredAndSortedProposals = useMemo(() => {
+    let result = proposals
+      .filter((p) => filterStatus === 'all' || p.status === filterStatus)
+      .filter((p) => {
+        if (isRestricted && user.linked_profile_id) {
+          const linkedProfile = profiles.find(pr => pr.id === user.linked_profile_id);
+          return linkedProfile ? p.profile_name === linkedProfile.name : true;
+        }
+        return filterProfile === 'all' || p.profile_name === filterProfile;
+      });
+
+    // Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p =>
+        p.job_title.toLowerCase().includes(q) ||
+        p.profile_name.toLowerCase().includes(q) ||
+        (p.notes && p.notes.toLowerCase().includes(q)) ||
+        (p.client_country && p.client_country.toLowerCase().includes(q))
+      );
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case 'date':
+          cmp = new Date(a.date_submitted || a.created_at).getTime() - new Date(b.date_submitted || b.created_at).getTime();
+          break;
+        case 'budget':
+          cmp = (a.budget || 0) - (b.budget || 0);
+          break;
+        case 'proposed_amount':
+          cmp = (a.proposed_amount || 0) - (b.proposed_amount || 0);
+          break;
+        case 'connects_used':
+          cmp = (a.connects_used || 0) - (b.connects_used || 0);
+          break;
+        case 'status':
+          cmp = a.status.localeCompare(b.status);
+          break;
+        case 'profile_name':
+          cmp = a.profile_name.localeCompare(b.profile_name);
+          break;
+        case 'job_title':
+          cmp = a.job_title.localeCompare(b.job_title);
+          break;
       }
-      return filterProfile === 'all' || p.profile_name === filterProfile;
-    })
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return sortDirection === 'asc' ? cmp : -cmp;
+    });
+
+    return result;
+  }, [proposals, filterStatus, filterProfile, isRestricted, user.linked_profile_id, profiles, searchQuery, sortField, sortDirection]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const fp = filteredAndSortedProposals;
+    const total = fp.length;
+    const totalConnects = fp.reduce((s, p) => s + (p.connects_used || 0), 0);
+    const wonCount = fp.filter(p => p.status === 'won').length;
+    const viewedCount = fp.filter(p => ['viewed', 'interviewed', 'won', 'lost'].includes(p.status)).length;
+    const totalDealValue = fp.filter(p => p.status === 'won').reduce((s, p) => s + (p.deal_value || 0), 0);
+    const avgBudget = total > 0 ? fp.reduce((s, p) => s + (p.budget || 0), 0) / total : 0;
+    return {
+      total,
+      totalConnects,
+      winRate: total > 0 ? ((wonCount / total) * 100).toFixed(1) : '0',
+      viewRate: total > 0 ? ((viewedCount / total) * 100).toFixed(1) : '0',
+      totalDealValue,
+      avgBudget,
+    };
+  }, [filteredAndSortedProposals]);
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedProposals.length / ROWS_PER_PAGE));
+  const paginatedProposals = filteredAndSortedProposals.slice(
+    (currentPage - 1) * ROWS_PER_PAGE,
+    currentPage * ROWS_PER_PAGE
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, filterProfile, searchQuery]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 opacity-40" />;
+    return sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
+  };
 
   const openNewProposalModal = () => {
     setEditingProposal(null);
@@ -112,10 +226,11 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
   const handleSubmit = async (e: React.FormEvent, addAnother: boolean = false) => {
     e.preventDefault();
     setSubmitting(true);
-    
+
     const proposalData: ProposalFormData = {
       profile_name: formData.profile_name,
       job_title: formData.job_title,
+      job_link: formData.job_link || null,
       job_type: formData.job_type,
       status: formData.status,
       payment_status: formData.payment_status,
@@ -123,6 +238,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       proposed_amount: formData.proposed_amount,
       connects_used: formData.connects_used,
       boosted: formData.boosted,
+      video_sent: formData.video_sent,
       invite_sent: formData.invite_sent,
       interviewing_at_submission: formData.interviewing_at_submission,
       last_viewed_text: formData.last_viewed_text || null,
@@ -130,6 +246,10 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       client_rating: formData.client_rating,
       client_reviews: formData.client_reviews,
       client_total_spent: formData.client_total_spent,
+      competition_bucket: formData.competition_bucket || null,
+      date_submitted: formData.date_submitted || null,
+      deal_value: formData.deal_value,
+      refund_amount: formData.refund_amount,
       notes: formData.notes || null,
     };
 
@@ -142,9 +262,9 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
         setLastUsedProfile(formData.profile_name);
       }
     }
-    
+
     setSubmitting(false);
-    
+
     if (success) {
       if (addAnother) {
         setFormData(getDefaultFormData(formData.profile_name));
@@ -167,6 +287,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     setFormData({
       profile_name: proposal.profile_name,
       job_title: proposal.job_title,
+      job_link: proposal.job_link || '',
       job_type: proposal.job_type,
       status: proposal.status,
       payment_status: proposal.payment_status,
@@ -174,6 +295,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       proposed_amount: proposal.proposed_amount,
       connects_used: proposal.connects_used,
       boosted: proposal.boosted,
+      video_sent: proposal.video_sent ?? false,
       invite_sent: proposal.invite_sent,
       interviewing_at_submission: proposal.interviewing_at_submission,
       last_viewed_text: proposal.last_viewed_text || '',
@@ -181,6 +303,10 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       client_rating: proposal.client_rating,
       client_reviews: proposal.client_reviews,
       client_total_spent: proposal.client_total_spent,
+      competition_bucket: proposal.competition_bucket || '',
+      date_submitted: proposal.date_submitted || '',
+      deal_value: proposal.deal_value ?? 0,
+      refund_amount: proposal.refund_amount ?? 0,
       notes: proposal.notes || '',
     });
     setShowModal(true);
@@ -192,18 +318,39 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     }
   };
 
+  const exportCSV = () => {
+    const headers = [
+      'Date Submitted', 'Profile', 'Job Title', 'Job Link', 'Status', 'Payment Status',
+      'Type', 'Budget', 'Proposed', 'Connects', 'Boosted', 'Video Sent', 'Competition',
+      'Invite Sent', 'Interviewing', 'Last Viewed', 'Client Country', 'Client Rating',
+      'Client Reviews', 'Client Total Spent', 'Deal Value', 'Refund Amount', 'Notes'
+    ];
+    const rows = filteredAndSortedProposals.map(p => [
+      p.date_submitted || format(new Date(p.created_at), 'yyyy-MM-dd'),
+      p.profile_name, p.job_title, p.job_link || '', p.status, p.payment_status,
+      p.job_type, p.budget, p.proposed_amount, p.connects_used, p.boosted ? 'Yes' : 'No',
+      p.video_sent ? 'Yes' : 'No', p.competition_bucket || '', p.invite_sent,
+      p.interviewing_at_submission, p.last_viewed_text || '', p.client_country || '',
+      p.client_rating || '', p.client_reviews || '', p.client_total_spent || '',
+      p.deal_value || 0, p.refund_amount || 0, (p.notes || '').replace(/"/g, '""')
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `proposals-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'won':
-        return 'status-badge-success';
-      case 'lost':
-        return 'status-badge-error';
-      case 'interviewed':
-        return 'status-badge-info';
-      case 'archived':
-        return 'status-badge-neutral';
-      default:
-        return 'status-badge-warning';
+      case 'won': return 'status-badge-success';
+      case 'lost': return 'status-badge-error';
+      case 'interviewed': return 'status-badge-info';
+      case 'archived': return 'status-badge-neutral';
+      default: return 'status-badge-warning';
     }
   };
 
@@ -223,20 +370,39 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
           <div>
             <h2 className="text-2xl font-bold text-foreground">Proposals</h2>
             <p className="text-sm text-muted-foreground">
-              {filteredProposals.length} proposals • <span className="text-muted-foreground/70">Ctrl+N to add</span>
+              {filteredAndSortedProposals.length} proposals • <span className="text-muted-foreground/70">Ctrl+N to add</span>
             </p>
           </div>
-          <button
-            onClick={openNewProposalModal}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity glow-primary-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Add Proposal
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={exportCSV}
+              className="flex items-center gap-2 px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-secondary transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Export CSV
+            </button>
+            <button
+              onClick={openNewProposalModal}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity glow-primary-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Proposal
+            </button>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="mt-4 flex gap-4">
+        {/* Filters & Search */}
+        <div className="mt-4 flex gap-4 flex-wrap">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search proposals..."
+              className="w-full pl-9 pr-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
+            />
+          </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -247,7 +413,6 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
               <option key={status} value={status}>{status}</option>
             ))}
           </select>
-
           {!isRestricted && (
             <select
               value={filterProfile}
@@ -255,7 +420,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
               className="px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
             >
               <option value="all">All Profiles</option>
-              {profiles.slice(0, 4).map((profile) => (
+              {profiles.map((profile) => (
                 <option key={profile.id} value={profile.name}>{profile.name}</option>
               ))}
             </select>
@@ -263,30 +428,59 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
         </div>
       </header>
 
+      {/* Summary Stats */}
+      <div className="px-6 py-3 border-b border-border bg-card/30 flex gap-6 flex-wrap text-sm">
+        <div><span className="text-muted-foreground">Total:</span> <span className="font-semibold text-foreground">{stats.total}</span></div>
+        <div><span className="text-muted-foreground">Connects:</span> <span className="font-semibold text-foreground">{stats.totalConnects}</span></div>
+        <div><span className="text-muted-foreground">Win Rate:</span> <span className="font-semibold text-foreground">{stats.winRate}%</span></div>
+        <div><span className="text-muted-foreground">View Rate:</span> <span className="font-semibold text-foreground">{stats.viewRate}%</span></div>
+        <div><span className="text-muted-foreground">Deal Value:</span> <span className="font-semibold text-foreground">${stats.totalDealValue.toLocaleString()}</span></div>
+        <div><span className="text-muted-foreground">Avg Budget:</span> <span className="font-semibold text-foreground">${Math.round(stats.avgBudget).toLocaleString()}</span></div>
+      </div>
+
       {/* Table */}
       <div className="flex-1 overflow-auto p-6">
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="data-table min-w-[1200px]">
+            <table className="data-table min-w-[1400px]">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Profile</th>
-                  <th>Job Title</th>
-                  <th className="w-24">Status</th>
+                  <th className="cursor-pointer select-none" onClick={() => handleSort('date')}>
+                    <div className="flex items-center gap-1">Date <SortIcon field="date" /></div>
+                  </th>
+                  <th className="cursor-pointer select-none" onClick={() => handleSort('profile_name')}>
+                    <div className="flex items-center gap-1">Profile <SortIcon field="profile_name" /></div>
+                  </th>
+                  <th className="cursor-pointer select-none" onClick={() => handleSort('job_title')}>
+                    <div className="flex items-center gap-1">Job Title <SortIcon field="job_title" /></div>
+                  </th>
+                  <th className="w-8 text-center">Link</th>
+                  <th className="w-24 cursor-pointer select-none" onClick={() => handleSort('status')}>
+                    <div className="flex items-center gap-1">Status <SortIcon field="status" /></div>
+                  </th>
                   <th className="w-20">Type</th>
-                  <th className="w-24 text-right">Budget</th>
-                  <th className="w-24 text-right">Proposed</th>
-                  <th className="w-16 text-center">Connects</th>
+                  <th className="w-24 text-right cursor-pointer select-none" onClick={() => handleSort('budget')}>
+                    <div className="flex items-center justify-end gap-1">Budget <SortIcon field="budget" /></div>
+                  </th>
+                  <th className="w-24 text-right cursor-pointer select-none" onClick={() => handleSort('proposed_amount')}>
+                    <div className="flex items-center justify-end gap-1">Proposed <SortIcon field="proposed_amount" /></div>
+                  </th>
+                  <th className="w-16 text-center cursor-pointer select-none" onClick={() => handleSort('connects_used')}>
+                    <div className="flex items-center justify-center gap-1">Conn <SortIcon field="connects_used" /></div>
+                  </th>
+                  <th className="w-16 text-center">Comp</th>
+                  <th className="w-12 text-center">Vid</th>
                   <th className="w-24 text-center">Last Viewed</th>
                   <th className="w-24 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredProposals.map((proposal) => (
+                {paginatedProposals.map((proposal) => (
                   <tr key={proposal.id}>
                     <td className="text-muted-foreground tabular-nums">
-                      {new Date(proposal.created_at).toLocaleDateString()}
+                      {proposal.date_submitted
+                        ? format(new Date(proposal.date_submitted), 'MMM d, yyyy')
+                        : format(new Date(proposal.created_at), 'MMM d, yyyy')}
                     </td>
                     <td>
                       <span className="px-2 py-1 bg-secondary rounded text-xs font-medium">
@@ -296,18 +490,37 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                     <td>
                       <span className="truncate max-w-[200px] block">{proposal.job_title}</span>
                     </td>
+                    <td className="text-center">
+                      {proposal.job_link ? (
+                        <a href={proposal.job_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
+                          <ExternalLink className="w-4 h-4 inline" />
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground/40">-</span>
+                      )}
+                    </td>
                     <td>
                       <span className={`status-badge ${getStatusBadgeClass(proposal.status)}`}>
                         {proposal.status}
                       </span>
                     </td>
                     <td className="text-muted-foreground">{proposal.job_type}</td>
-                    <td className="text-right tabular-nums">${proposal.budget.toLocaleString()}</td>
-                    <td className="text-right tabular-nums">${proposal.proposed_amount.toLocaleString()}</td>
+                    <td className="text-right tabular-nums">${(proposal.budget || 0).toLocaleString()}</td>
+                    <td className="text-right tabular-nums">${(proposal.proposed_amount || 0).toLocaleString()}</td>
                     <td className="text-center">
                       <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${proposal.boosted ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground'}`}>
                         {proposal.connects_used}
                       </span>
+                    </td>
+                    <td className="text-center text-xs text-muted-foreground">
+                      {proposal.competition_bucket || '-'}
+                    </td>
+                    <td className="text-center">
+                      {proposal.video_sent ? (
+                        <Video className="w-4 h-4 text-primary inline" />
+                      ) : (
+                        <span className="text-muted-foreground/40">-</span>
+                      )}
                     </td>
                     <td className="text-center text-xs text-muted-foreground">
                       {proposal.last_viewed_text || '-'}
@@ -330,9 +543,9 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                     </td>
                   </tr>
                 ))}
-                {filteredProposals.length === 0 && (
+                {paginatedProposals.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="text-center py-8 text-muted-foreground">
+                    <td colSpan={13} className="text-center py-8 text-muted-foreground">
                       No proposals found. Click "Add Proposal" to create one.
                     </td>
                   </tr>
@@ -341,6 +554,51 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
             </table>
           </div>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let page: number;
+                  if (totalPages <= 7) {
+                    page = i + 1;
+                  } else if (currentPage <= 4) {
+                    page = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    page = totalPages - 6 + i;
+                  } else {
+                    page = currentPage - 3 + i;
+                  }
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        isActive={currentPage === page}
+                        onClick={() => setCurrentPage(page)}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
 
       {/* Modal */}
@@ -365,7 +623,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
             </div>
 
             <form onSubmit={(e) => handleSubmit(e, false)} className="p-6 space-y-5">
-              {/* Quick Entry Fields - Always Visible */}
+              {/* Quick Entry Fields */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Profile</label>
@@ -376,7 +634,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                     className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
                     required
                   >
-                    {profiles.slice(0, 4).map((p) => (
+                    {profiles.map((p) => (
                       <option key={p.id} value={p.name}>{p.name}</option>
                     ))}
                   </select>
@@ -406,6 +664,17 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                   placeholder="Enter job title"
                   required
                   autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Job Link</label>
+                <input
+                  type="url"
+                  value={formData.job_link}
+                  onChange={(e) => setFormData({ ...formData, job_link: e.target.value })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  placeholder="https://www.upwork.com/jobs/..."
                 />
               </div>
 
@@ -444,7 +713,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Connects Used</label>
                   <input
@@ -463,10 +732,33 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                     className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
                   >
                     {PAYMENT_STATUS_OPTIONS.map((status) => (
-                      <option key={status} value={status}>{status.replace('_', ' ')}</option>
+                      <option key={status} value={status}>{status}</option>
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Competition</label>
+                  <select
+                    value={formData.competition_bucket}
+                    onChange={(e) => setFormData({ ...formData, competition_bucket: e.target.value })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  >
+                    <option value="">Select...</option>
+                    {COMPETITION_BUCKET_OPTIONS.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Date Submitted</label>
+                <input
+                  type="date"
+                  value={formData.date_submitted}
+                  onChange={(e) => setFormData({ ...formData, date_submitted: e.target.value })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                />
               </div>
 
               {/* At-Submission Metrics */}
@@ -509,7 +801,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
               </div>
 
               {/* Quick Checkboxes */}
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-6">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <div className="relative">
                     <input
@@ -519,16 +811,28 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                       className="sr-only"
                     />
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                      formData.boosted 
-                        ? 'bg-primary border-primary' 
-                        : 'border-border'
+                      formData.boosted ? 'bg-primary border-primary' : 'border-border'
                     }`}>
-                      {formData.boosted && (
-                        <Check className="w-3 h-3 text-primary-foreground" />
-                      )}
+                      {formData.boosted && <Check className="w-3 h-3 text-primary-foreground" />}
                     </div>
                   </div>
                   <span className="text-sm text-foreground">Boosted</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={formData.video_sent}
+                      onChange={(e) => setFormData({ ...formData, video_sent: e.target.checked })}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                      formData.video_sent ? 'bg-primary border-primary' : 'border-border'
+                    }`}>
+                      {formData.video_sent && <Check className="w-3 h-3 text-primary-foreground" />}
+                    </div>
+                  </div>
+                  <span className="text-sm text-foreground">Video Sent</span>
                 </label>
               </div>
 
@@ -540,11 +844,35 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showFullForm ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  {showFullForm ? 'Hide client details' : 'Show client details (country, rating, etc.)'}
+                  {showFullForm ? 'Hide outcome & client details' : 'Show outcome & client details (deal value, refund, etc.)'}
                 </button>
 
                 {showFullForm && (
                   <div className="mt-4 space-y-4 animate-fade-in">
+                    {/* Outcome fields */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Deal Value ($)</label>
+                        <input
+                          type="number"
+                          value={formData.deal_value}
+                          onChange={(e) => setFormData({ ...formData, deal_value: Number(e.target.value) })}
+                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                          min="0"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Refund Amount ($)</label>
+                        <input
+                          type="number"
+                          value={formData.refund_amount}
+                          onChange={(e) => setFormData({ ...formData, refund_amount: Number(e.target.value) })}
+                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Client Country</label>
@@ -563,10 +891,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                           value={formData.client_rating || ''}
                           onChange={(e) => setFormData({ ...formData, client_rating: e.target.value ? Number(e.target.value) : null })}
                           className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          min="0"
-                          max="5"
-                          step="0.1"
-                          placeholder="0-5"
+                          min="0" max="5" step="0.1" placeholder="0-5"
                         />
                       </div>
                     </div>
@@ -579,8 +904,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                           value={formData.client_reviews || ''}
                           onChange={(e) => setFormData({ ...formData, client_reviews: e.target.value ? Number(e.target.value) : null })}
                           className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          min="0"
-                          placeholder="Number of reviews"
+                          min="0" placeholder="Number of reviews"
                         />
                       </div>
                       <div>
@@ -590,8 +914,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                           value={formData.client_total_spent || ''}
                           onChange={(e) => setFormData({ ...formData, client_total_spent: e.target.value ? Number(e.target.value) : null })}
                           className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          min="0"
-                          placeholder="Total spent on platform"
+                          min="0" placeholder="Total spent on platform"
                         />
                       </div>
                     </div>

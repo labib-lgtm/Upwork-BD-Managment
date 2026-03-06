@@ -9,6 +9,7 @@ export interface Proposal {
   user_id: string;
   profile_name: string;
   job_title: string;
+  job_link: string | null;
   job_type: string;
   status: string;
   payment_status: string;
@@ -16,6 +17,7 @@ export interface Proposal {
   proposed_amount: number;
   connects_used: number;
   boosted: boolean;
+  video_sent: boolean;
   invite_sent: number;
   interviewing_at_submission: number;
   last_viewed_text: string | null;
@@ -23,6 +25,10 @@ export interface Proposal {
   client_rating: number | null;
   client_reviews: number | null;
   client_total_spent: number | null;
+  competition_bucket: string | null;
+  date_submitted: string | null;
+  deal_value: number;
+  refund_amount: number;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -33,6 +39,7 @@ export interface Proposal {
 export interface ProposalFormData {
   profile_name: string;
   job_title: string;
+  job_link: string | null;
   job_type: string;
   status: string;
   payment_status: string;
@@ -40,6 +47,7 @@ export interface ProposalFormData {
   proposed_amount: number;
   connects_used: number;
   boosted: boolean;
+  video_sent: boolean;
   invite_sent: number;
   interviewing_at_submission: number;
   last_viewed_text: string | null;
@@ -47,6 +55,10 @@ export interface ProposalFormData {
   client_rating: number | null;
   client_reviews: number | null;
   client_total_spent: number | null;
+  competition_bucket: string | null;
+  date_submitted: string | null;
+  deal_value: number;
+  refund_amount: number;
   notes: string | null;
 }
 
