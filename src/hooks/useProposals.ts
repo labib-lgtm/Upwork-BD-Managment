@@ -74,7 +74,8 @@ export const useProposals = () => {
     const { data, error } = await supabase
       .from('proposals')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(5000);
 
     if (error) {
       toast.error('Failed to fetch proposals');

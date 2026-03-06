@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BDProfile, User, UserRole } from '@/types';
 import { useProposals, Proposal, ProposalFormData } from '@/hooks/useProposals';
-import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { format } from 'date-fns';
+import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown, CalendarIcon } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, subMonths, startOfQuarter, endOfQuarter } from 'date-fns';
 import {
   Pagination,
   PaginationContent,
@@ -90,6 +90,9 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const [datePreset, setDatePreset] = useState<string>('all');
 
   const [formData, setFormData] = useState<LocalFormData>(() =>
     getDefaultFormData(lastUsedProfile)
@@ -118,6 +121,32 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  const applyDatePreset = (preset: string) => {
+    setDatePreset(preset);
+    const now = new Date();
+    switch (preset) {
+      case 'this_month':
+        setDateFrom(format(startOfMonth(now), 'yyyy-MM-dd'));
+        setDateTo(format(endOfMonth(now), 'yyyy-MM-dd'));
+        break;
+      case 'last_month': {
+        const lm = subMonths(now, 1);
+        setDateFrom(format(startOfMonth(lm), 'yyyy-MM-dd'));
+        setDateTo(format(endOfMonth(lm), 'yyyy-MM-dd'));
+        break;
+      }
+      case 'this_quarter':
+        setDateFrom(format(startOfQuarter(now), 'yyyy-MM-dd'));
+        setDateTo(format(endOfQuarter(now), 'yyyy-MM-dd'));
+        break;
+      case 'all':
+      default:
+        setDateFrom('');
+        setDateTo('');
+        break;
+    }
+  };
+
   const filteredAndSortedProposals = useMemo(() => {
     let result = proposals
       .filter((p) => filterStatus === 'all' || p.status === filterStatus)
@@ -128,6 +157,16 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
         }
         return filterProfile === 'all' || p.profile_name === filterProfile;
       });
+
+    // Date range filter
+    if (dateFrom || dateTo) {
+      result = result.filter(p => {
+        const pDate = p.date_submitted || p.created_at.split('T')[0];
+        if (dateFrom && pDate < dateFrom) return false;
+        if (dateTo && pDate > dateTo) return false;
+        return true;
+      });
+    }
 
     // Search
     if (searchQuery.trim()) {
@@ -170,7 +209,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     });
 
     return result;
-  }, [proposals, filterStatus, filterProfile, isRestricted, user.linked_profile_id, profiles, searchQuery, sortField, sortDirection]);
+  }, [proposals, filterStatus, filterProfile, isRestricted, user.linked_profile_id, profiles, searchQuery, sortField, sortDirection, dateFrom, dateTo]);
 
   // Stats
   const stats = useMemo(() => {
@@ -200,7 +239,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterProfile, searchQuery]);
+  }, [filterStatus, filterProfile, searchQuery, dateFrom, dateTo]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -427,6 +466,42 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
           )}
         </div>
       </header>
+
+      {/* Timeline Filter */}
+      <div className="px-6 py-3 border-b border-border bg-card/30 flex gap-3 flex-wrap items-center text-sm">
+        <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+        <select
+          value={datePreset}
+          onChange={(e) => applyDatePreset(e.target.value)}
+          className="px-2 py-1.5 bg-secondary border border-border rounded-md text-sm focus:ring-2 focus:ring-primary outline-none"
+        >
+          <option value="all">All Time</option>
+          <option value="this_month">This Month</option>
+          <option value="last_month">Last Month</option>
+          <option value="this_quarter">This Quarter</option>
+        </select>
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); }}
+          className="px-2 py-1.5 bg-secondary border border-border rounded-md text-sm focus:ring-2 focus:ring-primary outline-none"
+        />
+        <span className="text-muted-foreground">to</span>
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); }}
+          className="px-2 py-1.5 bg-secondary border border-border rounded-md text-sm focus:ring-2 focus:ring-primary outline-none"
+        />
+        {(dateFrom || dateTo) && (
+          <button
+            onClick={() => applyDatePreset('all')}
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Clear
+          </button>
+        )}
+      </div>
 
       {/* Summary Stats */}
       <div className="px-6 py-3 border-b border-border bg-card/30 flex gap-6 flex-wrap text-sm">

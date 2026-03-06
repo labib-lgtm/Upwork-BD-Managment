@@ -39,7 +39,7 @@ const calculateMetricsFromProposals = (
     const year = isSecondHalf ? targetYear : targetYear - 1;
 
     const proposalsInMonth = scopeProposals.filter((p) => {
-      const d = new Date(p.created_at);
+      const d = new Date(p.date_submitted || p.created_at);
       return d.getMonth() === monthIndex && d.getFullYear() === year;
     });
 
@@ -51,8 +51,10 @@ const calculateMetricsFromProposals = (
 
     const revenue = proposalsInMonth
       .filter((p) => p.status === 'won')
-      .reduce((sum, p) => sum + (p.proposed_amount || 0), 0);
-    const refunds = 0; // Not tracked in current schema
+      .reduce((sum, p) => sum + (p.deal_value || 0), 0);
+    const refunds = proposalsInMonth
+      .filter((p) => p.status === 'won')
+      .reduce((sum, p) => sum + (p.refund_amount || 0), 0);
     const spend = connects * settings.connect_cost;
     const netRevenue = revenue - refunds;
 
