@@ -150,12 +150,16 @@ export type Database = {
           client_rating: number | null
           client_reviews: number | null
           client_total_spent: number | null
+          competition_bucket: string | null
           connects_used: number | null
           created_at: string
           created_by: string | null
+          date_submitted: string | null
+          deal_value: number | null
           id: string
           interviewing_at_submission: number | null
           invite_sent: number | null
+          job_link: string | null
           job_title: string
           job_type: string
           last_viewed_text: string | null
@@ -163,10 +167,12 @@ export type Database = {
           payment_status: string
           profile_name: string
           proposed_amount: number | null
+          refund_amount: number | null
           status: string
           updated_at: string
           updated_by: string | null
           user_id: string
+          video_sent: boolean | null
         }
         Insert: {
           boosted?: boolean | null
@@ -175,12 +181,16 @@ export type Database = {
           client_rating?: number | null
           client_reviews?: number | null
           client_total_spent?: number | null
+          competition_bucket?: string | null
           connects_used?: number | null
           created_at?: string
           created_by?: string | null
+          date_submitted?: string | null
+          deal_value?: number | null
           id?: string
           interviewing_at_submission?: number | null
           invite_sent?: number | null
+          job_link?: string | null
           job_title: string
           job_type?: string
           last_viewed_text?: string | null
@@ -188,10 +198,12 @@ export type Database = {
           payment_status?: string
           profile_name: string
           proposed_amount?: number | null
+          refund_amount?: number | null
           status?: string
           updated_at?: string
           updated_by?: string | null
           user_id: string
+          video_sent?: boolean | null
         }
         Update: {
           boosted?: boolean | null
@@ -200,12 +212,16 @@ export type Database = {
           client_rating?: number | null
           client_reviews?: number | null
           client_total_spent?: number | null
+          competition_bucket?: string | null
           connects_used?: number | null
           created_at?: string
           created_by?: string | null
+          date_submitted?: string | null
+          deal_value?: number | null
           id?: string
           interviewing_at_submission?: number | null
           invite_sent?: number | null
+          job_link?: string | null
           job_title?: string
           job_type?: string
           last_viewed_text?: string | null
@@ -213,10 +229,12 @@ export type Database = {
           payment_status?: string
           profile_name?: string
           proposed_amount?: number | null
+          refund_amount?: number | null
           status?: string
           updated_at?: string
           updated_by?: string | null
           user_id?: string
+          video_sent?: boolean | null
         }
         Relationships: []
       }
