@@ -523,6 +523,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                   <th className="cursor-pointer select-none" onClick={() => handleSort('date')}>
                     <div className="flex items-center gap-1">Date <SortIcon field="date" /></div>
                   </th>
+                  <th className="w-20 text-center">Time</th>
                   <th className="cursor-pointer select-none" onClick={() => handleSort('profile_name')}>
                     <div className="flex items-center gap-1">Profile <SortIcon field="profile_name" /></div>
                   </th>
