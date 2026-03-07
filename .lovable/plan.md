@@ -1,49 +1,36 @@
 
 
-# Proposals Stats Timeline + Dashboard Data Fix
+# Add Auto-Captured "Time" Column to Proposals
 
-## Problems Identified
+## Summary
 
-1. **Proposals page has no timeline-based stats filtering** — the summary stats bar shows overall totals but cannot be filtered by date range or month, making it hard to evaluate performance over time.
+Add a read-only "Time" column next to the "Date" column in the Proposals table. This column will display the time the proposal was created (from `created_at`), automatically captured in the user's local timezone. It is not editable — it simply records when the entry was made.
 
-2. **Dashboard uses `created_at` instead of `date_submitted`** — line 42 of Dashboard.tsx filters proposals by `new Date(p.created_at)`, but proposals now have a `date_submitted` field. This means the dashboard bins proposals into months based on when the record was created, not when the proposal was actually submitted.
+## Why This Works Without Database Changes
 
-3. **Dashboard ignores `deal_value` and `refund_amount`** — revenue is calculated from `proposed_amount` (line 53-54) instead of `deal_value`, and refunds are hardcoded to 0 (line 55) despite `refund_amount` being available.
+The `created_at` column already stores a full timestamp with timezone (`timestamptz`). We just need to display the time portion in the UI. The browser automatically converts UTC timestamps to the user's local timezone when using `new Date()`, so no timezone conversion code is needed.
 
-4. **Potential 1000-row limit** — `useProposals` fetches with `supabase.from('proposals').select('*')` which caps at 1000 rows. If the team has more, data will be silently truncated.
+## Changes
 
----
+### 1. `src/components/Proposals.tsx`
 
-## Plan
+- **Table header**: Add a "Time" column immediately after the "Date" column header
+- **Table body**: After the date cell, add a new non-editable cell showing the time from `created_at` formatted as `hh:mm a` (e.g., "02:35 PM") using `date-fns` `format()`
+- **CSV export**: Add "Time" to the export headers and include formatted time in each row
+- No form field for time — it is automatically derived from the record's `created_at` timestamp
 
-### 1. Add Timeline Filter to Proposals Page
+### 2. No database migration needed
 
-Add a date range filter (month/year picker or start/end date inputs) above the summary stats bar in `Proposals.tsx`:
-- Two date inputs: "From" and "To" (default: current month)
-- Filter `filteredAndSortedProposals` by `date_submitted` (fallback to `created_at`)
-- Summary stats recalculate based on the filtered date range
-- Add a quick-select for "This Month", "Last Month", "This Quarter", "This FY"
+`created_at` already has full timestamp data. The time is inherently stored in UTC and will render in the user's local timezone via the browser's `Date` object.
 
-### 2. Fix Dashboard Date Logic
+## Technical Detail
 
-In `Dashboard.tsx` `calculateMetricsFromProposals`:
-- Change line 42 from `new Date(p.created_at)` to `new Date(p.date_submitted || p.created_at)` so proposals are bucketed by submission date
+```typescript
+// After the date cell in the table row:
+<td className="text-muted-foreground tabular-nums text-center">
+  {format(new Date(proposal.created_at), 'hh:mm a')}
+</td>
+```
 
-### 3. Fix Dashboard Revenue Calculations
-
-In `Dashboard.tsx` `calculateMetricsFromProposals`:
-- Change revenue calculation (line 53-54) to use `deal_value` instead of `proposed_amount`
-- Change refunds (line 55) to use `refund_amount` from proposals: `proposalsInMonth.filter(p => p.status === 'won').reduce((sum, p) => sum + (p.refund_amount || 0), 0)`
-
-### 4. Handle 1000-Row Limit
-
-In `useProposals.ts`:
-- Add `.limit(5000)` or implement pagination in the fetch query to avoid silent truncation
-- Alternatively, for the dashboard, create an RPC function for aggregated stats (future improvement)
-
-### Files to Change
-
-- `src/components/Proposals.tsx` — add timeline filter UI and date-based filtering
-- `src/components/Dashboard.tsx` — fix date field, revenue, and refund calculations
-- `src/hooks/useProposals.ts` — increase query limit
+`new Date(proposal.created_at)` converts the UTC timestamp to the user's local timezone automatically.
 
