@@ -359,13 +359,14 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
 
   const exportCSV = () => {
     const headers = [
-      'Date Submitted', 'Profile', 'Job Title', 'Job Link', 'Status', 'Payment Status',
+      'Date Submitted', 'Time', 'Profile', 'Job Title', 'Job Link', 'Status', 'Payment Status',
       'Type', 'Budget', 'Proposed', 'Connects', 'Boosted', 'Video Sent', 'Competition',
       'Invite Sent', 'Interviewing', 'Last Viewed', 'Client Country', 'Client Rating',
       'Client Reviews', 'Client Total Spent', 'Deal Value', 'Refund Amount', 'Notes'
     ];
     const rows = filteredAndSortedProposals.map(p => [
       p.date_submitted || format(new Date(p.created_at), 'yyyy-MM-dd'),
+      format(new Date(p.created_at), 'hh:mm a'),
       p.profile_name, p.job_title, p.job_link || '', p.status, p.payment_status,
       p.job_type, p.budget, p.proposed_amount, p.connects_used, p.boosted ? 'Yes' : 'No',
       p.video_sent ? 'Yes' : 'No', p.competition_bucket || '', p.invite_sent,
@@ -558,6 +559,9 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                         ? format(new Date(proposal.date_submitted), 'MMM d, yyyy')
                         : format(new Date(proposal.created_at), 'MMM d, yyyy')}
                     </td>
+                    <td className="text-center text-xs text-muted-foreground tabular-nums">
+                      {format(new Date(proposal.created_at), 'hh:mm a')}
+                    </td>
                     <td>
                       <span className="px-2 py-1 bg-secondary rounded text-xs font-medium">
                         {proposal.profile_name}
@@ -621,7 +625,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                 ))}
                 {paginatedProposals.length === 0 && (
                   <tr>
-                    <td colSpan={13} className="text-center py-8 text-muted-foreground">
+                    <td colSpan={14} className="text-center py-8 text-muted-foreground">
                       No proposals found. Click "Add Proposal" to create one.
                     </td>
                   </tr>
