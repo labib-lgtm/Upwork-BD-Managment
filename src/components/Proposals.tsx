@@ -615,12 +615,25 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                         {proposal.connects_used}
                       </span>
                     </td>
+                    <td className="text-center text-xs tabular-nums text-muted-foreground">
+                      {proposal.boosted_connects || '-'}
+                    </td>
+                    <td className="text-center text-xs tabular-nums text-muted-foreground">
+                      {proposal.returned_connects || '-'}
+                    </td>
                     <td className="text-center text-xs text-muted-foreground">
                       {proposal.competition_bucket || '-'}
                     </td>
                     <td className="text-center">
                       {proposal.video_sent ? (
                         <Video className="w-4 h-4 text-primary inline" />
+                      ) : (
+                        <span className="text-muted-foreground/40">-</span>
+                      )}
+                    </td>
+                    <td className="text-center">
+                      {proposal.is_new_client ? (
+                        <span className="px-1.5 py-0.5 bg-accent/20 text-accent-foreground rounded text-[10px] font-medium">NEW</span>
                       ) : (
                         <span className="text-muted-foreground/40">-</span>
                       )}
