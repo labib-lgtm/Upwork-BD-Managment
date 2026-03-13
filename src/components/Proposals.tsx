@@ -297,6 +297,10 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       date_submitted: formData.date_submitted || null,
       deal_value: formData.deal_value,
       refund_amount: formData.refund_amount,
+      is_new_client: formData.is_new_client,
+      client_hire_count: formData.client_hire_count,
+      boosted_connects: formData.boosted_connects,
+      returned_connects: formData.returned_connects,
       notes: formData.notes || null,
     };
 
