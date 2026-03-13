@@ -565,8 +565,11 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                   <th className="w-16 text-center cursor-pointer select-none" onClick={() => handleSort('connects_used')}>
                     <div className="flex items-center justify-center gap-1">Conn <SortIcon field="connects_used" /></div>
                   </th>
+                  <th className="w-14 text-center">Boost</th>
+                  <th className="w-14 text-center">Ret</th>
                   <th className="w-16 text-center">Comp</th>
                   <th className="w-12 text-center">Vid</th>
+                  <th className="w-12 text-center">New</th>
                   <th className="w-24 text-center">Last Viewed</th>
                   <th className="w-24 text-center">Actions</th>
                 </tr>
