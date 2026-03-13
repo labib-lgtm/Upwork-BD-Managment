@@ -358,6 +358,10 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       date_submitted: proposal.date_submitted || '',
       deal_value: proposal.deal_value ?? 0,
       refund_amount: proposal.refund_amount ?? 0,
+      is_new_client: proposal.is_new_client ?? false,
+      client_hire_count: proposal.client_hire_count ?? null,
+      boosted_connects: proposal.boosted_connects ?? 0,
+      returned_connects: proposal.returned_connects ?? 0,
       notes: proposal.notes || '',
     });
     setShowModal(true);
