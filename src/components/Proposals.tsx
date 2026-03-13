@@ -233,6 +233,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     return {
       total,
       totalConnects,
+      netConnects,
+      totalReturned,
       winRate: total > 0 ? ((wonCount / total) * 100).toFixed(1) : '0',
       viewRate: total > 0 ? ((viewedCount / total) * 100).toFixed(1) : '0',
       totalDealValue,
