@@ -76,6 +76,10 @@ const getDefaultFormData = (profileName: string): LocalFormData => ({
   date_submitted: format(new Date(), 'yyyy-MM-dd'),
   deal_value: 0,
   refund_amount: 0,
+  is_new_client: false,
+  client_hire_count: null,
+  boosted_connects: 0,
+  returned_connects: 0,
   notes: '',
 });
 
