@@ -1,43 +1,49 @@
 
 
-# Add Client History & Connects Tracking Fields to Proposals
+# Proposals Stats Timeline + Dashboard Data Fix
 
-## New Fields (Database Migration)
+## Problems Identified
 
-Add 4 new columns to the `proposals` table:
+1. **Proposals page has no timeline-based stats filtering** — the summary stats bar shows overall totals but cannot be filtered by date range or month, making it hard to evaluate performance over time.
 
-| Column | Type | Default | Purpose |
-|--------|------|---------|---------|
-| `is_new_client` | boolean | false | Whether client is new to Upwork (no hire history) |
-| `client_hire_count` | integer | null | Number of previous hires the client has made |
-| `boosted_connects` | integer | 0 | Extra connects spent on boosting |
-| `returned_connects` | integer | 0 | Connects refunded (job cancelled, proposal withdrawn) |
+2. **Dashboard uses `created_at` instead of `date_submitted`** — line 42 of Dashboard.tsx filters proposals by `new Date(p.created_at)`, but proposals now have a `date_submitted` field. This means the dashboard bins proposals into months based on when the record was created, not when the proposal was actually submitted.
 
-## UI Changes in `src/components/Proposals.tsx`
+3. **Dashboard ignores `deal_value` and `refund_amount`** — revenue is calculated from `proposed_amount` (line 53-54) instead of `deal_value`, and refunds are hardcoded to 0 (line 55) despite `refund_amount` being available.
 
-### Form (Quick + Full Mode)
-- **Quick form**: Add "New Client" checkbox alongside existing "Boosted" and "Video Sent" toggles
-- **Quick form**: Add "Boosted Connects" and "Returned Connects" number inputs near the existing "Connects Used" field
-- **Full form**: Add "Client Hire Count" number input in the client details section
+4. **Potential 1000-row limit** — `useProposals` fetches with `supabase.from('proposals').select('*')` which caps at 1000 rows. If the team has more, data will be silently truncated.
 
-### Table
-- Add "Boosted" and "Returned" sub-columns under the existing Connects column area, or as separate narrow columns
-- The "New Client" flag can display as a small badge/icon in the payment status or client info area
+---
 
-### Stats Bar
-- Update total connects calculation to account for returned connects: `net connects = connects_used - returned_connects`
+## Plan
 
-## Hook Changes in `src/hooks/useProposals.ts`
+### 1. Add Timeline Filter to Proposals Page
 
-- Add the 4 new fields to the `Proposal` interface and `ProposalFormData` interface
-- Include them in insert/update operations
+Add a date range filter (month/year picker or start/end date inputs) above the summary stats bar in `Proposals.tsx`:
+- Two date inputs: "From" and "To" (default: current month)
+- Filter `filteredAndSortedProposals` by `date_submitted` (fallback to `created_at`)
+- Summary stats recalculate based on the filtered date range
+- Add a quick-select for "This Month", "Last Month", "This Quarter", "This FY"
 
-## CSV Export
-- Add new columns to exported data
+### 2. Fix Dashboard Date Logic
 
-## Summary of Files to Change
+In `Dashboard.tsx` `calculateMetricsFromProposals`:
+- Change line 42 from `new Date(p.created_at)` to `new Date(p.date_submitted || p.created_at)` so proposals are bucketed by submission date
 
-1. **Database migration** — add 4 columns to `proposals`
-2. **`src/hooks/useProposals.ts`** — update interfaces
-3. **`src/components/Proposals.tsx`** — form fields, table columns, stats, CSV export
+### 3. Fix Dashboard Revenue Calculations
+
+In `Dashboard.tsx` `calculateMetricsFromProposals`:
+- Change revenue calculation (line 53-54) to use `deal_value` instead of `proposed_amount`
+- Change refunds (line 55) to use `refund_amount` from proposals: `proposalsInMonth.filter(p => p.status === 'won').reduce((sum, p) => sum + (p.refund_amount || 0), 0)`
+
+### 4. Handle 1000-Row Limit
+
+In `useProposals.ts`:
+- Add `.limit(5000)` or implement pagination in the fetch query to avoid silent truncation
+- Alternatively, for the dashboard, create an RPC function for aggregated stats (future improvement)
+
+### Files to Change
+
+- `src/components/Proposals.tsx` — add timeline filter UI and date-based filtering
+- `src/components/Dashboard.tsx` — fix date field, revenue, and refund calculations
+- `src/hooks/useProposals.ts` — increase query limit
 

@@ -46,6 +46,10 @@ interface LocalFormData {
   date_submitted: string;
   deal_value: number;
   refund_amount: number;
+  is_new_client: boolean;
+  client_hire_count: number | null;
+  boosted_connects: number;
+  returned_connects: number;
   notes: string;
 }
 
@@ -72,6 +76,10 @@ const getDefaultFormData = (profileName: string): LocalFormData => ({
   date_submitted: format(new Date(), 'yyyy-MM-dd'),
   deal_value: 0,
   refund_amount: 0,
+  is_new_client: false,
+  client_hire_count: null,
+  boosted_connects: 0,
+  returned_connects: 0,
   notes: '',
 });
 
@@ -216,6 +224,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     const fp = filteredAndSortedProposals;
     const total = fp.length;
     const totalConnects = fp.reduce((s, p) => s + (p.connects_used || 0), 0);
+    const totalReturned = fp.reduce((s, p) => s + (p.returned_connects || 0), 0);
+    const netConnects = totalConnects - totalReturned;
     const wonCount = fp.filter(p => p.status === 'won').length;
     const viewedCount = fp.filter(p => ['viewed', 'interviewed', 'won', 'lost'].includes(p.status)).length;
     const totalDealValue = fp.filter(p => p.status === 'won').reduce((s, p) => s + (p.deal_value || 0), 0);
@@ -223,6 +233,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     return {
       total,
       totalConnects,
+      netConnects,
+      totalReturned,
       winRate: total > 0 ? ((wonCount / total) * 100).toFixed(1) : '0',
       viewRate: total > 0 ? ((viewedCount / total) * 100).toFixed(1) : '0',
       totalDealValue,
@@ -289,6 +301,10 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       date_submitted: formData.date_submitted || null,
       deal_value: formData.deal_value,
       refund_amount: formData.refund_amount,
+      is_new_client: formData.is_new_client,
+      client_hire_count: formData.client_hire_count,
+      boosted_connects: formData.boosted_connects,
+      returned_connects: formData.returned_connects,
       notes: formData.notes || null,
     };
 
@@ -346,6 +362,10 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       date_submitted: proposal.date_submitted || '',
       deal_value: proposal.deal_value ?? 0,
       refund_amount: proposal.refund_amount ?? 0,
+      is_new_client: proposal.is_new_client ?? false,
+      client_hire_count: proposal.client_hire_count ?? null,
+      boosted_connects: proposal.boosted_connects ?? 0,
+      returned_connects: proposal.returned_connects ?? 0,
       notes: proposal.notes || '',
     });
     setShowModal(true);
@@ -360,7 +380,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
   const exportCSV = () => {
     const headers = [
       'Date Submitted', 'Time', 'Profile', 'Job Title', 'Job Link', 'Status', 'Payment Status',
-      'Type', 'Budget', 'Proposed', 'Connects', 'Boosted', 'Video Sent', 'Competition',
+      'Type', 'Budget', 'Proposed', 'Connects', 'Boosted Connects', 'Returned Connects',
+      'Boosted', 'Video Sent', 'Competition', 'New Client', 'Client Hire Count',
       'Invite Sent', 'Interviewing', 'Last Viewed', 'Client Country', 'Client Rating',
       'Client Reviews', 'Client Total Spent', 'Deal Value', 'Refund Amount', 'Notes'
     ];
@@ -368,8 +389,12 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       p.date_submitted || format(new Date(p.created_at), 'yyyy-MM-dd'),
       format(new Date(p.created_at), 'hh:mm a'),
       p.profile_name, p.job_title, p.job_link || '', p.status, p.payment_status,
-      p.job_type, p.budget, p.proposed_amount, p.connects_used, p.boosted ? 'Yes' : 'No',
-      p.video_sent ? 'Yes' : 'No', p.competition_bucket || '', p.invite_sent,
+      p.job_type, p.budget, p.proposed_amount, p.connects_used,
+      p.boosted_connects || 0, p.returned_connects || 0,
+      p.boosted ? 'Yes' : 'No',
+      p.video_sent ? 'Yes' : 'No', p.competition_bucket || '',
+      p.is_new_client ? 'Yes' : 'No', p.client_hire_count ?? '',
+      p.invite_sent,
       p.interviewing_at_submission, p.last_viewed_text || '', p.client_country || '',
       p.client_rating || '', p.client_reviews || '', p.client_total_spent || '',
       p.deal_value || 0, p.refund_amount || 0, (p.notes || '').replace(/"/g, '""')
@@ -507,7 +532,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       {/* Summary Stats */}
       <div className="px-6 py-3 border-b border-border bg-card/30 flex gap-6 flex-wrap text-sm">
         <div><span className="text-muted-foreground">Total:</span> <span className="font-semibold text-foreground">{stats.total}</span></div>
-        <div><span className="text-muted-foreground">Connects:</span> <span className="font-semibold text-foreground">{stats.totalConnects}</span></div>
+        <div><span className="text-muted-foreground">Net Connects:</span> <span className="font-semibold text-foreground">{stats.netConnects}</span>{stats.totalReturned > 0 && <span className="text-xs text-muted-foreground ml-1">({stats.totalConnects} - {stats.totalReturned} returned)</span>}</div>
         <div><span className="text-muted-foreground">Win Rate:</span> <span className="font-semibold text-foreground">{stats.winRate}%</span></div>
         <div><span className="text-muted-foreground">View Rate:</span> <span className="font-semibold text-foreground">{stats.viewRate}%</span></div>
         <div><span className="text-muted-foreground">Deal Value:</span> <span className="font-semibold text-foreground">${stats.totalDealValue.toLocaleString()}</span></div>
@@ -518,7 +543,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       <div className="flex-1 overflow-auto p-6">
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="data-table min-w-[1400px]">
+            <table className="data-table min-w-[1600px]">
               <thead>
                 <tr>
                   <th className="cursor-pointer select-none" onClick={() => handleSort('date')}>
@@ -545,8 +570,11 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                   <th className="w-16 text-center cursor-pointer select-none" onClick={() => handleSort('connects_used')}>
                     <div className="flex items-center justify-center gap-1">Conn <SortIcon field="connects_used" /></div>
                   </th>
+                  <th className="w-14 text-center">Boost</th>
+                  <th className="w-14 text-center">Ret</th>
                   <th className="w-16 text-center">Comp</th>
                   <th className="w-12 text-center">Vid</th>
+                  <th className="w-12 text-center">New</th>
                   <th className="w-24 text-center">Last Viewed</th>
                   <th className="w-24 text-center">Actions</th>
                 </tr>
@@ -592,12 +620,25 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                         {proposal.connects_used}
                       </span>
                     </td>
+                    <td className="text-center text-xs tabular-nums text-muted-foreground">
+                      {proposal.boosted_connects || '-'}
+                    </td>
+                    <td className="text-center text-xs tabular-nums text-muted-foreground">
+                      {proposal.returned_connects || '-'}
+                    </td>
                     <td className="text-center text-xs text-muted-foreground">
                       {proposal.competition_bucket || '-'}
                     </td>
                     <td className="text-center">
                       {proposal.video_sent ? (
                         <Video className="w-4 h-4 text-primary inline" />
+                      ) : (
+                        <span className="text-muted-foreground/40">-</span>
+                      )}
+                    </td>
+                    <td className="text-center">
+                      {proposal.is_new_client ? (
+                        <span className="px-1.5 py-0.5 bg-accent/20 text-accent-foreground rounded text-[10px] font-medium">NEW</span>
                       ) : (
                         <span className="text-muted-foreground/40">-</span>
                       )}
@@ -625,7 +666,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                 ))}
                 {paginatedProposals.length === 0 && (
                   <tr>
-                    <td colSpan={14} className="text-center py-8 text-muted-foreground">
+                    <td colSpan={17} className="text-center py-8 text-muted-foreground">
                       No proposals found. Click "Add Proposal" to create one.
                     </td>
                   </tr>
@@ -805,6 +846,31 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Boosted Connects</label>
+                  <input
+                    type="number"
+                    value={formData.boosted_connects}
+                    onChange={(e) => setFormData({ ...formData, boosted_connects: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Returned Connects</label>
+                  <input
+                    type="number"
+                    value={formData.returned_connects}
+                    onChange={(e) => setFormData({ ...formData, returned_connects: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Payment Status</label>
                   <select
                     value={formData.payment_status}
@@ -914,6 +980,22 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                   </div>
                   <span className="text-sm text-foreground">Video Sent</span>
                 </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_new_client}
+                      onChange={(e) => setFormData({ ...formData, is_new_client: e.target.checked })}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                      formData.is_new_client ? 'bg-primary border-primary' : 'border-border'
+                    }`}>
+                      {formData.is_new_client && <Check className="w-3 h-3 text-primary-foreground" />}
+                    </div>
+                  </div>
+                  <span className="text-sm text-foreground">New Client</span>
+                </label>
               </div>
 
               {/* Expandable Full Form */}
@@ -949,6 +1031,19 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                           onChange={(e) => setFormData({ ...formData, refund_amount: Number(e.target.value) })}
                           className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
                           min="0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Client Hire Count</label>
+                        <input
+                          type="number"
+                          value={formData.client_hire_count ?? ''}
+                          onChange={(e) => setFormData({ ...formData, client_hire_count: e.target.value ? Number(e.target.value) : null })}
+                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                          min="0" placeholder="Previous hires"
                         />
                       </div>
                     </div>
