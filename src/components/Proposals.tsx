@@ -846,6 +846,31 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Boosted Connects</label>
+                  <input
+                    type="number"
+                    value={formData.boosted_connects}
+                    onChange={(e) => setFormData({ ...formData, boosted_connects: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Returned Connects</label>
+                  <input
+                    type="number"
+                    value={formData.returned_connects}
+                    onChange={(e) => setFormData({ ...formData, returned_connects: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Payment Status</label>
                   <select
                     value={formData.payment_status}
