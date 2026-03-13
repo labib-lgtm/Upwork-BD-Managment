@@ -145,8 +145,10 @@ export type Database = {
       proposals: {
         Row: {
           boosted: boolean | null
+          boosted_connects: number
           budget: number | null
           client_country: string | null
+          client_hire_count: number | null
           client_rating: number | null
           client_reviews: number | null
           client_total_spent: number | null
@@ -159,6 +161,7 @@ export type Database = {
           id: string
           interviewing_at_submission: number | null
           invite_sent: number | null
+          is_new_client: boolean
           job_link: string | null
           job_title: string
           job_type: string
@@ -168,6 +171,7 @@ export type Database = {
           profile_name: string
           proposed_amount: number | null
           refund_amount: number | null
+          returned_connects: number
           status: string
           updated_at: string
           updated_by: string | null
@@ -176,8 +180,10 @@ export type Database = {
         }
         Insert: {
           boosted?: boolean | null
+          boosted_connects?: number
           budget?: number | null
           client_country?: string | null
+          client_hire_count?: number | null
           client_rating?: number | null
           client_reviews?: number | null
           client_total_spent?: number | null
@@ -190,6 +196,7 @@ export type Database = {
           id?: string
           interviewing_at_submission?: number | null
           invite_sent?: number | null
+          is_new_client?: boolean
           job_link?: string | null
           job_title: string
           job_type?: string
@@ -199,6 +206,7 @@ export type Database = {
           profile_name: string
           proposed_amount?: number | null
           refund_amount?: number | null
+          returned_connects?: number
           status?: string
           updated_at?: string
           updated_by?: string | null
@@ -207,8 +215,10 @@ export type Database = {
         }
         Update: {
           boosted?: boolean | null
+          boosted_connects?: number
           budget?: number | null
           client_country?: string | null
+          client_hire_count?: number | null
           client_rating?: number | null
           client_reviews?: number | null
           client_total_spent?: number | null
@@ -221,6 +231,7 @@ export type Database = {
           id?: string
           interviewing_at_submission?: number | null
           invite_sent?: number | null
+          is_new_client?: boolean
           job_link?: string | null
           job_title?: string
           job_type?: string
@@ -230,6 +241,7 @@ export type Database = {
           profile_name?: string
           proposed_amount?: number | null
           refund_amount?: number | null
+          returned_connects?: number
           status?: string
           updated_at?: string
           updated_by?: string | null
