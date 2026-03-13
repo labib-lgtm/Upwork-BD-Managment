@@ -224,6 +224,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
     const fp = filteredAndSortedProposals;
     const total = fp.length;
     const totalConnects = fp.reduce((s, p) => s + (p.connects_used || 0), 0);
+    const totalReturned = fp.reduce((s, p) => s + (p.returned_connects || 0), 0);
+    const netConnects = totalConnects - totalReturned;
     const wonCount = fp.filter(p => p.status === 'won').length;
     const viewedCount = fp.filter(p => ['viewed', 'interviewed', 'won', 'lost'].includes(p.status)).length;
     const totalDealValue = fp.filter(p => p.status === 'won').reduce((s, p) => s + (p.deal_value || 0), 0);
