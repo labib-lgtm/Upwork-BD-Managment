@@ -661,7 +661,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                 ))}
                 {paginatedProposals.length === 0 && (
                   <tr>
-                    <td colSpan={14} className="text-center py-8 text-muted-foreground">
+                    <td colSpan={17} className="text-center py-8 text-muted-foreground">
                       No proposals found. Click "Add Proposal" to create one.
                     </td>
                   </tr>
