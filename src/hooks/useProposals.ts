@@ -29,6 +29,10 @@ export interface Proposal {
   date_submitted: string | null;
   deal_value: number;
   refund_amount: number;
+  is_new_client: boolean;
+  client_hire_count: number | null;
+  boosted_connects: number;
+  returned_connects: number;
   notes: string | null;
   created_at: string;
   updated_at: string;
