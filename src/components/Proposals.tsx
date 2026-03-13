@@ -980,6 +980,22 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                   </div>
                   <span className="text-sm text-foreground">Video Sent</span>
                 </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_new_client}
+                      onChange={(e) => setFormData({ ...formData, is_new_client: e.target.checked })}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                      formData.is_new_client ? 'bg-primary border-primary' : 'border-border'
+                    }`}>
+                      {formData.is_new_client && <Check className="w-3 h-3 text-primary-foreground" />}
+                    </div>
+                  </div>
+                  <span className="text-sm text-foreground">New Client</span>
+                </label>
               </div>
 
               {/* Expandable Full Form */}
