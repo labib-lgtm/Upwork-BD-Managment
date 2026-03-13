@@ -380,7 +380,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
   const exportCSV = () => {
     const headers = [
       'Date Submitted', 'Time', 'Profile', 'Job Title', 'Job Link', 'Status', 'Payment Status',
-      'Type', 'Budget', 'Proposed', 'Connects', 'Boosted', 'Video Sent', 'Competition',
+      'Type', 'Budget', 'Proposed', 'Connects', 'Boosted Connects', 'Returned Connects',
+      'Boosted', 'Video Sent', 'Competition', 'New Client', 'Client Hire Count',
       'Invite Sent', 'Interviewing', 'Last Viewed', 'Client Country', 'Client Rating',
       'Client Reviews', 'Client Total Spent', 'Deal Value', 'Refund Amount', 'Notes'
     ];
@@ -388,8 +389,12 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       p.date_submitted || format(new Date(p.created_at), 'yyyy-MM-dd'),
       format(new Date(p.created_at), 'hh:mm a'),
       p.profile_name, p.job_title, p.job_link || '', p.status, p.payment_status,
-      p.job_type, p.budget, p.proposed_amount, p.connects_used, p.boosted ? 'Yes' : 'No',
-      p.video_sent ? 'Yes' : 'No', p.competition_bucket || '', p.invite_sent,
+      p.job_type, p.budget, p.proposed_amount, p.connects_used,
+      p.boosted_connects || 0, p.returned_connects || 0,
+      p.boosted ? 'Yes' : 'No',
+      p.video_sent ? 'Yes' : 'No', p.competition_bucket || '',
+      p.is_new_client ? 'Yes' : 'No', p.client_hire_count ?? '',
+      p.invite_sent,
       p.interviewing_at_submission, p.last_viewed_text || '', p.client_country || '',
       p.client_rating || '', p.client_reviews || '', p.client_total_spent || '',
       p.deal_value || 0, p.refund_amount || 0, (p.notes || '').replace(/"/g, '""')
