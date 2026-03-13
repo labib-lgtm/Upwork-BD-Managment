@@ -1035,6 +1035,19 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Client Hire Count</label>
+                        <input
+                          type="number"
+                          value={formData.client_hire_count ?? ''}
+                          onChange={(e) => setFormData({ ...formData, client_hire_count: e.target.value ? Number(e.target.value) : null })}
+                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                          min="0" placeholder="Previous hires"
+                        />
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Client Country</label>
