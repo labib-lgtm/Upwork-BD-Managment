@@ -527,7 +527,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       {/* Summary Stats */}
       <div className="px-6 py-3 border-b border-border bg-card/30 flex gap-6 flex-wrap text-sm">
         <div><span className="text-muted-foreground">Total:</span> <span className="font-semibold text-foreground">{stats.total}</span></div>
-        <div><span className="text-muted-foreground">Connects:</span> <span className="font-semibold text-foreground">{stats.totalConnects}</span></div>
+        <div><span className="text-muted-foreground">Net Connects:</span> <span className="font-semibold text-foreground">{stats.netConnects}</span>{stats.totalReturned > 0 && <span className="text-xs text-muted-foreground ml-1">({stats.totalConnects} - {stats.totalReturned} returned)</span>}</div>
         <div><span className="text-muted-foreground">Win Rate:</span> <span className="font-semibold text-foreground">{stats.winRate}%</span></div>
         <div><span className="text-muted-foreground">View Rate:</span> <span className="font-semibold text-foreground">{stats.viewRate}%</span></div>
         <div><span className="text-muted-foreground">Deal Value:</span> <span className="font-semibold text-foreground">${stats.totalDealValue.toLocaleString()}</span></div>
