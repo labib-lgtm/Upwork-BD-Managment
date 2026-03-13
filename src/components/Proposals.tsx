@@ -538,7 +538,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
       <div className="flex-1 overflow-auto p-6">
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="data-table min-w-[1400px]">
+            <table className="data-table min-w-[1600px]">
               <thead>
                 <tr>
                   <th className="cursor-pointer select-none" onClick={() => handleSort('date')}>
