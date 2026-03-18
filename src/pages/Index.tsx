@@ -100,6 +100,7 @@ const IndexContent = () => {
             profiles={userAccessibleProfiles}
             settings={settings}
             user={currentUser}
+            onViewProposals={handleViewProposals}
           />
         );
       case 'proposals':
@@ -107,6 +108,8 @@ const IndexContent = () => {
           <Proposals
             profiles={userAccessibleProfiles}
             user={currentUser}
+            dateFilter={proposalDateFilter}
+            onClearDateFilter={() => setProposalDateFilter(null)}
           />
         );
       case 'inbound':
