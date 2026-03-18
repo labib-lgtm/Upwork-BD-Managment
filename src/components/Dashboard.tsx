@@ -190,6 +190,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
 
   const totals = useMemo(() => calculateTotals(metrics), [metrics]);
 
+  // Recent activity calculations
+  const recentActivity = useMemo(() => {
+    const now = new Date();
+    const ranges = [
+      { key: '1d' as const, label: 'Last 24 Hours', icon: <Clock className="w-4 h-4" />, ms: 24 * 60 * 60 * 1000 },
+      { key: '7d' as const, label: 'Last 7 Days', icon: <Calendar className="w-4 h-4" />, ms: 7 * 24 * 60 * 60 * 1000 },
+      { key: '14d' as const, label: 'Last 14 Days', icon: <CalendarDays className="w-4 h-4" />, ms: 14 * 24 * 60 * 60 * 1000 },
+    ];
+
+    const scopeProposals = proposals.filter((p) =>
+      selectedProfileNames.includes(p.profile_name)
+    );
+
+    return ranges.map(({ key, label, icon, ms }) => {
+      const cutoff = new Date(now.getTime() - ms);
+      const filtered = scopeProposals.filter((p) => {
+        const d = new Date(p.date_submitted || p.created_at);
+        return d >= cutoff;
+      });
+      const connects = filtered.reduce((s, p) => s + (p.connects_used || 0), 0);
+      const returned = filtered.reduce((s, p) => s + (p.returned_connects || 0), 0);
+      const wins = filtered.filter((p) => p.status === 'won').length;
+      return { key, label, icon, count: filtered.length, netConnects: connects - returned, wins };
+    });
+  }, [proposals, selectedProfileNames]);
+
   const toggleProfile = (profileName: string) => {
     if (isRestricted) return;
     setSelectedProfileNames((prev) =>
