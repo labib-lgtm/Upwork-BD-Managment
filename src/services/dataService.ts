@@ -97,6 +97,8 @@ export const calculateKPIMetrics = (
     months.push({
       periodLabel: monthNames[monthIndex],
       connects,
+      boostedConnects: 0,
+      returnedConnects: 0,
       sent,
       views,
       interviews,
@@ -104,6 +106,7 @@ export const calculateKPIMetrics = (
       viewRate: sent > 0 ? (views / sent) * 100 : 0,
       interviewRate: views > 0 ? (interviews / views) * 100 : 0,
       closeRate: interviews > 0 ? (closes / interviews) * 100 : 0,
+      newClientRate: 0,
       spend,
       revenue: netRevenue,
       refunds,
@@ -126,6 +129,8 @@ export const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
   const total: KPIMetrics = {
     periodLabel: 'TOTAL',
     connects: 0,
+    boostedConnects: 0,
+    returnedConnects: 0,
     sent: 0,
     views: 0,
     interviews: 0,
@@ -133,6 +138,7 @@ export const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
     viewRate: 0,
     interviewRate: 0,
     closeRate: 0,
+    newClientRate: 0,
     spend: 0,
     revenue: 0,
     refunds: 0,

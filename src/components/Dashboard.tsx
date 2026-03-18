@@ -3,12 +3,13 @@ import { BDProfile, AppSettings, KPIMetrics, UserRole, User } from '@/types';
 import { useProposals, Proposal } from '@/hooks/useProposals';
 import { useGoals } from '@/hooks/useGoals';
 import { GoalProgressGrid } from '@/components/goals/GoalProgressGrid';
-import { TrendingUp, TrendingDown, DollarSign, Eye, MessageSquare, Award, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Eye, Award, ChevronLeft, ChevronRight, Loader2, Clock, Calendar, CalendarDays } from 'lucide-react';
 
 interface DashboardProps {
   profiles: BDProfile[];
   settings: AppSettings;
   user: User;
+  onViewProposals?: (range: '1d' | '7d' | '14d') => void;
 }
 
 // Calculate metrics from database proposals
@@ -45,9 +46,12 @@ const calculateMetricsFromProposals = (
 
     const sent = proposalsInMonth.length;
     const connects = proposalsInMonth.reduce((sum, p) => sum + (p.connects_used || 0), 0);
+    const boostedConnects = proposalsInMonth.reduce((sum, p) => sum + (p.boosted_connects || 0), 0);
+    const returnedConnects = proposalsInMonth.reduce((sum, p) => sum + (p.returned_connects || 0), 0);
     const views = proposalsInMonth.filter((p) => p.status === 'viewed' || p.status === 'interviewed' || p.status === 'won').length;
     const interviews = proposalsInMonth.filter((p) => p.status === 'interviewed' || p.status === 'won').length;
     const closes = proposalsInMonth.filter((p) => p.status === 'won').length;
+    const newClients = proposalsInMonth.filter((p) => p.is_new_client).length;
 
     const revenue = proposalsInMonth
       .filter((p) => p.status === 'won')
@@ -55,12 +59,14 @@ const calculateMetricsFromProposals = (
     const refunds = proposalsInMonth
       .filter((p) => p.status === 'won')
       .reduce((sum, p) => sum + (p.refund_amount || 0), 0);
-    const spend = connects * settings.connect_cost;
+    const spend = (connects - returnedConnects) * settings.connect_cost;
     const netRevenue = revenue - refunds;
 
     months.push({
       periodLabel: monthNames[monthIndex],
       connects,
+      boostedConnects,
+      returnedConnects,
       sent,
       views,
       interviews,
@@ -68,6 +74,7 @@ const calculateMetricsFromProposals = (
       viewRate: sent > 0 ? (views / sent) * 100 : 0,
       interviewRate: views > 0 ? (interviews / views) * 100 : 0,
       closeRate: interviews > 0 ? (closes / interviews) * 100 : 0,
+      newClientRate: sent > 0 ? (newClients / sent) * 100 : 0,
       spend,
       revenue: netRevenue,
       refunds,
@@ -90,6 +97,8 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
   const total: KPIMetrics = {
     periodLabel: 'TOTAL',
     connects: 0,
+    boostedConnects: 0,
+    returnedConnects: 0,
     sent: 0,
     views: 0,
     interviews: 0,
@@ -97,6 +106,7 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
     viewRate: 0,
     interviewRate: 0,
     closeRate: 0,
+    newClientRate: 0,
     spend: 0,
     revenue: 0,
     refunds: 0,
@@ -111,6 +121,8 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
 
   metrics.forEach((m) => {
     total.connects += m.connects;
+    total.boostedConnects += m.boostedConnects;
+    total.returnedConnects += m.returnedConnects;
     total.sent += m.sent;
     total.views += m.views;
     total.interviews += m.interviews;
@@ -119,6 +131,10 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
     total.revenue += m.revenue;
     total.refunds += m.refunds;
   });
+
+  // Calculate newClientRate from weighted average of monthly rates
+  const totalNewClients = metrics.reduce((sum, m) => sum + Math.round(m.newClientRate * m.sent / 100), 0);
+  total.newClientRate = total.sent > 0 ? (totalNewClients / total.sent) * 100 : 0;
 
   total.viewRate = total.sent > 0 ? (total.views / total.sent) * 100 : 0;
   total.interviewRate = total.views > 0 ? (total.interviews / total.views) * 100 : 0;
@@ -133,7 +149,7 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
   return total;
 };
 
-export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, onViewProposals }) => {
   const { proposals, loading } = useProposals();
   const { goals, loading: goalsLoading } = useGoals();
   const isRestricted = user.role === UserRole.BD_MEMBER && !!user.linked_profile_id;
@@ -173,6 +189,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }
   );
 
   const totals = useMemo(() => calculateTotals(metrics), [metrics]);
+
+  // Recent activity calculations
+  const recentActivity = useMemo(() => {
+    const now = new Date();
+    const ranges = [
+      { key: '1d' as const, label: 'Last 24 Hours', icon: <Clock className="w-4 h-4" />, ms: 24 * 60 * 60 * 1000 },
+      { key: '7d' as const, label: 'Last 7 Days', icon: <Calendar className="w-4 h-4" />, ms: 7 * 24 * 60 * 60 * 1000 },
+      { key: '14d' as const, label: 'Last 14 Days', icon: <CalendarDays className="w-4 h-4" />, ms: 14 * 24 * 60 * 60 * 1000 },
+    ];
+
+    const scopeProposals = proposals.filter((p) =>
+      selectedProfileNames.includes(p.profile_name)
+    );
+
+    return ranges.map(({ key, label, icon, ms }) => {
+      const cutoff = new Date(now.getTime() - ms);
+      const filtered = scopeProposals.filter((p) => {
+        const d = new Date(p.date_submitted || p.created_at);
+        return d >= cutoff;
+      });
+      const connects = filtered.reduce((s, p) => s + (p.connects_used || 0), 0);
+      const returned = filtered.reduce((s, p) => s + (p.returned_connects || 0), 0);
+      const wins = filtered.filter((p) => p.status === 'won').length;
+      return { key, label, icon, count: filtered.length, netConnects: connects - returned, wins };
+    });
+  }, [proposals, selectedProfileNames]);
 
   const toggleProfile = (profileName: string) => {
     if (isRestricted) return;
@@ -329,6 +371,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }
         />
       </div>
 
+      {/* Recent Activity Cards */}
+      <div className="px-6 py-4 grid grid-cols-3 gap-4">
+        {recentActivity.map((card) => (
+          <button
+            key={card.key}
+            onClick={() => onViewProposals?.(card.key)}
+            className="metric-card text-left hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-muted-foreground">{card.icon}</span>
+              <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">View →</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{card.count}</p>
+            <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+            <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+              <span>Net Connects: {card.netConnects}</span>
+              <span>Wins: {card.wins}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
       {/* Summary Cards */}
       <div className="px-6 py-4 grid grid-cols-4 gap-4">
         {summaryCards.map((card, idx) => (
@@ -336,9 +400,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }
             <div className="flex items-center justify-between mb-2">
               <span className="text-muted-foreground">{card.icon}</span>
               {card.trend ? (
-                <TrendingUp className="w-4 h-4 text-green-400" />
+                <TrendingUp className="w-4 h-4 text-primary" />
               ) : (
-                <TrendingDown className="w-4 h-4 text-red-400" />
+                <TrendingDown className="w-4 h-4 text-destructive" />
               )}
             </div>
             <p className="text-2xl font-bold text-foreground">{card.value}</p>
@@ -371,7 +435,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }
                   </td>
                 </tr>
                 {renderRow('connects', 'Connects', undefined, 0)}
-                {renderRow('spend', 'Spend', 'currency')}
+                {renderRow('boostedConnects', 'Boosted Connects', undefined, 0)}
+                {renderRow('returnedConnects', 'Returned Connects', undefined, 0)}
+                {renderRow('spend', 'Spend (Net)', 'currency')}
 
                 {/* Activity Section */}
                 <tr className="kpi-section-header">
@@ -383,6 +449,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }
                 {renderRow('views', 'Views', undefined, 0)}
                 {renderRow('interviews', 'Interviews', undefined, 0)}
                 {renderRow('closes', 'Closes (Won)', undefined, 0)}
+                {renderRow('newClientRate', 'New Client %', 'percent', 1)}
 
                 {/* Conversion Section */}
                 <tr className="kpi-section-header">

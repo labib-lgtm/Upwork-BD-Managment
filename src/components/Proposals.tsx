@@ -15,6 +15,8 @@ import {
 interface ProposalsProps {
   profiles: BDProfile[];
   user: User;
+  dateFilter?: '1d' | '7d' | '14d' | null;
+  onClearDateFilter?: () => void;
 }
 
 const STATUS_OPTIONS = ['pending', 'viewed', 'interviewed', 'won', 'lost', 'archived'] as const;
@@ -86,7 +88,7 @@ const getDefaultFormData = (profileName: string): LocalFormData => ({
 type SortField = 'date' | 'budget' | 'proposed_amount' | 'connects_used' | 'status' | 'profile_name' | 'job_title';
 type SortDirection = 'asc' | 'desc';
 
-export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
+export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter, onClearDateFilter }) => {
   const { proposals, loading, addProposal, updateProposal, deleteProposal } = useProposals();
   const isRestricted = user.role === UserRole.BD_MEMBER && !!user.linked_profile_id;
   const [showModal, setShowModal] = useState(false);
@@ -107,6 +109,19 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
   );
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterProfile, setFilterProfile] = useState<string>('all');
+
+  // Apply external date filter from Dashboard drill-down
+  useEffect(() => {
+    if (dateFilter) {
+      const now = new Date();
+      const msMap = { '1d': 1, '7d': 7, '14d': 14 };
+      const days = msMap[dateFilter];
+      const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      setDateFrom(format(from, 'yyyy-MM-dd'));
+      setDateTo(format(now, 'yyyy-MM-dd'));
+      setDatePreset('custom');
+    }
+  }, [dateFilter]);
 
   useEffect(() => {
     if (!editingProposal) {
@@ -493,12 +508,30 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
         </div>
       </header>
 
+      {/* Date Filter Banner from Dashboard */}
+      {dateFilter && (
+        <div className="px-6 py-2 border-b border-primary/30 bg-primary/5 flex items-center justify-between text-sm">
+          <span className="text-primary font-medium">
+            Showing proposals from last {dateFilter === '1d' ? '24 hours' : dateFilter === '7d' ? '7 days' : '14 days'}
+          </span>
+          <button
+            onClick={() => {
+              onClearDateFilter?.();
+              applyDatePreset('all');
+            }}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-3 h-3" /> Clear filter
+          </button>
+        </div>
+      )}
+
       {/* Timeline Filter */}
       <div className="px-6 py-3 border-b border-border bg-card/30 flex gap-3 flex-wrap items-center text-sm">
         <CalendarIcon className="w-4 h-4 text-muted-foreground" />
         <select
           value={datePreset}
-          onChange={(e) => applyDatePreset(e.target.value)}
+          onChange={(e) => { applyDatePreset(e.target.value); onClearDateFilter?.(); }}
           className="px-2 py-1.5 bg-secondary border border-border rounded-md text-sm focus:ring-2 focus:ring-primary outline-none"
         >
           <option value="all">All Time</option>
@@ -509,19 +542,19 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
         <input
           type="date"
           value={dateFrom}
-          onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); }}
+          onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); onClearDateFilter?.(); }}
           className="px-2 py-1.5 bg-secondary border border-border rounded-md text-sm focus:ring-2 focus:ring-primary outline-none"
         />
         <span className="text-muted-foreground">to</span>
         <input
           type="date"
           value={dateTo}
-          onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); }}
+          onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); onClearDateFilter?.(); }}
           className="px-2 py-1.5 bg-secondary border border-border rounded-md text-sm focus:ring-2 focus:ring-primary outline-none"
         />
         {(dateFrom || dateTo) && (
           <button
-            onClick={() => applyDatePreset('all')}
+            onClick={() => { applyDatePreset('all'); onClearDateFilter?.(); }}
             className="text-xs text-muted-foreground hover:text-foreground underline"
           >
             Clear
