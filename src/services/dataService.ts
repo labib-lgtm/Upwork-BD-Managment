@@ -129,6 +129,8 @@ export const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
   const total: KPIMetrics = {
     periodLabel: 'TOTAL',
     connects: 0,
+    boostedConnects: 0,
+    returnedConnects: 0,
     sent: 0,
     views: 0,
     interviews: 0,
@@ -136,6 +138,7 @@ export const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
     viewRate: 0,
     interviewRate: 0,
     closeRate: 0,
+    newClientRate: 0,
     spend: 0,
     revenue: 0,
     refunds: 0,

@@ -97,6 +97,8 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
   const total: KPIMetrics = {
     periodLabel: 'TOTAL',
     connects: 0,
+    boostedConnects: 0,
+    returnedConnects: 0,
     sent: 0,
     views: 0,
     interviews: 0,
@@ -104,6 +106,7 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
     viewRate: 0,
     interviewRate: 0,
     closeRate: 0,
+    newClientRate: 0,
     spend: 0,
     revenue: 0,
     refunds: 0,
@@ -118,6 +121,8 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
 
   metrics.forEach((m) => {
     total.connects += m.connects;
+    total.boostedConnects += m.boostedConnects;
+    total.returnedConnects += m.returnedConnects;
     total.sent += m.sent;
     total.views += m.views;
     total.interviews += m.interviews;
@@ -126,6 +131,10 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
     total.revenue += m.revenue;
     total.refunds += m.refunds;
   });
+
+  // Calculate newClientRate from weighted average of monthly rates
+  const totalNewClients = metrics.reduce((sum, m) => sum + Math.round(m.newClientRate * m.sent / 100), 0);
+  total.newClientRate = total.sent > 0 ? (totalNewClients / total.sent) * 100 : 0;
 
   total.viewRate = total.sent > 0 ? (total.views / total.sent) * 100 : 0;
   total.interviewRate = total.views > 0 ? (total.interviews / total.views) * 100 : 0;
