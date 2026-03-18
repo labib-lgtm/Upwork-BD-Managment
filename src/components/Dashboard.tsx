@@ -371,6 +371,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
         />
       </div>
 
+      {/* Recent Activity Cards */}
+      <div className="px-6 py-4 grid grid-cols-3 gap-4">
+        {recentActivity.map((card) => (
+          <button
+            key={card.key}
+            onClick={() => onViewProposals?.(card.key)}
+            className="metric-card text-left hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-muted-foreground">{card.icon}</span>
+              <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">View →</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{card.count}</p>
+            <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+            <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+              <span>Net Connects: {card.netConnects}</span>
+              <span>Wins: {card.wins}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
       {/* Summary Cards */}
       <div className="px-6 py-4 grid grid-cols-4 gap-4">
         {summaryCards.map((card, idx) => (
@@ -378,9 +400,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
             <div className="flex items-center justify-between mb-2">
               <span className="text-muted-foreground">{card.icon}</span>
               {card.trend ? (
-                <TrendingUp className="w-4 h-4 text-green-400" />
+                <TrendingUp className="w-4 h-4 text-primary" />
               ) : (
-                <TrendingDown className="w-4 h-4 text-red-400" />
+                <TrendingDown className="w-4 h-4 text-destructive" />
               )}
             </div>
             <p className="text-2xl font-bold text-foreground">{card.value}</p>
