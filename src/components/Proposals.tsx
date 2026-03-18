@@ -123,6 +123,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
     }
   }, [dateFilter]);
 
+  useEffect(() => {
     if (!editingProposal) {
       setFormData(prev => ({
         ...prev,
