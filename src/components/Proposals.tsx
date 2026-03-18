@@ -88,7 +88,7 @@ const getDefaultFormData = (profileName: string): LocalFormData => ({
 type SortField = 'date' | 'budget' | 'proposed_amount' | 'connects_used' | 'status' | 'profile_name' | 'job_title';
 type SortDirection = 'asc' | 'desc';
 
-export const Proposals: React.FC<ProposalsProps> = ({ profiles, user }) => {
+export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter, onClearDateFilter }) => {
   const { proposals, loading, addProposal, updateProposal, deleteProposal } = useProposals();
   const isRestricted = user.role === UserRole.BD_MEMBER && !!user.linked_profile_id;
   const [showModal, setShowModal] = useState(false);
