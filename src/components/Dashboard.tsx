@@ -46,9 +46,12 @@ const calculateMetricsFromProposals = (
 
     const sent = proposalsInMonth.length;
     const connects = proposalsInMonth.reduce((sum, p) => sum + (p.connects_used || 0), 0);
+    const boostedConnects = proposalsInMonth.reduce((sum, p) => sum + (p.boosted_connects || 0), 0);
+    const returnedConnects = proposalsInMonth.reduce((sum, p) => sum + (p.returned_connects || 0), 0);
     const views = proposalsInMonth.filter((p) => p.status === 'viewed' || p.status === 'interviewed' || p.status === 'won').length;
     const interviews = proposalsInMonth.filter((p) => p.status === 'interviewed' || p.status === 'won').length;
     const closes = proposalsInMonth.filter((p) => p.status === 'won').length;
+    const newClients = proposalsInMonth.filter((p) => p.is_new_client).length;
 
     const revenue = proposalsInMonth
       .filter((p) => p.status === 'won')
@@ -56,12 +59,14 @@ const calculateMetricsFromProposals = (
     const refunds = proposalsInMonth
       .filter((p) => p.status === 'won')
       .reduce((sum, p) => sum + (p.refund_amount || 0), 0);
-    const spend = connects * settings.connect_cost;
+    const spend = (connects - returnedConnects) * settings.connect_cost;
     const netRevenue = revenue - refunds;
 
     months.push({
       periodLabel: monthNames[monthIndex],
       connects,
+      boostedConnects,
+      returnedConnects,
       sent,
       views,
       interviews,
@@ -69,6 +74,7 @@ const calculateMetricsFromProposals = (
       viewRate: sent > 0 ? (views / sent) * 100 : 0,
       interviewRate: views > 0 ? (interviews / views) * 100 : 0,
       closeRate: interviews > 0 ? (closes / interviews) * 100 : 0,
+      newClientRate: sent > 0 ? (newClients / sent) * 100 : 0,
       spend,
       revenue: netRevenue,
       refunds,
