@@ -21,6 +21,17 @@ const IndexContent = () => {
   const { settings: appSettings, loading: settingsLoading, updateSetting, updateMultipleSettings } = useAppSettings();
   
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
+  const [proposalDateFilter, setProposalDateFilter] = useState<'1d' | '7d' | '14d' | null>(null);
+
+  const handleViewProposals = (range: '1d' | '7d' | '14d') => {
+    setProposalDateFilter(range);
+    setActiveTab('proposals');
+  };
+
+  const handleTabChange = (tab: NavigationTab) => {
+    setActiveTab(tab);
+    setProposalDateFilter(null);
+  };
 
   // Map app settings from database to AppSettings type
   const settings: AppSettings = {
