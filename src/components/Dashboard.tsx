@@ -149,7 +149,7 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
   return total;
 };
 
-export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, onViewProposals }) => {
   const { proposals, loading } = useProposals();
   const { goals, loading: goalsLoading } = useGoals();
   const isRestricted = user.role === UserRole.BD_MEMBER && !!user.linked_profile_id;
