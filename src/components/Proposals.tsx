@@ -15,6 +15,8 @@ import {
 interface ProposalsProps {
   profiles: BDProfile[];
   user: User;
+  dateFilter?: '1d' | '7d' | '14d' | null;
+  onClearDateFilter?: () => void;
 }
 
 const STATUS_OPTIONS = ['pending', 'viewed', 'interviewed', 'won', 'lost', 'archived'] as const;
