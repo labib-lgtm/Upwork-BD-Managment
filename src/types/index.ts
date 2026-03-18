@@ -80,6 +80,8 @@ export interface AppSettings {
 export interface KPIMetrics {
   periodLabel: string;
   connects: number;
+  boostedConnects: number;
+  returnedConnects: number;
   sent: number;
   views: number;
   interviews: number;
@@ -87,6 +89,7 @@ export interface KPIMetrics {
   viewRate: number;
   interviewRate: number;
   closeRate: number;
+  newClientRate: number;
   spend: number;
   revenue: number;
   refunds: number;

@@ -3,12 +3,13 @@ import { BDProfile, AppSettings, KPIMetrics, UserRole, User } from '@/types';
 import { useProposals, Proposal } from '@/hooks/useProposals';
 import { useGoals } from '@/hooks/useGoals';
 import { GoalProgressGrid } from '@/components/goals/GoalProgressGrid';
-import { TrendingUp, TrendingDown, DollarSign, Eye, MessageSquare, Award, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Eye, Award, ChevronLeft, ChevronRight, Loader2, Clock, Calendar, CalendarDays } from 'lucide-react';
 
 interface DashboardProps {
   profiles: BDProfile[];
   settings: AppSettings;
   user: User;
+  onViewProposals?: (range: '1d' | '7d' | '14d') => void;
 }
 
 // Calculate metrics from database proposals
