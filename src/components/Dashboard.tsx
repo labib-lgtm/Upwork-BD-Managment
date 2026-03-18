@@ -435,7 +435,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
                   </td>
                 </tr>
                 {renderRow('connects', 'Connects', undefined, 0)}
-                {renderRow('spend', 'Spend', 'currency')}
+                {renderRow('boostedConnects', 'Boosted Connects', undefined, 0)}
+                {renderRow('returnedConnects', 'Returned Connects', undefined, 0)}
+                {renderRow('spend', 'Spend (Net)', 'currency')}
 
                 {/* Activity Section */}
                 <tr className="kpi-section-header">
@@ -447,6 +449,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
                 {renderRow('views', 'Views', undefined, 0)}
                 {renderRow('interviews', 'Interviews', undefined, 0)}
                 {renderRow('closes', 'Closes (Won)', undefined, 0)}
+                {renderRow('newClientRate', 'New Client %', 'percent', 1)}
 
                 {/* Conversion Section */}
                 <tr className="kpi-section-header">

@@ -144,7 +144,7 @@ const IndexContent = () => {
     <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         currentUser={currentUser}
         onUserChange={() => {}}
         onSignOut={signOut}
