@@ -110,7 +110,19 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterProfile, setFilterProfile] = useState<string>('all');
 
+  // Apply external date filter from Dashboard drill-down
   useEffect(() => {
+    if (dateFilter) {
+      const now = new Date();
+      const msMap = { '1d': 1, '7d': 7, '14d': 14 };
+      const days = msMap[dateFilter];
+      const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      setDateFrom(format(from, 'yyyy-MM-dd'));
+      setDateTo(format(now, 'yyyy-MM-dd'));
+      setDatePreset('custom');
+    }
+  }, [dateFilter]);
+
     if (!editingProposal) {
       setFormData(prev => ({
         ...prev,
