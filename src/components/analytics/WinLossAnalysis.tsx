@@ -1,13 +1,14 @@
 import React, { useMemo } from 'react';
 import { Proposal } from '@/hooks/useProposals';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { getChartTooltipStyle, getAxisStyle, getGridStyle, CHART_COLORS } from '@/lib/chartConfig';
+import { Trophy, XCircle, TrendingUp } from 'lucide-react';
 
 interface WinLossAnalysisProps {
   proposals: Proposal[];
 }
 
-const LOSS_COLORS = ['hsl(0, 84%, 60%)', 'hsl(38, 92%, 50%)', 'hsl(199, 89%, 48%)', 'hsl(280, 65%, 60%)', 'hsl(160, 60%, 45%)', 'hsl(330, 70%, 55%)', 'hsl(220, 10%, 55%)'];
-const LOSS_REASONS = ['Outbid', 'No Response', 'Job Cancelled', 'Under-qualified', 'Price Mismatch', 'Slow Response', 'Other'];
+const LOSS_COLORS = [CHART_COLORS.destructive, CHART_COLORS.warning, CHART_COLORS.info, CHART_COLORS.purple, CHART_COLORS.teal, CHART_COLORS.pink, CHART_COLORS.muted];
 
 export const WinLossAnalysis: React.FC<WinLossAnalysisProps> = ({ proposals }) => {
   const lossReasonData = useMemo(() => {
@@ -46,92 +47,114 @@ export const WinLossAnalysis: React.FC<WinLossAnalysisProps> = ({ proposals }) =
   const totalWon = proposals.filter(p => p.status === 'won').length;
   const totalLost = proposals.filter(p => p.status === 'lost').length;
   const total = proposals.length;
+  const axisStyle = getAxisStyle();
 
   return (
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
         <div className="metric-card">
-          <p className="text-xs text-muted-foreground">Won</p>
-          <p className="text-2xl font-bold text-green-400">{totalWon}</p>
-          <p className="text-xs text-muted-foreground">{total > 0 ? ((totalWon / total) * 100).toFixed(1) : 0}% of all</p>
+          <div className="flex items-center gap-2 mb-2">
+            <Trophy className="w-4 h-4 text-success" />
+            <p className="text-xs text-muted-foreground font-medium">Won</p>
+          </div>
+          <p className="text-2xl font-bold text-success tabular-nums">{totalWon}</p>
+          <p className="text-xs text-muted-foreground mt-1">{total > 0 ? ((totalWon / total) * 100).toFixed(1) : 0}% of all</p>
         </div>
         <div className="metric-card">
-          <p className="text-xs text-muted-foreground">Lost</p>
-          <p className="text-2xl font-bold text-destructive">{totalLost}</p>
-          <p className="text-xs text-muted-foreground">{total > 0 ? ((totalLost / total) * 100).toFixed(1) : 0}% of all</p>
+          <div className="flex items-center gap-2 mb-2">
+            <XCircle className="w-4 h-4 text-destructive" />
+            <p className="text-xs text-muted-foreground font-medium">Lost</p>
+          </div>
+          <p className="text-2xl font-bold text-destructive tabular-nums">{totalLost}</p>
+          <p className="text-xs text-muted-foreground mt-1">{total > 0 ? ((totalLost / total) * 100).toFixed(1) : 0}% of all</p>
         </div>
         <div className="metric-card">
-          <p className="text-xs text-muted-foreground">Win/Loss Ratio</p>
-          <p className="text-2xl font-bold text-foreground">{totalLost > 0 ? (totalWon / totalLost).toFixed(2) : totalWon > 0 ? '∞' : '0'}</p>
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="w-4 h-4 text-foreground" />
+            <p className="text-xs text-muted-foreground font-medium">Win/Loss Ratio</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground tabular-nums">{totalLost > 0 ? (totalWon / totalLost).toFixed(2) : totalWon > 0 ? '∞' : '0'}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6">
         {/* Loss Reasons Pie */}
-        <div>
-          <h4 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Loss Reasons</h4>
-          {lossReasonData.length > 0 ? (
-            <div className="h-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={lossReasonData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={11}>
-                    {lossReasonData.map((_, i) => (
-                      <Cell key={i} fill={LOSS_COLORS[i % LOSS_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(220, 15%, 11%)', border: '1px solid hsl(220, 15%, 20%)', borderRadius: '8px', color: 'hsl(0, 0%, 98%)' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
-              No loss reasons recorded yet. Mark proposals as "lost" and add a reason.
-            </div>
-          )}
+        <div className="section-card">
+          <div className="section-card-header">
+            <h4 className="text-sm font-bold text-foreground">Loss Reasons</h4>
+          </div>
+          <div className="section-card-body">
+            {lossReasonData.length > 0 ? (
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={lossReasonData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={40} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={11} strokeWidth={2} stroke="hsl(var(--card))">
+                      {lossReasonData.map((_, i) => (
+                        <Cell key={i} fill={LOSS_COLORS[i % LOSS_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={getChartTooltipStyle()} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
+                No loss reasons recorded yet.
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Win Factors */}
-        <div>
-          <h4 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Win Factors</h4>
-          {winFactorData.length > 0 ? (
-            <div className="space-y-2">
-              {winFactorData.map((f, i) => (
-                <div key={i} className="flex items-center justify-between p-2 rounded bg-secondary/50">
-                  <span className="text-sm text-foreground">{f.name}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${(f.value / (winFactorData[0]?.value || 1)) * 100}%` }} />
+        <div className="section-card">
+          <div className="section-card-header">
+            <h4 className="text-sm font-bold text-foreground">Win Factors</h4>
+          </div>
+          <div className="section-card-body">
+            {winFactorData.length > 0 ? (
+              <div className="space-y-2.5">
+                {winFactorData.map((f, i) => (
+                  <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
+                    <span className="text-sm text-foreground font-medium">{f.name}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-28 h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-success rounded-full transition-all duration-500" style={{ width: `${(f.value / (winFactorData[0]?.value || 1)) * 100}%` }} />
+                      </div>
+                      <span className="text-sm font-bold text-foreground w-8 text-right tabular-nums">{f.value}</span>
                     </div>
-                    <span className="text-sm font-semibold text-foreground w-8 text-right">{f.value}</span>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
-              No win factors recorded yet. Mark proposals as "won" and add a factor.
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
+                No win factors recorded yet.
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Monthly Trend */}
       {monthlyTrend.length > 0 && (
-        <div>
-          <h4 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Monthly Win/Loss Trend</h4>
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 20%)" />
-                <XAxis dataKey="month" stroke="hsl(220, 10%, 55%)" fontSize={12} />
-                <YAxis stroke="hsl(220, 10%, 55%)" fontSize={12} />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(220, 15%, 11%)', border: '1px solid hsl(220, 15%, 20%)', borderRadius: '8px', color: 'hsl(0, 0%, 98%)' }} />
-                <Legend />
-                <Line type="monotone" dataKey="won" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="lost" stroke="hsl(0, 84%, 60%)" strokeWidth={2} dot={{ r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
+        <div className="section-card">
+          <div className="section-card-header">
+            <h4 className="text-sm font-bold text-foreground">Monthly Win/Loss Trend</h4>
+          </div>
+          <div className="section-card-body">
+            <div className="h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthlyTrend}>
+                  <CartesianGrid {...getGridStyle()} />
+                  <XAxis dataKey="month" {...axisStyle} />
+                  <YAxis {...axisStyle} />
+                  <Tooltip contentStyle={getChartTooltipStyle()} />
+                  <Legend />
+                  <Line type="monotone" dataKey="won" stroke={CHART_COLORS.success} strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2 }} />
+                  <Line type="monotone" dataKey="lost" stroke={CHART_COLORS.destructive} strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       )}
