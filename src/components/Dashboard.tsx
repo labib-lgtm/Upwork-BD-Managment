@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { BDProfile, AppSettings, KPIMetrics, UserRole, User } from '@/types';
 import { useProposals, Proposal } from '@/hooks/useProposals';
 import { useGoals } from '@/hooks/useGoals';
