@@ -152,7 +152,7 @@ const IndexContent = () => {
         onUserChange={() => {}}
         onSignOut={signOut}
       />
-      <main className="flex-1 flex flex-col overflow-y-auto">
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {renderContent()}
       </main>
     </div>
