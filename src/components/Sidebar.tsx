@@ -9,6 +9,7 @@ import {
   Settings, 
   ChevronDown,
   LogOut,
+  BarChart3,
 } from 'lucide-react';
 import lynxLogo from '@/assets/lynx-logo.png';
 
