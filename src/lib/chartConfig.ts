@@ -4,7 +4,7 @@ export const getChartTooltipStyle = () => ({
   backgroundColor: 'hsl(var(--chart-tooltip-bg))',
   border: '1px solid hsl(var(--chart-tooltip-border))',
   borderRadius: '10px',
-  color: 'hsl(var(--chart-tooltip-text))',
+  color: 'hsl(var(--muted-foreground))',
   boxShadow: '0 8px 24px rgb(0 0 0 / 0.12)',
   padding: '10px 14px',
   fontSize: '13px',
