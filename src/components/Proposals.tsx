@@ -85,6 +85,8 @@ const getDefaultFormData = (profileName: string): LocalFormData => ({
   boosted_connects: 0,
   returned_connects: 0,
   notes: '',
+  loss_reason: '',
+  win_factor: '',
 });
 
 type SortField = 'date' | 'budget' | 'proposed_amount' | 'connects_used' | 'status' | 'profile_name' | 'job_title';
