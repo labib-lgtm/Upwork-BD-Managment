@@ -453,25 +453,25 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-border bg-card/50">
+      <header className="page-header">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Proposals</h2>
-            <p className="text-sm text-muted-foreground">
-              {filteredAndSortedProposals.length} proposals • <span className="text-muted-foreground/70">Ctrl+N to add</span>
+            <h2 className="page-title">Proposals</h2>
+            <p className="page-subtitle">
+              {filteredAndSortedProposals.length} proposals • <span className="text-muted-foreground/60">⌘N to add</span>
             </p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={exportCSV}
-              className="flex items-center gap-2 px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-secondary transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 border border-border text-foreground rounded-xl font-medium hover:bg-muted/50 transition-colors text-sm"
             >
               <Download className="w-4 h-4" />
-              Export CSV
+              Export
             </button>
             <button
               onClick={openNewProposalModal}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity glow-primary-sm"
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90 transition-all text-sm glow-primary-sm"
             >
               <Plus className="w-4 h-4" />
               Add Proposal
@@ -480,7 +480,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
         </div>
 
         {/* Filters & Search */}
-        <div className="mt-4 flex gap-4 flex-wrap">
+        <div className="mt-4 flex gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -488,13 +488,13 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search proposals..."
-              className="w-full pl-9 pr-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
+              className="w-full pl-9 pr-3 py-2.5 bg-muted/30 border border-border rounded-xl text-sm input-focus"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
+            className="px-3 py-2.5 bg-muted/30 border border-border rounded-xl text-sm input-focus"
           >
             <option value="all">All Status</option>
             {STATUS_OPTIONS.map((status) => (
@@ -505,7 +505,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
             <select
               value={filterProfile}
               onChange={(e) => setFilterProfile(e.target.value)}
-              className="px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
+              className="px-3 py-2.5 bg-muted/30 border border-border rounded-xl text-sm input-focus"
             >
               <option value="all">All Profiles</option>
               {profiles.map((profile) => (
