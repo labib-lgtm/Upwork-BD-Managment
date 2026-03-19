@@ -1076,6 +1076,50 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                       </div>
                     </div>
 
+                    {/* Win/Loss Attribution */}
+                    {(formData.status === 'won' || formData.status === 'lost') && (
+                      <div className="grid grid-cols-2 gap-4">
+                        {formData.status === 'lost' && (
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">Loss Reason</label>
+                            <select
+                              value={formData.loss_reason}
+                              onChange={(e) => setFormData({ ...formData, loss_reason: e.target.value })}
+                              className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                            >
+                              <option value="">Select reason...</option>
+                              <option value="Outbid">Outbid</option>
+                              <option value="No Response">No Response</option>
+                              <option value="Job Cancelled">Job Cancelled</option>
+                              <option value="Under-qualified">Under-qualified</option>
+                              <option value="Price Mismatch">Price Mismatch</option>
+                              <option value="Slow Response">Slow Response</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                        )}
+                        {formData.status === 'won' && (
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">Win Factor</label>
+                            <select
+                              value={formData.win_factor}
+                              onChange={(e) => setFormData({ ...formData, win_factor: e.target.value })}
+                              className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                            >
+                              <option value="">Select factor...</option>
+                              <option value="Best Proposal">Best Proposal</option>
+                              <option value="Fastest Response">Fastest Response</option>
+                              <option value="Optimal Price">Optimal Price</option>
+                              <option value="Portfolio Match">Portfolio Match</option>
+                              <option value="Past Relationship">Past Relationship</option>
+                              <option value="Video Intro">Video Intro</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Client Hire Count</label>
