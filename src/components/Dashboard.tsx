@@ -378,17 +378,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
           <button
             key={card.key}
             onClick={() => onViewProposals?.(card.key)}
-            className="metric-card text-left hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
+            className="metric-card text-left cursor-pointer group"
           >
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <span className="text-muted-foreground">{card.icon}</span>
-              <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">View →</span>
+              <span className="text-[11px] font-medium text-muted-foreground group-hover:text-primary transition-colors">View →</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{card.count}</p>
-            <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
-            <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
-              <span>Net Connects: {card.netConnects}</span>
-              <span>Wins: {card.wins}</span>
+            <p className="text-2xl font-bold text-foreground tabular-nums">{card.count}</p>
+            <p className="text-xs text-muted-foreground font-medium mt-1">{card.label}</p>
+            <div className="flex gap-4 mt-3 pt-3 border-t border-border/40 text-xs text-muted-foreground">
+              <span className="tabular-nums">Connects: <span className="font-semibold text-foreground">{card.netConnects}</span></span>
+              <span className="tabular-nums">Wins: <span className="font-semibold text-foreground">{card.wins}</span></span>
             </div>
           </button>
         ))}
