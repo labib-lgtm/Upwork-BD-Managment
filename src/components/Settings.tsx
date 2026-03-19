@@ -29,19 +29,19 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   const { accessList, loading: accessLoading, getUserAccess, updateUserAccess } = useProfileAccess();
   const { permissions, loading: permissionsLoading, hasTabAccess, updatePermission } = useRolePermissionsContext();
   const isAdmin = currentUserRole === UserRole.ADMIN;
-  
+
   // Sync local settings when props change (real-time updates)
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
-  
+
   // Profile management state
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [editingProfile, setEditingProfile] = useState<BDProfile | null>(null);
   const [profileForm, setProfileForm] = useState({ name: '', description: '', is_active: true });
   const [submitting, setSubmitting] = useState(false);
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
-  
+
   // Access management state
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [editingMemberAccess, setEditingMemberAccess] = useState<TeamMember | null>(null);
@@ -53,7 +53,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
       fiscal_year_start: localSettings.fiscal_year_start_month,
       connect_cost: localSettings.connect_cost,
       target_roas: localSettings.target_roas,
-      currency: localSettings.currency,
+      currency: localSettings.currency
     });
   };
 
@@ -68,7 +68,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
     setProfileForm({
       name: profile.name,
       description: profile.description || '',
-      is_active: profile.is_active,
+      is_active: profile.is_active
     });
     setShowProfileModal(true);
   };
@@ -80,7 +80,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
     const formData = {
       name: profileForm.name,
       description: profileForm.description || null,
-      is_active: profileForm.is_active,
+      is_active: profileForm.is_active
     };
 
     let success = false;
@@ -115,10 +115,10 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   };
 
   const handleAccessChange = (profileId: string) => {
-    setSelectedProfileAccess(prev => 
-      prev.includes(profileId) 
-        ? prev.filter(id => id !== profileId)
-        : [...prev, profileId]
+    setSelectedProfileAccess((prev) =>
+    prev.includes(profileId) ?
+    prev.filter((id) => id !== profileId) :
+    [...prev, profileId]
     );
   };
 
@@ -144,9 +144,9 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
   };
 
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -161,8 +161,8 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
           </div>
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity glow-primary-sm"
-          >
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity glow-primary-sm">
+            
             <Save className="w-4 h-4" />
             Save Changes
           </button>
@@ -182,61 +182,61 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               </h3>
               <button
                 onClick={openNewProfileModal}
-                className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-              >
+                className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+                
                 <Plus className="w-4 h-4" />
                 Add Profile
               </button>
             </div>
 
-            {profilesLoading ? (
-              <div className="flex items-center justify-center py-8">
+            {profilesLoading ?
+            <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
-              </div>
-            ) : profiles.length === 0 ? (
-              <p className="text-muted-foreground text-sm py-4">No profiles yet. Add your first BD profile above.</p>
-            ) : (
-              <div className="space-y-3">
-                {profiles.map((profile) => (
-                  <div
-                    key={profile.id}
-                    className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border/50"
-                  >
+              </div> :
+            profiles.length === 0 ?
+            <p className="text-muted-foreground text-sm py-4">No profiles yet. Add your first BD profile above.</p> :
+
+            <div className="space-y-3">
+                {profiles.map((profile) =>
+              <div
+                key={profile.id}
+                className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border/50">
+                
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${profile.is_active ? 'bg-green-500' : 'bg-muted-foreground'}`} />
                       <div>
                         <p className="font-medium text-foreground">{profile.name}</p>
-                        {profile.description && (
-                          <p className="text-xs text-muted-foreground">{profile.description}</p>
-                        )}
+                        {profile.description &&
+                    <p className="text-xs text-muted-foreground">{profile.description}</p>
+                    }
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => openEditProfileModal(profile)}
-                        className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
-                      >
+                    onClick={() => openEditProfileModal(profile)}
+                    className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground">
+                    
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDeleteProfile(profile.id)}
-                        className="p-2 hover:bg-destructive/20 rounded-lg transition-colors text-muted-foreground hover:text-destructive"
-                      >
+                    onClick={() => handleDeleteProfile(profile.id)}
+                    className="p-2 hover:bg-destructive/20 rounded-lg transition-colors text-muted-foreground hover:text-destructive">
+                    
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                ))}
+              )}
               </div>
-            )}
+            }
             <p className="mt-4 text-xs text-muted-foreground">
               BD profiles represent different Upwork accounts or business profiles your team works on.
             </p>
           </div>
 
           {/* Team Members - Admin Only */}
-          {isAdmin && (
-            <div className="bg-card border border-border rounded-lg p-6">
+          {isAdmin &&
+          <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <UserCog className="w-5 h-5 text-foreground" />
@@ -248,28 +248,28 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                 </div>
               </div>
 
-              {membersLoading ? (
-                <div className="flex items-center justify-center py-8">
+              {membersLoading ?
+            <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-              ) : members.length === 0 ? (
-                <p className="text-muted-foreground text-sm py-4">No team members found.</p>
-              ) : (
-                <div className="space-y-3">
+                </div> :
+            members.length === 0 ?
+            <p className="text-muted-foreground text-sm py-4">No team members found.</p> :
+
+            <div className="space-y-3">
                   {members.map((member) => {
-                    const memberAccess = getUserAccess(member.id);
-                    const accessCount = memberAccess.length;
-                    const isAdminRole = member.role === 'admin';
+                const memberAccess = getUserAccess(member.id);
+                const accessCount = memberAccess.length;
+                const isAdminRole = member.role === 'admin';
+
+                return (
+                  <div
+                    key={member.id}
+                    className="p-4 bg-secondary/50 rounded-lg border border-border/50">
                     
-                    return (
-                      <div
-                        key={member.id}
-                        className="p-4 bg-secondary/50 rounded-lg border border-border/50"
-                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                              <span className="text-sm font-bold text-primary">
+                              <span className="text-sm font-bold bg-transparent text-black">
                                 {(member.full_name || member.email || '?').charAt(0).toUpperCase()}
                               </span>
                             </div>
@@ -283,18 +283,18 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                               {member.role || 'No Role'}
                             </span>
                             <select
-                              value={member.role || ''}
-                              onChange={(e) => handleRoleChange(member.id, e.target.value as 'admin' | 'manager' | 'bd_member')}
-                              disabled={updatingRole === member.id}
-                              className="px-3 py-1.5 text-sm bg-input border border-border rounded-lg input-focus"
-                            >
+                          value={member.role || ''}
+                          onChange={(e) => handleRoleChange(member.id, e.target.value as 'admin' | 'manager' | 'bd_member')}
+                          disabled={updatingRole === member.id}
+                          className="px-3 py-1.5 text-sm bg-input border border-border rounded-lg input-focus">
+                          
                               <option value="bd_member">BD Member</option>
                               <option value="manager">Manager</option>
                               <option value="admin">Admin</option>
                             </select>
-                            {updatingRole === member.id && (
-                              <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                            )}
+                            {updatingRole === member.id &&
+                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                        }
                           </div>
                         </div>
                         
@@ -303,41 +303,41 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                           <div className="flex items-center gap-2">
                             <Key className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">Profile Access:</span>
-                            {isAdminRole ? (
-                              <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded">
+                            {isAdminRole ?
+                        <span className="text-xs px-2 py-0.5 bg-primary/20 rounded text-black">
                                 All Profiles (Admin)
-                              </span>
-                            ) : accessCount === 0 ? (
-                              <span className="text-xs text-destructive">No access assigned</span>
-                            ) : (
-                              <span className="text-xs text-foreground">
+                              </span> :
+                        accessCount === 0 ?
+                        <span className="text-xs text-destructive">No access assigned</span> :
+
+                        <span className="text-xs text-foreground">
                                 {accessCount} profile{accessCount !== 1 ? 's' : ''}
                               </span>
-                            )}
+                        }
                           </div>
-                          {!isAdminRole && (
-                            <button
-                              onClick={() => openAccessModal(member)}
-                              className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors"
-                            >
+                          {!isAdminRole &&
+                      <button
+                        onClick={() => openAccessModal(member)}
+                        className="px-3 py-1 text-xs font-medium bg-primary/10 rounded hover:bg-primary/20 transition-colors text-black">
+                        
                               Manage Access
                             </button>
-                          )}
+                      }
                         </div>
-                      </div>
-                    );
-                  })}
+                      </div>);
+
+              })}
                 </div>
-              )}
+            }
               <p className="mt-4 text-xs text-muted-foreground">
                 Admins have access to all profiles. Other roles need explicit profile access to view dashboard and proposals for those profiles.
               </p>
             </div>
-          )}
+          }
 
           {/* Role Permissions - Admin Only */}
-          {isAdmin && (
-            <div className="bg-card border border-border rounded-lg p-6">
+          {isAdmin &&
+          <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Lock className="w-5 h-5 text-foreground" />
@@ -349,12 +349,12 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                 </div>
               </div>
 
-              {permissionsLoading ? (
-                <div className="flex items-center justify-center py-8">
+              {permissionsLoading ?
+            <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-              ) : (
-                <div className="space-y-6">
+                </div> :
+
+            <div className="space-y-6">
                   {/* Manager Permissions */}
                   <div>
                   <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
@@ -364,31 +364,31 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                       Navigation Access
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
-                      {(['dashboard', 'proposals', 'inbound', 'catalogs', 'settings'] as NavigationTab[]).map((tab) => (
-                        <label
-                          key={`manager-${tab}`}
-                          className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors"
-                        >
+                      {(['dashboard', 'proposals', 'inbound', 'catalogs', 'settings'] as NavigationTab[]).map((tab) =>
+                  <label
+                    key={`manager-${tab}`}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors">
+                    
                           <div className="relative">
                             <input
-                              type="checkbox"
-                              checked={hasTabAccess('manager', tab)}
-                              onChange={(e) => updatePermission('manager', tab, e.target.checked)}
-                              className="sr-only"
-                            />
+                        type="checkbox"
+                        checked={hasTabAccess('manager', tab)}
+                        onChange={(e) => updatePermission('manager', tab, e.target.checked)}
+                        className="sr-only" />
+                      
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                              hasTabAccess('manager', tab)
-                                ? 'bg-primary border-primary' 
-                                : 'border-border'
-                            }`}>
-                              {hasTabAccess('manager', tab) && (
-                                <Check className="w-3 h-3 text-primary-foreground" />
-                              )}
+                      hasTabAccess('manager', tab) ?
+                      'bg-primary border-primary' :
+                      'border-border'}`
+                      }>
+                              {hasTabAccess('manager', tab) &&
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                        }
                             </div>
                           </div>
                           <span className="text-sm text-foreground capitalize">{tab}</span>
                         </label>
-                      ))}
+                  )}
                     </div>
                   </div>
 
@@ -401,40 +401,40 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                       Navigation Access
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
-                      {(['dashboard', 'proposals', 'inbound', 'catalogs', 'settings'] as NavigationTab[]).map((tab) => (
-                        <label
-                          key={`bd_member-${tab}`}
-                          className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors"
-                        >
+                      {(['dashboard', 'proposals', 'inbound', 'catalogs', 'settings'] as NavigationTab[]).map((tab) =>
+                  <label
+                    key={`bd_member-${tab}`}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors">
+                    
                           <div className="relative">
                             <input
-                              type="checkbox"
-                              checked={hasTabAccess('bd_member', tab)}
-                              onChange={(e) => updatePermission('bd_member', tab, e.target.checked)}
-                              className="sr-only"
-                            />
+                        type="checkbox"
+                        checked={hasTabAccess('bd_member', tab)}
+                        onChange={(e) => updatePermission('bd_member', tab, e.target.checked)}
+                        className="sr-only" />
+                      
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                              hasTabAccess('bd_member', tab)
-                                ? 'bg-primary border-primary' 
-                                : 'border-border'
-                            }`}>
-                              {hasTabAccess('bd_member', tab) && (
-                                <Check className="w-3 h-3 text-primary-foreground" />
-                              )}
+                      hasTabAccess('bd_member', tab) ?
+                      'bg-primary border-primary' :
+                      'border-border'}`
+                      }>
+                              {hasTabAccess('bd_member', tab) &&
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                        }
                             </div>
                           </div>
                           <span className="text-sm text-foreground capitalize">{tab}</span>
                         </label>
-                      ))}
+                  )}
                     </div>
                   </div>
                 </div>
-              )}
+            }
               <p className="mt-4 text-xs text-muted-foreground">
                 Configure which navigation tabs each role can access. Admins always have access to all tabs.
               </p>
             </div>
-          )}
+          }
 
           {/* Goal Settings */}
           <GoalSettingsSection currency={localSettings.currency} />
@@ -456,8 +456,8 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                   step="0.01"
                   value={localSettings.connect_cost}
                   onChange={(e) => setLocalSettings({ ...localSettings, connect_cost: Number(e.target.value) })}
-                  className="w-full px-4 py-3 bg-input border border-border rounded-lg input-focus text-lg"
-                />
+                  className="w-full px-4 py-3 bg-input border border-border rounded-lg input-focus text-lg" />
+                
                 <p className="mt-2 text-xs text-muted-foreground">
                   Average cost per connect on Upwork (typically $0.15 - $0.18)
                 </p>
@@ -473,8 +473,8 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                   step="0.1"
                   value={localSettings.target_roas}
                   onChange={(e) => setLocalSettings({ ...localSettings, target_roas: Number(e.target.value) })}
-                  className="w-full px-4 py-3 bg-input border border-border rounded-lg input-focus text-lg"
-                />
+                  className="w-full px-4 py-3 bg-input border border-border rounded-lg input-focus text-lg" />
+                
                 <p className="mt-2 text-xs text-muted-foreground">
                   Return on Ad Spend target (e.g., 10 means $10 revenue per $1 spent)
                 </p>
@@ -487,8 +487,8 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                 <select
                   value={localSettings.currency}
                   onChange={(e) => setLocalSettings({ ...localSettings, currency: e.target.value })}
-                  className="w-full px-4 py-3 bg-input border border-border rounded-lg input-focus text-lg"
-                >
+                  className="w-full px-4 py-3 bg-input border border-border rounded-lg input-focus text-lg">
+                  
                   <option value="USD">USD ($)</option>
                   <option value="EUR">EUR (€)</option>
                   <option value="GBP">GBP (£)</option>
@@ -511,11 +511,11 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               <select
                 value={localSettings.fiscal_year_start_month}
                 onChange={(e) => setLocalSettings({ ...localSettings, fiscal_year_start_month: Number(e.target.value) })}
-                className="w-full px-4 py-3 bg-input border border-border rounded-lg input-focus text-lg"
-              >
-                {months.map((month, index) => (
-                  <option key={month} value={index + 1}>{month}</option>
-                ))}
+                className="w-full px-4 py-3 bg-input border border-border rounded-lg input-focus text-lg">
+                
+                {months.map((month, index) =>
+                <option key={month} value={index + 1}>{month}</option>
+                )}
               </select>
               <p className="mt-2 text-xs text-muted-foreground">
                 The first month of your fiscal year (commonly July or January)
@@ -538,17 +538,17 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
       </div>
 
       {/* Profile Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      {showProfileModal &&
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-fade-in">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h3 className="text-xl font-bold text-foreground">
                 {editingProfile ? 'Edit Profile' : 'New BD Profile'}
               </h3>
               <button
-                onClick={() => setShowProfileModal(false)}
-                className="p-2 hover:bg-secondary rounded-lg transition-colors"
-              >
+              onClick={() => setShowProfileModal(false)}
+              className="p-2 hover:bg-secondary rounded-lg transition-colors">
+              
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -557,43 +557,43 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Profile Name</label>
                 <input
-                  type="text"
-                  value={profileForm.name}
-                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  placeholder="e.g. Main Profile, Design Profile"
-                  required
-                  autoFocus
-                />
+                type="text"
+                value={profileForm.name}
+                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                placeholder="e.g. Main Profile, Design Profile"
+                required
+                autoFocus />
+              
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Description</label>
                 <input
-                  type="text"
-                  value={profileForm.description}
-                  onChange={(e) => setProfileForm({ ...profileForm, description: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  placeholder="Optional description"
-                />
+                type="text"
+                value={profileForm.description}
+                onChange={(e) => setProfileForm({ ...profileForm, description: e.target.value })}
+                className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                placeholder="Optional description" />
+              
               </div>
 
               <label className="flex items-center gap-3 cursor-pointer">
                 <div className="relative">
                   <input
-                    type="checkbox"
-                    checked={profileForm.is_active}
-                    onChange={(e) => setProfileForm({ ...profileForm, is_active: e.target.checked })}
-                    className="sr-only"
-                  />
+                  type="checkbox"
+                  checked={profileForm.is_active}
+                  onChange={(e) => setProfileForm({ ...profileForm, is_active: e.target.checked })}
+                  className="sr-only" />
+                
                   <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                    profileForm.is_active 
-                      ? 'bg-primary border-primary' 
-                      : 'border-border'
-                  }`}>
-                    {profileForm.is_active && (
-                      <Check className="w-3 h-3 text-primary-foreground" />
-                    )}
+                profileForm.is_active ?
+                'bg-primary border-primary' :
+                'border-border'}`
+                }>
+                    {profileForm.is_active &&
+                  <Check className="w-3 h-3 text-primary-foreground" />
+                  }
                   </div>
                 </div>
                 <span className="text-sm text-foreground">Active profile</span>
@@ -601,18 +601,18 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
 
               <div className="flex justify-end gap-3 pt-4">
                 <button
-                  type="button"
-                  onClick={() => setShowProfileModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  disabled={submitting}
-                >
+                type="button"
+                onClick={() => setShowProfileModal(false)}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                disabled={submitting}>
+                
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
-                  disabled={submitting}
-                >
+                type="submit"
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                disabled={submitting}>
+                
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   {editingProfile ? 'Update' : 'Create'} Profile
                 </button>
@@ -620,11 +620,11 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
             </form>
           </div>
         </div>
-      )}
+      }
 
       {/* Profile Access Modal */}
-      {showAccessModal && editingMemberAccess && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      {showAccessModal && editingMemberAccess &&
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-fade-in">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
@@ -634,9 +634,9 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
                 </p>
               </div>
               <button
-                onClick={() => setShowAccessModal(false)}
-                className="p-2 hover:bg-secondary rounded-lg transition-colors"
-              >
+              onClick={() => setShowAccessModal(false)}
+              className="p-2 hover:bg-secondary rounded-lg transition-colors">
+              
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -647,59 +647,59 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               </p>
               
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {profiles.map((profile) => (
-                  <label
-                    key={profile.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors"
-                  >
+                {profiles.map((profile) =>
+              <label
+                key={profile.id}
+                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors">
+                
                     <div className="relative">
                       <input
-                        type="checkbox"
-                        checked={selectedProfileAccess.includes(profile.id)}
-                        onChange={() => handleAccessChange(profile.id)}
-                        className="sr-only"
-                      />
+                    type="checkbox"
+                    checked={selectedProfileAccess.includes(profile.id)}
+                    onChange={() => handleAccessChange(profile.id)}
+                    className="sr-only" />
+                  
                       <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                        selectedProfileAccess.includes(profile.id)
-                          ? 'bg-primary border-primary' 
-                          : 'border-border'
-                      }`}>
-                        {selectedProfileAccess.includes(profile.id) && (
-                          <Check className="w-3 h-3 text-primary-foreground" />
-                        )}
+                  selectedProfileAccess.includes(profile.id) ?
+                  'bg-primary border-primary' :
+                  'border-border'}`
+                  }>
+                        {selectedProfileAccess.includes(profile.id) &&
+                    <Check className="w-3 h-3 text-primary-foreground" />
+                    }
                       </div>
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-foreground">{profile.name}</p>
-                      {profile.description && (
-                        <p className="text-xs text-muted-foreground">{profile.description}</p>
-                      )}
+                      {profile.description &&
+                  <p className="text-xs text-muted-foreground">{profile.description}</p>
+                  }
                     </div>
                     <div className={`w-2 h-2 rounded-full ${profile.is_active ? 'bg-green-500' : 'bg-muted-foreground'}`} />
                   </label>
-                ))}
+              )}
               </div>
 
-              {profiles.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">
+              {profiles.length === 0 &&
+            <p className="text-center text-muted-foreground py-4">
                   No BD profiles available. Create profiles first.
                 </p>
-              )}
+            }
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button
-                  type="button"
-                  onClick={() => setShowAccessModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  disabled={savingAccess}
-                >
+                type="button"
+                onClick={() => setShowAccessModal(false)}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                disabled={savingAccess}>
+                
                   Cancel
                 </button>
                 <button
-                  onClick={handleSaveAccess}
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
-                  disabled={savingAccess}
-                >
+                onClick={handleSaveAccess}
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                disabled={savingAccess}>
+                
                   {savingAccess && <Loader2 className="w-4 h-4 animate-spin" />}
                   Save Access
                 </button>
@@ -707,8 +707,8 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
             </div>
           </div>
         </div>
-      )}
+      }
 
-    </div>
-  );
+    </div>);
+
 };

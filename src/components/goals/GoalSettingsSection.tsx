@@ -10,57 +10,57 @@ interface GoalSettingsSectionProps {
 export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ currency }) => {
   const { goals, loading, upsertGoal } = useGoals();
   const { profiles } = useBDProfiles();
-  
+
   const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear());
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [saving, setSaving] = useState<number | null>(null);
-  
+
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 
   // Get goals for selected year and profile
   const yearGoals = useMemo(() => {
-    return goals.filter(g => 
-      g.fiscal_year === fiscalYear && 
-      (selectedProfileId ? g.bd_profile_id === selectedProfileId : !g.bd_profile_id)
+    return goals.filter((g) =>
+    g.fiscal_year === fiscalYear && (
+    selectedProfileId ? g.bd_profile_id === selectedProfileId : !g.bd_profile_id)
     );
   }, [goals, fiscalYear, selectedProfileId]);
 
   // Create a map for quick lookup
   const goalsByMonth = useMemo(() => {
     const map: Record<number, Goal> = {};
-    yearGoals.forEach(g => {
+    yearGoals.forEach((g) => {
       map[g.month] = g;
     });
     return map;
   }, [yearGoals]);
 
   // Local state for form values
-  const [formValues, setFormValues] = useState<Record<number, { revenue: string; proposals: string; closes: string }>>({});
+  const [formValues, setFormValues] = useState<Record<number, {revenue: string;proposals: string;closes: string;}>>({});
 
   // Initialize form values when goals load
   React.useEffect(() => {
-    const newValues: Record<number, { revenue: string; proposals: string; closes: string }> = {};
+    const newValues: Record<number, {revenue: string;proposals: string;closes: string;}> = {};
     for (let month = 1; month <= 12; month++) {
       const goal = goalsByMonth[month];
       newValues[month] = {
         revenue: goal ? String(goal.revenue_target) : '0',
         proposals: goal ? String(goal.proposal_target) : '0',
-        closes: goal ? String(goal.closes_target) : '0',
+        closes: goal ? String(goal.closes_target) : '0'
       };
     }
     setFormValues(newValues);
   }, [goalsByMonth]);
 
   const handleValueChange = (month: number, field: 'revenue' | 'proposals' | 'closes', value: string) => {
-    setFormValues(prev => ({
+    setFormValues((prev) => ({
       ...prev,
       [month]: {
         ...prev[month],
-        [field]: value,
-      },
+        [field]: value
+      }
     }));
   };
 
@@ -69,14 +69,14 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
     if (!values) return;
 
     setSaving(month);
-    
+
     const formData: GoalFormData = {
       bd_profile_id: selectedProfileId,
       fiscal_year: fiscalYear,
       month,
       revenue_target: parseFloat(values.revenue) || 0,
       proposal_target: parseInt(values.proposals) || 0,
-      closes_target: parseInt(values.closes) || 0,
+      closes_target: parseInt(values.closes) || 0
     };
 
     await upsertGoal(formData);
@@ -89,7 +89,7 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
       style: 'currency',
       currency,
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(num);
   };
 
@@ -98,8 +98,8 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
     let revenue = 0;
     let proposals = 0;
     let closes = 0;
-    
-    Object.values(formValues).forEach(v => {
+
+    Object.values(formValues).forEach((v) => {
       revenue += parseFloat(v?.revenue || '0') || 0;
       proposals += parseInt(v?.proposals || '0') || 0;
       closes += parseInt(v?.closes || '0') || 0;
@@ -114,8 +114,8 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -128,34 +128,34 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
         
         <div className="flex items-center gap-4">
           {/* Profile selector */}
-          {profiles.length > 0 && (
-            <select
-              value={selectedProfileId || ''}
-              onChange={(e) => setSelectedProfileId(e.target.value || null)}
-              className="px-3 py-1.5 text-sm bg-input border border-border rounded-lg input-focus"
-            >
+          {profiles.length > 0 &&
+          <select
+            value={selectedProfileId || ''}
+            onChange={(e) => setSelectedProfileId(e.target.value || null)}
+            className="px-3 py-1.5 text-sm bg-input border border-border rounded-lg input-focus">
+            
               <option value="">All Profiles</option>
-              {profiles.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
+              {profiles.map((p) =>
+            <option key={p.id} value={p.id}>{p.name}</option>
+            )}
             </select>
-          )}
+          }
           
           {/* Year selector */}
           <div className="flex items-center gap-2 bg-secondary rounded-lg p-1">
             <button
-              onClick={() => setFiscalYear(y => y - 1)}
-              className="p-2 hover:bg-muted rounded-md transition-colors"
-            >
+              onClick={() => setFiscalYear((y) => y - 1)}
+              className="p-2 hover:bg-muted rounded-md transition-colors">
+              
               <ChevronLeft className="w-4 h-4" />
             </button>
             <span className="px-3 text-sm font-medium tabular-nums">
               FY {fiscalYear - 1}/{fiscalYear}
             </span>
             <button
-              onClick={() => setFiscalYear(y => y + 1)}
-              className="p-2 hover:bg-muted rounded-md transition-colors"
-            >
+              onClick={() => setFiscalYear((y) => y + 1)}
+              className="p-2 hover:bg-muted rounded-md transition-colors">
+              
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -179,7 +179,7 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
               const month = idx + 1;
               const values = formValues[month] || { revenue: '0', proposals: '0', closes: '0' };
               const hasGoal = !!goalsByMonth[month];
-              
+
               return (
                 <tr key={month} className={`border-b border-border/50 hover:bg-secondary/30 transition-colors ${hasGoal ? 'bg-primary/5' : ''}`}>
                   <td className="py-3 px-2 font-medium text-foreground">{monthName}</td>
@@ -189,8 +189,8 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
                       value={values.revenue}
                       onChange={(e) => handleValueChange(month, 'revenue', e.target.value)}
                       className="w-full text-right px-3 py-2 bg-input border border-border rounded-lg input-focus tabular-nums"
-                      placeholder="0"
-                    />
+                      placeholder="0" />
+                    
                   </td>
                   <td className="py-2 px-2">
                     <input
@@ -198,8 +198,8 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
                       value={values.proposals}
                       onChange={(e) => handleValueChange(month, 'proposals', e.target.value)}
                       className="w-full text-right px-3 py-2 bg-input border border-border rounded-lg input-focus tabular-nums"
-                      placeholder="0"
-                    />
+                      placeholder="0" />
+                    
                   </td>
                   <td className="py-2 px-2">
                     <input
@@ -207,25 +207,25 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
                       value={values.closes}
                       onChange={(e) => handleValueChange(month, 'closes', e.target.value)}
                       className="w-full text-right px-3 py-2 bg-input border border-border rounded-lg input-focus tabular-nums"
-                      placeholder="0"
-                    />
+                      placeholder="0" />
+                    
                   </td>
                   <td className="py-2 px-2">
                     <button
                       onClick={() => handleSaveMonth(month)}
                       disabled={saving === month}
                       className="p-2 hover:bg-primary/20 rounded-lg transition-colors text-primary disabled:opacity-50"
-                      title="Save"
-                    >
-                      {saving === month ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4" />
-                      )}
+                      title="Save">
+                      
+                      {saving === month ?
+                      <Loader2 className="w-4 h-4 animate-spin" /> :
+
+                      <Save className="w-4 h-4 text-black" />
+                      }
                     </button>
                   </td>
-                </tr>
-              );
+                </tr>);
+
             })}
             {/* Totals row */}
             <tr className="bg-primary/10 font-bold">
@@ -248,6 +248,6 @@ export const GoalSettingsSection: React.FC<GoalSettingsSectionProps> = ({ curren
       <p className="mt-4 text-xs text-muted-foreground">
         Set monthly targets for revenue, proposals sent, and closes won. Click the save icon to save each month's goals.
       </p>
-    </div>
-  );
+    </div>);
+
 };
