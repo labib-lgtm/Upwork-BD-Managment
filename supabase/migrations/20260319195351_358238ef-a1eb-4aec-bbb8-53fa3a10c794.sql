@@ -1,0 +1,2 @@
+ALTER TABLE public.role_permissions DROP CONSTRAINT role_permissions_tab_id_check;
+ALTER TABLE public.role_permissions ADD CONSTRAINT role_permissions_tab_id_check CHECK (tab_id = ANY (ARRAY['dashboard'::text, 'proposals'::text, 'analytics'::text, 'inbound'::text, 'catalogs'::text, 'settings'::text]));

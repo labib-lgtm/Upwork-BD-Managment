@@ -5,6 +5,7 @@ import { RolePermissionsProvider } from '@/contexts/RolePermissionsContext';
 import { Sidebar } from '@/components/Sidebar';
 import { Dashboard } from '@/components/Dashboard';
 import { Proposals } from '@/components/Proposals';
+import { Analytics } from '@/components/Analytics';
 import { Settings } from '@/components/Settings';
 import { PlaceholderView } from '@/components/PlaceholderView';
 import { NavigationTab, User, AppSettings, UserRole } from '@/types';
@@ -112,6 +113,8 @@ const IndexContent = () => {
             onClearDateFilter={() => setProposalDateFilter(null)}
           />
         );
+      case 'analytics':
+        return <Analytics settings={settings} />;
       case 'inbound':
         return (
           <PlaceholderView
