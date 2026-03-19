@@ -325,6 +325,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
       boosted_connects: formData.boosted_connects,
       returned_connects: formData.returned_connects,
       notes: formData.notes || null,
+      loss_reason: formData.loss_reason || null,
+      win_factor: formData.win_factor || null,
     };
 
     let success = false;
