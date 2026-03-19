@@ -113,6 +113,8 @@ const IndexContent = () => {
             onClearDateFilter={() => setProposalDateFilter(null)}
           />
         );
+      case 'analytics':
+        return <Analytics settings={settings} />;
       case 'inbound':
         return (
           <PlaceholderView

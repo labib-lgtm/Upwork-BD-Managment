@@ -24,6 +24,7 @@ interface SidebarProps {
 const allNavItems: { id: NavigationTab; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { id: 'proposals', label: 'Proposals', icon: <FileText className="w-5 h-5" /> },
+  { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" /> },
   { id: 'inbound', label: 'Inbound', icon: <Inbox className="w-5 h-5" /> },
   { id: 'catalogs', label: 'Catalogs', icon: <Package className="w-5 h-5" /> },
   { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
