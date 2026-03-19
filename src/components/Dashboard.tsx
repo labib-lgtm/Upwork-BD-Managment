@@ -311,29 +311,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-border bg-card/50">
+      <header className="page-header">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Performance Dashboard</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="page-title">Performance Dashboard</h2>
+            <p className="page-subtitle">
               Fiscal Year {fiscalYear - 1}/{fiscalYear} • {proposals.length} total proposals
             </p>
           </div>
           <div className="flex items-center gap-4">
             {/* Fiscal Year Selector */}
-            <div className="flex items-center gap-2 bg-secondary rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-muted/40 rounded-xl p-1">
               <button
                 onClick={() => setFiscalYear((y) => y - 1)}
-                className="p-2 hover:bg-muted rounded-md transition-colors"
+                className="p-2 hover:bg-card rounded-lg transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="px-3 text-sm font-medium tabular-nums">
+              <span className="px-3 text-sm font-semibold tabular-nums">
                 FY {fiscalYear - 1}/{fiscalYear}
               </span>
               <button
                 onClick={() => setFiscalYear((y) => y + 1)}
-                className="p-2 hover:bg-muted rounded-md transition-colors"
+                className="p-2 hover:bg-card rounded-lg transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -348,11 +348,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
               key={profile.id}
               onClick={() => toggleProfile(profile.name)}
               disabled={isRestricted}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                 selectedProfileNames.includes(profile.name)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-muted-foreground hover:bg-muted'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
               } ${isRestricted ? 'opacity-50 cursor-not-allowed' : ''}`}
+              style={selectedProfileNames.includes(profile.name) ? { boxShadow: '0 2px 6px hsl(72 100% 50% / 0.2)' } : undefined}
             >
               {profile.name}
             </button>
