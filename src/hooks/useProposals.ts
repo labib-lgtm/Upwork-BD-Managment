@@ -70,6 +70,8 @@ export interface ProposalFormData {
   boosted_connects: number;
   returned_connects: number;
   notes: string | null;
+  loss_reason: string | null;
+  win_factor: string | null;
 }
 
 export const useProposals = () => {
