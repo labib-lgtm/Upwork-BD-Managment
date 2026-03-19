@@ -411,8 +411,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
                 <TrendingDown className="w-4 h-4 text-destructive" />
               )}
             </div>
-            <p className="text-2xl font-bold text-foreground">{card.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-2xl font-bold text-foreground">{card.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+              </div>
+              <div className="w-20 h-10 flex-shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={card.sparkData}>
+                    <Line
+                      type="monotone"
+                      dataKey="v"
+                      stroke={card.trend ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'}
+                      strokeWidth={1.5}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         ))}
       </div>
