@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { Proposal } from '@/hooks/useProposals';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
-import { TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { getChartTooltipStyle, getAxisStyle, getGridStyle, CHART_COLORS } from '@/lib/chartConfig';
+import { TrendingUp, TrendingDown, Zap, DollarSign } from 'lucide-react';
 
 interface ConnectROIProps {
   proposals: Proposal[];
@@ -15,7 +16,6 @@ export const ConnectROI: React.FC<ConnectROIProps> = ({ proposals, connectCost =
       if (!byProfile[p.profile_name]) byProfile[p.profile_name] = [];
       byProfile[p.profile_name].push(p);
     });
-
     return Object.entries(byProfile).map(([name, props]) => {
       const totalConnects = props.reduce((s, p) => s + (p.connects_used || 0), 0);
       const returned = props.reduce((s, p) => s + (p.returned_connects || 0), 0);
@@ -26,7 +26,6 @@ export const ConnectROI: React.FC<ConnectROIProps> = ({ proposals, connectCost =
       const roas = spend > 0 ? revenue / spend : 0;
       const revenuePerConnect = netConnects > 0 ? revenue / netConnects : 0;
       const costPerWin = won > 0 ? spend / won : 0;
-
       return { name, totalConnects, returned, netConnects, spend, revenue, won, roas, revenuePerConnect, costPerWin, total: props.length };
     }).sort((a, b) => b.roas - a.roas);
   }, [proposals, connectCost]);
@@ -36,13 +35,11 @@ export const ConnectROI: React.FC<ConnectROIProps> = ({ proposals, connectCost =
     proposals.forEach(p => {
       const d = new Date(p.date_submitted || p.created_at);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = d.toLocaleString('default', { month: 'short', year: '2-digit' });
       if (!months[key]) months[key] = { connects: 0, returned: 0, revenue: 0 };
       months[key].connects += p.connects_used || 0;
       months[key].returned += p.returned_connects || 0;
       if (p.status === 'won') months[key].revenue += p.deal_value || 0;
     });
-
     return Object.entries(months)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, data]) => ({
@@ -54,65 +51,76 @@ export const ConnectROI: React.FC<ConnectROIProps> = ({ proposals, connectCost =
   }, [proposals, connectCost]);
 
   const totals = profileROI.reduce((t, p) => ({
-    connects: t.connects + p.netConnects,
-    spend: t.spend + p.spend,
-    revenue: t.revenue + p.revenue,
-    won: t.won + p.won,
+    connects: t.connects + p.netConnects, spend: t.spend + p.spend, revenue: t.revenue + p.revenue, won: t.won + p.won,
   }), { connects: 0, spend: 0, revenue: 0, won: 0 });
 
   const overallROAS = totals.spend > 0 ? totals.revenue / totals.spend : 0;
   const overallRevenuePerConnect = totals.connects > 0 ? totals.revenue / totals.connects : 0;
+  const axisStyle = getAxisStyle();
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-bold text-foreground">Connect ROI Dashboard</h3>
-
       {/* Key metrics */}
       <div className="grid grid-cols-4 gap-4">
         <div className="metric-card">
-          <p className="text-xs text-muted-foreground">Overall ROAS</p>
-          <p className="text-2xl font-bold text-foreground">{overallROAS.toFixed(1)}x</p>
-          <div className="mt-1">
-            {overallROAS >= 5 ? <TrendingUp className="w-4 h-4 text-green-400" /> : <TrendingDown className="w-4 h-4 text-destructive" />}
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="w-4 h-4 text-foreground" />
+            <p className="text-xs text-muted-foreground font-medium">Overall ROAS</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground tabular-nums">{overallROAS.toFixed(1)}x</p>
+          <div className="mt-1.5">
+            {overallROAS >= 5 ? <span className="text-xs text-success font-medium">● Excellent</span> : <span className="text-xs text-destructive font-medium">● Below target</span>}
           </div>
         </div>
         <div className="metric-card">
-          <p className="text-xs text-muted-foreground">Revenue / Connect</p>
-          <p className="text-2xl font-bold text-foreground">${overallRevenuePerConnect.toFixed(2)}</p>
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="w-4 h-4 text-foreground" />
+            <p className="text-xs text-muted-foreground font-medium">Revenue / Connect</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground tabular-nums">${overallRevenuePerConnect.toFixed(2)}</p>
         </div>
         <div className="metric-card">
-          <p className="text-xs text-muted-foreground">Total Net Connects</p>
-          <p className="text-2xl font-bold text-foreground">{totals.connects}</p>
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="w-4 h-4 text-foreground" />
+            <p className="text-xs text-muted-foreground font-medium">Total Net Connects</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground tabular-nums">{totals.connects}</p>
         </div>
         <div className="metric-card">
-          <p className="text-xs text-muted-foreground">Total Spend</p>
-          <p className="text-2xl font-bold text-foreground">${Math.round(totals.spend).toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground font-medium mb-2">Total Spend</p>
+          <p className="text-2xl font-bold text-foreground tabular-nums">${Math.round(totals.spend).toLocaleString()}</p>
         </div>
       </div>
 
       {/* Monthly burn trend */}
       {monthlyBurn.length > 0 && (
-        <div>
-          <h4 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Monthly Connect Burn vs Revenue</h4>
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyBurn}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 20%)" />
-                <XAxis dataKey="month" stroke="hsl(220, 10%, 55%)" fontSize={11} />
-                <YAxis stroke="hsl(220, 10%, 55%)" fontSize={12} />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(220, 15%, 11%)', border: '1px solid hsl(220, 15%, 20%)', borderRadius: '8px', color: 'hsl(0, 0%, 98%)' }} />
-                <Line type="monotone" dataKey="netConnects" name="Net Connects" stroke="hsl(38, 92%, 50%)" strokeWidth={2} />
-                <Line type="monotone" dataKey="revenue" name="Revenue ($)" stroke="hsl(142, 71%, 45%)" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
+        <div className="section-card">
+          <div className="section-card-header">
+            <h4 className="text-sm font-bold text-foreground">Monthly Connect Burn vs Revenue</h4>
+          </div>
+          <div className="section-card-body">
+            <div className="h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthlyBurn}>
+                  <CartesianGrid {...getGridStyle()} />
+                  <XAxis dataKey="month" {...axisStyle} fontSize={11} />
+                  <YAxis {...axisStyle} />
+                  <Tooltip contentStyle={getChartTooltipStyle()} />
+                  <Line type="monotone" dataKey="netConnects" name="Net Connects" stroke={CHART_COLORS.warning} strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2 }} />
+                  <Line type="monotone" dataKey="revenue" name="Revenue ($)" stroke={CHART_COLORS.success} strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       )}
 
       {/* Profile ROI table */}
-      <div>
-        <h4 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">ROI by Profile</h4>
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
+      <div className="section-card">
+        <div className="section-card-header">
+          <h4 className="text-sm font-bold text-foreground">ROI by Profile</h4>
+        </div>
+        <div className="overflow-x-auto">
           <table className="data-table">
             <thead>
               <tr>
@@ -130,25 +138,25 @@ export const ConnectROI: React.FC<ConnectROIProps> = ({ proposals, connectCost =
               {profileROI.map(p => (
                 <tr key={p.name}>
                   <td className="font-medium text-foreground">{p.name}</td>
-                  <td className="text-center">{p.total}</td>
-                  <td className="text-center">{p.netConnects}</td>
+                  <td className="text-center tabular-nums">{p.total}</td>
+                  <td className="text-center tabular-nums">{p.netConnects}</td>
                   <td className="text-right tabular-nums">${Math.round(p.spend).toLocaleString()}</td>
                   <td className="text-right tabular-nums font-semibold">${Math.round(p.revenue).toLocaleString()}</td>
                   <td className="text-center">
-                    <span className={p.roas >= 5 ? 'text-green-400' : p.roas >= 1 ? 'text-amber-400' : 'text-destructive'}>
+                    <span className={`font-semibold tabular-nums ${p.roas >= 5 ? 'text-success' : p.roas >= 1 ? 'text-warning' : 'text-destructive'}`}>
                       {p.roas.toFixed(1)}x
                     </span>
                   </td>
                   <td className="text-right tabular-nums">${p.revenuePerConnect.toFixed(2)}</td>
                   <td className="text-center">
                     {p.roas >= 5 ? (
-                      <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full">Double Down</span>
+                      <span className="text-[11px] font-bold px-2.5 py-1 bg-green-500/15 text-success rounded-full">Double Down</span>
                     ) : p.roas >= 1 ? (
-                      <span className="text-xs px-2 py-1 bg-amber-500/20 text-amber-400 rounded-full">Maintain</span>
+                      <span className="text-[11px] font-bold px-2.5 py-1 bg-amber-500/15 text-warning rounded-full">Maintain</span>
                     ) : p.revenue > 0 ? (
-                      <span className="text-xs px-2 py-1 bg-red-500/20 text-red-400 rounded-full">Review</span>
+                      <span className="text-[11px] font-bold px-2.5 py-1 bg-red-500/15 text-destructive rounded-full">Review</span>
                     ) : (
-                      <span className="text-xs px-2 py-1 bg-red-500/20 text-red-400 rounded-full">Stop</span>
+                      <span className="text-[11px] font-bold px-2.5 py-1 bg-red-500/15 text-destructive rounded-full">Stop</span>
                     )}
                   </td>
                 </tr>

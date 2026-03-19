@@ -311,29 +311,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-border bg-card/50">
+      <header className="page-header">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Performance Dashboard</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="page-title">Performance Dashboard</h2>
+            <p className="page-subtitle">
               Fiscal Year {fiscalYear - 1}/{fiscalYear} • {proposals.length} total proposals
             </p>
           </div>
           <div className="flex items-center gap-4">
             {/* Fiscal Year Selector */}
-            <div className="flex items-center gap-2 bg-secondary rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-muted/40 rounded-xl p-1">
               <button
                 onClick={() => setFiscalYear((y) => y - 1)}
-                className="p-2 hover:bg-muted rounded-md transition-colors"
+                className="p-2 hover:bg-card rounded-lg transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="px-3 text-sm font-medium tabular-nums">
+              <span className="px-3 text-sm font-semibold tabular-nums">
                 FY {fiscalYear - 1}/{fiscalYear}
               </span>
               <button
                 onClick={() => setFiscalYear((y) => y + 1)}
-                className="p-2 hover:bg-muted rounded-md transition-colors"
+                className="p-2 hover:bg-card rounded-lg transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -348,11 +348,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
               key={profile.id}
               onClick={() => toggleProfile(profile.name)}
               disabled={isRestricted}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                 selectedProfileNames.includes(profile.name)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-muted-foreground hover:bg-muted'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
               } ${isRestricted ? 'opacity-50 cursor-not-allowed' : ''}`}
+              style={selectedProfileNames.includes(profile.name) ? { boxShadow: '0 2px 6px hsl(72 100% 50% / 0.2)' } : undefined}
             >
               {profile.name}
             </button>
@@ -377,17 +378,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
           <button
             key={card.key}
             onClick={() => onViewProposals?.(card.key)}
-            className="metric-card text-left hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
+            className="metric-card text-left cursor-pointer group"
           >
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <span className="text-muted-foreground">{card.icon}</span>
-              <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">View →</span>
+              <span className="text-[11px] font-medium text-muted-foreground group-hover:text-primary transition-colors">View →</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{card.count}</p>
-            <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
-            <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
-              <span>Net Connects: {card.netConnects}</span>
-              <span>Wins: {card.wins}</span>
+            <p className="text-2xl font-bold text-foreground tabular-nums">{card.count}</p>
+            <p className="text-xs text-muted-foreground font-medium mt-1">{card.label}</p>
+            <div className="flex gap-4 mt-3 pt-3 border-t border-border/40 text-xs text-muted-foreground">
+              <span className="tabular-nums">Connects: <span className="font-semibold text-foreground">{card.netConnects}</span></span>
+              <span className="tabular-nums">Wins: <span className="font-semibold text-foreground">{card.wins}</span></span>
             </div>
           </button>
         ))}
@@ -413,18 +414,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
 
       {/* KPI Table */}
       <div className="flex-1 overflow-auto px-6 pb-6">
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="section-card">
           <div className="overflow-x-auto">
             <table className="data-table min-w-[1000px]">
               <thead>
                 <tr>
-                  <th className="sticky left-0 bg-secondary z-20 min-w-[150px]">Metric</th>
+                  <th className="sticky left-0 bg-muted/40 z-20 min-w-[150px]">Metric</th>
                   {metrics.map((m, idx) => (
                     <th key={idx} className="text-center min-w-[80px]">
                       {m.periodLabel}
                     </th>
                   ))}
-                  <th className="text-center bg-primary/10 min-w-[100px]">TOTAL</th>
+                  <th className="text-center bg-primary/10 min-w-[100px] font-bold">TOTAL</th>
                 </tr>
               </thead>
               <tbody>
