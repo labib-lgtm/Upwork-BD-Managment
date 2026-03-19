@@ -414,18 +414,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
 
       {/* KPI Table */}
       <div className="flex-1 overflow-auto px-6 pb-6">
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="section-card">
           <div className="overflow-x-auto">
             <table className="data-table min-w-[1000px]">
               <thead>
                 <tr>
-                  <th className="sticky left-0 bg-secondary z-20 min-w-[150px]">Metric</th>
+                  <th className="sticky left-0 bg-muted/40 z-20 min-w-[150px]">Metric</th>
                   {metrics.map((m, idx) => (
                     <th key={idx} className="text-center min-w-[80px]">
                       {m.periodLabel}
                     </th>
                   ))}
-                  <th className="text-center bg-primary/10 min-w-[100px]">TOTAL</th>
+                  <th className="text-center bg-primary/10 min-w-[100px] font-bold">TOTAL</th>
                 </tr>
               </thead>
               <tbody>
