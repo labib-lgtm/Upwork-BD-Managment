@@ -9,8 +9,8 @@ import {
   PaginationItem,
   PaginationLink,
   PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
+  PaginationPrevious } from
+'@/components/ui/pagination';
 
 interface ProposalsProps {
   profiles: BDProfile[];
@@ -86,7 +86,7 @@ const getDefaultFormData = (profileName: string): LocalFormData => ({
   returned_connects: 0,
   notes: '',
   loss_reason: '',
-  win_factor: '',
+  win_factor: ''
 });
 
 type SortField = 'date' | 'budget' | 'proposed_amount' | 'connects_used' | 'status' | 'profile_name' | 'job_title';
@@ -109,7 +109,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
   const [datePreset, setDatePreset] = useState<string>('all');
 
   const [formData, setFormData] = useState<LocalFormData>(() =>
-    getDefaultFormData(lastUsedProfile)
+  getDefaultFormData(lastUsedProfile)
   );
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterProfile, setFilterProfile] = useState<string>('all');
@@ -129,7 +129,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
 
   useEffect(() => {
     if (!editingProposal) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         connects_used: prev.boosted ? 8 : 6
       }));
@@ -156,12 +156,12 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
         setDateFrom(format(startOfMonth(now), 'yyyy-MM-dd'));
         setDateTo(format(endOfMonth(now), 'yyyy-MM-dd'));
         break;
-      case 'last_month': {
-        const lm = subMonths(now, 1);
-        setDateFrom(format(startOfMonth(lm), 'yyyy-MM-dd'));
-        setDateTo(format(endOfMonth(lm), 'yyyy-MM-dd'));
-        break;
-      }
+      case 'last_month':{
+          const lm = subMonths(now, 1);
+          setDateFrom(format(startOfMonth(lm), 'yyyy-MM-dd'));
+          setDateTo(format(endOfMonth(lm), 'yyyy-MM-dd'));
+          break;
+        }
       case 'this_quarter':
         setDateFrom(format(startOfQuarter(now), 'yyyy-MM-dd'));
         setDateTo(format(endOfQuarter(now), 'yyyy-MM-dd'));
@@ -175,19 +175,19 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
   };
 
   const filteredAndSortedProposals = useMemo(() => {
-    let result = proposals
-      .filter((p) => filterStatus === 'all' || p.status === filterStatus)
-      .filter((p) => {
-        if (isRestricted && user.linked_profile_id) {
-          const linkedProfile = profiles.find(pr => pr.id === user.linked_profile_id);
-          return linkedProfile ? p.profile_name === linkedProfile.name : true;
-        }
-        return filterProfile === 'all' || p.profile_name === filterProfile;
-      });
+    let result = proposals.
+    filter((p) => filterStatus === 'all' || p.status === filterStatus).
+    filter((p) => {
+      if (isRestricted && user.linked_profile_id) {
+        const linkedProfile = profiles.find((pr) => pr.id === user.linked_profile_id);
+        return linkedProfile ? p.profile_name === linkedProfile.name : true;
+      }
+      return filterProfile === 'all' || p.profile_name === filterProfile;
+    });
 
     // Date range filter
     if (dateFrom || dateTo) {
-      result = result.filter(p => {
+      result = result.filter((p) => {
         const pDate = p.date_submitted || p.created_at.split('T')[0];
         if (dateFrom && pDate < dateFrom) return false;
         if (dateTo && pDate > dateTo) return false;
@@ -198,11 +198,11 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
     // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(p =>
-        p.job_title.toLowerCase().includes(q) ||
-        p.profile_name.toLowerCase().includes(q) ||
-        (p.notes && p.notes.toLowerCase().includes(q)) ||
-        (p.client_country && p.client_country.toLowerCase().includes(q))
+      result = result.filter((p) =>
+      p.job_title.toLowerCase().includes(q) ||
+      p.profile_name.toLowerCase().includes(q) ||
+      p.notes && p.notes.toLowerCase().includes(q) ||
+      p.client_country && p.client_country.toLowerCase().includes(q)
       );
     }
 
@@ -245,19 +245,19 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
     const totalConnects = fp.reduce((s, p) => s + (p.connects_used || 0), 0);
     const totalReturned = fp.reduce((s, p) => s + (p.returned_connects || 0), 0);
     const netConnects = totalConnects - totalReturned;
-    const wonCount = fp.filter(p => p.status === 'won').length;
-    const viewedCount = fp.filter(p => ['viewed', 'interviewed', 'won', 'lost'].includes(p.status)).length;
-    const totalDealValue = fp.filter(p => p.status === 'won').reduce((s, p) => s + (p.deal_value || 0), 0);
+    const wonCount = fp.filter((p) => p.status === 'won').length;
+    const viewedCount = fp.filter((p) => ['viewed', 'interviewed', 'won', 'lost'].includes(p.status)).length;
+    const totalDealValue = fp.filter((p) => p.status === 'won').reduce((s, p) => s + (p.deal_value || 0), 0);
     const avgBudget = total > 0 ? fp.reduce((s, p) => s + (p.budget || 0), 0) / total : 0;
     return {
       total,
       totalConnects,
       netConnects,
       totalReturned,
-      winRate: total > 0 ? ((wonCount / total) * 100).toFixed(1) : '0',
-      viewRate: total > 0 ? ((viewedCount / total) * 100).toFixed(1) : '0',
+      winRate: total > 0 ? (wonCount / total * 100).toFixed(1) : '0',
+      viewRate: total > 0 ? (viewedCount / total * 100).toFixed(1) : '0',
       totalDealValue,
-      avgBudget,
+      avgBudget
     };
   }, [filteredAndSortedProposals]);
 
@@ -274,14 +274,14 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortDirection((prev) => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
       setSortDirection('desc');
     }
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
+  const SortIcon = ({ field }: {field: SortField;}) => {
     if (sortField !== field) return <ArrowUpDown className="w-3 h-3 opacity-40" />;
     return sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
   };
@@ -326,7 +326,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
       returned_connects: formData.returned_connects,
       notes: formData.notes || null,
       loss_reason: formData.loss_reason || null,
-      win_factor: formData.win_factor || null,
+      win_factor: formData.win_factor || null
     };
 
     let success = false;
@@ -389,7 +389,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
       returned_connects: proposal.returned_connects ?? 0,
       notes: proposal.notes || '',
       loss_reason: (proposal as any).loss_reason || '',
-      win_factor: (proposal as any).win_factor || '',
+      win_factor: (proposal as any).win_factor || ''
     });
     setShowModal(true);
   };
@@ -402,27 +402,27 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
 
   const exportCSV = () => {
     const headers = [
-      'Date Submitted', 'Time', 'Profile', 'Job Title', 'Job Link', 'Status', 'Payment Status',
-      'Type', 'Budget', 'Proposed', 'Connects', 'Boosted Connects', 'Returned Connects',
-      'Boosted', 'Video Sent', 'Competition', 'New Client', 'Client Hire Count',
-      'Invite Sent', 'Interviewing', 'Last Viewed', 'Client Country', 'Client Rating',
-      'Client Reviews', 'Client Total Spent', 'Deal Value', 'Refund Amount', 'Notes'
-    ];
-    const rows = filteredAndSortedProposals.map(p => [
-      p.date_submitted || format(new Date(p.created_at), 'yyyy-MM-dd'),
-      format(new Date(p.created_at), 'hh:mm a'),
-      p.profile_name, p.job_title, p.job_link || '', p.status, p.payment_status,
-      p.job_type, p.budget, p.proposed_amount, p.connects_used,
-      p.boosted_connects || 0, p.returned_connects || 0,
-      p.boosted ? 'Yes' : 'No',
-      p.video_sent ? 'Yes' : 'No', p.competition_bucket || '',
-      p.is_new_client ? 'Yes' : 'No', p.client_hire_count ?? '',
-      p.invite_sent,
-      p.interviewing_at_submission, p.last_viewed_text || '', p.client_country || '',
-      p.client_rating || '', p.client_reviews || '', p.client_total_spent || '',
-      p.deal_value || 0, p.refund_amount || 0, (p.notes || '').replace(/"/g, '""')
-    ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    'Date Submitted', 'Time', 'Profile', 'Job Title', 'Job Link', 'Status', 'Payment Status',
+    'Type', 'Budget', 'Proposed', 'Connects', 'Boosted Connects', 'Returned Connects',
+    'Boosted', 'Video Sent', 'Competition', 'New Client', 'Client Hire Count',
+    'Invite Sent', 'Interviewing', 'Last Viewed', 'Client Country', 'Client Rating',
+    'Client Reviews', 'Client Total Spent', 'Deal Value', 'Refund Amount', 'Notes'];
+
+    const rows = filteredAndSortedProposals.map((p) => [
+    p.date_submitted || format(new Date(p.created_at), 'yyyy-MM-dd'),
+    format(new Date(p.created_at), 'hh:mm a'),
+    p.profile_name, p.job_title, p.job_link || '', p.status, p.payment_status,
+    p.job_type, p.budget, p.proposed_amount, p.connects_used,
+    p.boosted_connects || 0, p.returned_connects || 0,
+    p.boosted ? 'Yes' : 'No',
+    p.video_sent ? 'Yes' : 'No', p.competition_bucket || '',
+    p.is_new_client ? 'Yes' : 'No', p.client_hire_count ?? '',
+    p.invite_sent,
+    p.interviewing_at_submission, p.last_viewed_text || '', p.client_country || '',
+    p.client_rating || '', p.client_reviews || '', p.client_total_spent || '',
+    p.deal_value || 0, p.refund_amount || 0, (p.notes || '').replace(/"/g, '""')]
+    );
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -434,11 +434,11 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'won': return 'status-badge-success';
-      case 'lost': return 'status-badge-error';
-      case 'interviewed': return 'status-badge-info';
-      case 'archived': return 'status-badge-neutral';
-      default: return 'status-badge-warning';
+      case 'won':return 'status-badge-success';
+      case 'lost':return 'status-badge-error';
+      case 'interviewed':return 'status-badge-info';
+      case 'archived':return 'status-badge-neutral';
+      default:return 'status-badge-warning';
     }
   };
 
@@ -446,8 +446,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
     return (
       <div className="flex-1 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -464,15 +464,15 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
           <div className="flex items-center gap-3">
             <button
               onClick={exportCSV}
-              className="flex items-center gap-2 px-4 py-2.5 border border-border text-foreground rounded-xl font-medium hover:bg-muted/50 transition-colors text-sm"
-            >
+              className="flex items-center gap-2 px-4 py-2.5 border border-border text-foreground rounded-xl font-medium hover:bg-muted/50 transition-colors text-sm">
+              
               <Download className="w-4 h-4" />
               Export
             </button>
             <button
               onClick={openNewProposalModal}
-              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90 transition-all text-sm glow-primary-sm"
-            >
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90 transition-all text-sm glow-primary-sm">
+              
               <Plus className="w-4 h-4" />
               Add Proposal
             </button>
@@ -488,60 +488,60 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search proposals..."
-              className="w-full pl-9 pr-3 py-2.5 bg-muted/30 border border-border rounded-xl text-sm input-focus"
-            />
+              className="w-full pl-9 pr-3 py-2.5 bg-muted/30 border border-border rounded-xl text-sm input-focus" />
+            
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2.5 bg-muted/30 border border-border rounded-xl text-sm input-focus"
-          >
+            className="px-3 py-2.5 bg-muted/30 border border-border rounded-xl text-sm input-focus">
+            
             <option value="all">All Status</option>
-            {STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>{status}</option>
-            ))}
+            {STATUS_OPTIONS.map((status) =>
+            <option key={status} value={status}>{status}</option>
+            )}
           </select>
-          {!isRestricted && (
-            <select
-              value={filterProfile}
-              onChange={(e) => setFilterProfile(e.target.value)}
-              className="px-3 py-2.5 bg-muted/30 border border-border rounded-xl text-sm input-focus"
-            >
+          {!isRestricted &&
+          <select
+            value={filterProfile}
+            onChange={(e) => setFilterProfile(e.target.value)}
+            className="px-3 py-2.5 bg-muted/30 border border-border rounded-xl text-sm input-focus">
+            
               <option value="all">All Profiles</option>
-              {profiles.map((profile) => (
-                <option key={profile.id} value={profile.name}>{profile.name}</option>
-              ))}
+              {profiles.map((profile) =>
+            <option key={profile.id} value={profile.name}>{profile.name}</option>
+            )}
             </select>
-          )}
+          }
         </div>
       </header>
 
       {/* Date Filter Banner from Dashboard */}
-      {dateFilter && (
-        <div className="px-6 py-2 border-b border-primary/30 bg-primary/5 flex items-center justify-between text-sm">
+      {dateFilter &&
+      <div className="px-6 py-2 border-b border-primary/30 bg-primary/5 flex items-center justify-between text-sm">
           <span className="text-primary font-medium">
             Showing proposals from last {dateFilter === '1d' ? '24 hours' : dateFilter === '7d' ? '7 days' : '14 days'}
           </span>
           <button
-            onClick={() => {
-              onClearDateFilter?.();
-              applyDatePreset('all');
-            }}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-          >
+          onClick={() => {
+            onClearDateFilter?.();
+            applyDatePreset('all');
+          }}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+          
             <X className="w-3 h-3" /> Clear filter
           </button>
         </div>
-      )}
+      }
 
       {/* Timeline Filter */}
       <div className="px-6 py-3 border-b border-border flex gap-3 flex-wrap items-center text-sm">
         <CalendarIcon className="w-4 h-4 text-muted-foreground" />
         <select
           value={datePreset}
-          onChange={(e) => { applyDatePreset(e.target.value); onClearDateFilter?.(); }}
-          className="px-2.5 py-2 bg-muted/30 border border-border rounded-lg text-sm input-focus"
-        >
+          onChange={(e) => {applyDatePreset(e.target.value);onClearDateFilter?.();}}
+          className="px-2.5 py-2 bg-muted/30 border border-border rounded-lg text-sm input-focus">
+          
           <option value="all">All Time</option>
           <option value="this_month">This Month</option>
           <option value="last_month">Last Month</option>
@@ -550,24 +550,24 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
         <input
           type="date"
           value={dateFrom}
-          onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); onClearDateFilter?.(); }}
-          className="px-2.5 py-2 bg-muted/30 border border-border rounded-lg text-sm input-focus"
-        />
+          onChange={(e) => {setDateFrom(e.target.value);setDatePreset('custom');onClearDateFilter?.();}}
+          className="px-2.5 py-2 bg-muted/30 border border-border rounded-lg text-sm input-focus" />
+        
         <span className="text-muted-foreground text-xs">to</span>
         <input
           type="date"
           value={dateTo}
-          onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); onClearDateFilter?.(); }}
-          className="px-2.5 py-2 bg-muted/30 border border-border rounded-lg text-sm input-focus"
-        />
-        {(dateFrom || dateTo) && (
-          <button
-            onClick={() => { applyDatePreset('all'); onClearDateFilter?.(); }}
-            className="text-xs text-muted-foreground hover:text-foreground underline"
-          >
+          onChange={(e) => {setDateTo(e.target.value);setDatePreset('custom');onClearDateFilter?.();}}
+          className="px-2.5 py-2 bg-muted/30 border border-border rounded-lg text-sm input-focus" />
+        
+        {(dateFrom || dateTo) &&
+        <button
+          onClick={() => {applyDatePreset('all');onClearDateFilter?.();}}
+          className="text-xs text-muted-foreground hover:text-foreground underline">
+          
             Clear
           </button>
-        )}
+        }
       </div>
 
       {/* Summary Stats */}
@@ -621,12 +621,12 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                 </tr>
               </thead>
               <tbody>
-                {paginatedProposals.map((proposal) => (
-                  <tr key={proposal.id}>
+                {paginatedProposals.map((proposal) =>
+                <tr key={proposal.id}>
                     <td className="text-muted-foreground tabular-nums">
-                      {proposal.date_submitted
-                        ? format(new Date(proposal.date_submitted), 'MMM d, yyyy')
-                        : format(new Date(proposal.created_at), 'MMM d, yyyy')}
+                      {proposal.date_submitted ?
+                    format(new Date(proposal.date_submitted), 'MMM d, yyyy') :
+                    format(new Date(proposal.created_at), 'MMM d, yyyy')}
                     </td>
                     <td className="text-center text-xs text-muted-foreground tabular-nums">
                       {format(new Date(proposal.created_at), 'hh:mm a')}
@@ -640,13 +640,13 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                       <span className="truncate max-w-[200px] block">{proposal.job_title}</span>
                     </td>
                     <td className="text-center">
-                      {proposal.job_link ? (
-                        <a href={proposal.job_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
-                          <ExternalLink className="w-4 h-4 inline" />
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground/40">-</span>
-                      )}
+                      {proposal.job_link ?
+                    <a href={proposal.job_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
+                          <ExternalLink className="w-4 h-4 inline text-black" />
+                        </a> :
+
+                    <span className="text-muted-foreground/40">-</span>
+                    }
                     </td>
                     <td>
                       <span className={`status-badge ${getStatusBadgeClass(proposal.status)}`}>
@@ -671,18 +671,18 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                       {proposal.competition_bucket || '-'}
                     </td>
                     <td className="text-center">
-                      {proposal.video_sent ? (
-                        <Video className="w-4 h-4 text-primary inline" />
-                      ) : (
-                        <span className="text-muted-foreground/40">-</span>
-                      )}
+                      {proposal.video_sent ?
+                    <Video className="w-4 h-4 text-primary inline" /> :
+
+                    <span className="text-muted-foreground/40">-</span>
+                    }
                     </td>
                     <td className="text-center">
-                      {proposal.is_new_client ? (
-                        <span className="px-1.5 py-0.5 bg-accent/20 text-accent-foreground rounded text-[10px] font-medium">NEW</span>
-                      ) : (
-                        <span className="text-muted-foreground/40">-</span>
-                      )}
+                      {proposal.is_new_client ?
+                    <span className="px-1.5 py-0.5 bg-accent/20 text-accent-foreground rounded text-[10px] font-medium">NEW</span> :
+
+                    <span className="text-muted-foreground/40">-</span>
+                    }
                     </td>
                     <td className="text-center text-xs text-muted-foreground">
                       {proposal.last_viewed_text || '-'}
@@ -690,82 +690,82 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                     <td>
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => handleEdit(proposal)}
-                          className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
-                        >
+                        onClick={() => handleEdit(proposal)}
+                        className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground">
+                        
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(proposal.id)}
-                          className="p-2 hover:bg-destructive/20 rounded-lg transition-colors text-muted-foreground hover:text-destructive"
-                        >
+                        onClick={() => handleDelete(proposal.id)}
+                        className="p-2 hover:bg-destructive/20 rounded-lg transition-colors text-muted-foreground hover:text-destructive">
+                        
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))}
-                {paginatedProposals.length === 0 && (
-                  <tr>
+                )}
+                {paginatedProposals.length === 0 &&
+                <tr>
                     <td colSpan={17} className="text-center py-8 text-muted-foreground">
                       No proposals found. Click "Add Proposal" to create one.
                     </td>
                   </tr>
-                )}
+                }
               </tbody>
             </table>
           </div>
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-4">
+        {totalPages > 1 &&
+        <div className="mt-4">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                  />
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+                
                 </PaginationItem>
                 {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  let page: number;
-                  if (totalPages <= 7) {
-                    page = i + 1;
-                  } else if (currentPage <= 4) {
-                    page = i + 1;
-                  } else if (currentPage >= totalPages - 3) {
-                    page = totalPages - 6 + i;
-                  } else {
-                    page = currentPage - 3 + i;
-                  }
-                  return (
-                    <PaginationItem key={page}>
+                let page: number;
+                if (totalPages <= 7) {
+                  page = i + 1;
+                } else if (currentPage <= 4) {
+                  page = i + 1;
+                } else if (currentPage >= totalPages - 3) {
+                  page = totalPages - 6 + i;
+                } else {
+                  page = currentPage - 3 + i;
+                }
+                return (
+                  <PaginationItem key={page}>
                       <PaginationLink
-                        isActive={currentPage === page}
-                        onClick={() => setCurrentPage(page)}
-                        className="cursor-pointer"
-                      >
+                      isActive={currentPage === page}
+                      onClick={() => setCurrentPage(page)}
+                      className="cursor-pointer">
+                      
                         {page}
                       </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
+                    </PaginationItem>);
+
+              })}
                 <PaginationItem>
                   <PaginationNext
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                  />
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+                
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
           </div>
-        )}
+        }
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      {showModal &&
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
@@ -777,9 +777,9 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                 </p>
               </div>
               <button
-                onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-secondary rounded-lg transition-colors"
-              >
+              onClick={() => setShowModal(false)}
+              className="p-2 hover:bg-secondary rounded-lg transition-colors">
+              
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -790,27 +790,27 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Profile</label>
                   <select
-                    value={formData.profile_name}
-                    onChange={(e) => setFormData({ ...formData, profile_name: e.target.value })}
-                    disabled={isRestricted}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                    required
-                  >
-                    {profiles.map((p) => (
-                      <option key={p.id} value={p.name}>{p.name}</option>
-                    ))}
+                  value={formData.profile_name}
+                  onChange={(e) => setFormData({ ...formData, profile_name: e.target.value })}
+                  disabled={isRestricted}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  required>
+                  
+                    {profiles.map((p) =>
+                  <option key={p.id} value={p.name}>{p.name}</option>
+                  )}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Status</label>
                   <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  >
-                    {STATUS_OPTIONS.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus">
+                  
+                    {STATUS_OPTIONS.map((status) =>
+                  <option key={status} value={status}>{status}</option>
+                  )}
                   </select>
                 </div>
               </div>
@@ -818,60 +818,60 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Job Title</label>
                 <input
-                  id="job-title-input"
-                  type="text"
-                  value={formData.job_title}
-                  onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  placeholder="Enter job title"
-                  required
-                  autoFocus
-                />
+                id="job-title-input"
+                type="text"
+                value={formData.job_title}
+                onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
+                className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                placeholder="Enter job title"
+                required
+                autoFocus />
+              
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Job Link</label>
                 <input
-                  type="url"
-                  value={formData.job_link}
-                  onChange={(e) => setFormData({ ...formData, job_link: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  placeholder="https://www.upwork.com/jobs/..."
-                />
+                type="url"
+                value={formData.job_link}
+                onChange={(e) => setFormData({ ...formData, job_link: e.target.value })}
+                className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                placeholder="https://www.upwork.com/jobs/..." />
+              
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Type</label>
                   <select
-                    value={formData.job_type}
-                    onChange={(e) => setFormData({ ...formData, job_type: e.target.value })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  >
-                    {JOB_TYPE_OPTIONS.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
+                  value={formData.job_type}
+                  onChange={(e) => setFormData({ ...formData, job_type: e.target.value })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus">
+                  
+                    {JOB_TYPE_OPTIONS.map((type) =>
+                  <option key={type} value={type}>{type}</option>
+                  )}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Budget ($)</label>
                   <input
-                    type="number"
-                    value={formData.budget}
-                    onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                    min="0"
-                  />
+                  type="number"
+                  value={formData.budget}
+                  onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  min="0" />
+                
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Proposed ($)</label>
                   <input
-                    type="number"
-                    value={formData.proposed_amount}
-                    onChange={(e) => setFormData({ ...formData, proposed_amount: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                    min="0"
-                  />
+                  type="number"
+                  value={formData.proposed_amount}
+                  onChange={(e) => setFormData({ ...formData, proposed_amount: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  min="0" />
+                
                 </div>
               </div>
 
@@ -879,34 +879,34 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Connects Used</label>
                   <input
-                    type="number"
-                    value={formData.connects_used}
-                    onChange={(e) => setFormData({ ...formData, connects_used: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                    min="0"
-                  />
+                  type="number"
+                  value={formData.connects_used}
+                  onChange={(e) => setFormData({ ...formData, connects_used: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  min="0" />
+                
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Boosted Connects</label>
                   <input
-                    type="number"
-                    value={formData.boosted_connects}
-                    onChange={(e) => setFormData({ ...formData, boosted_connects: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                    min="0"
-                    placeholder="0"
-                  />
+                  type="number"
+                  value={formData.boosted_connects}
+                  onChange={(e) => setFormData({ ...formData, boosted_connects: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  min="0"
+                  placeholder="0" />
+                
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Returned Connects</label>
                   <input
-                    type="number"
-                    value={formData.returned_connects}
-                    onChange={(e) => setFormData({ ...formData, returned_connects: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                    min="0"
-                    placeholder="0"
-                  />
+                  type="number"
+                  value={formData.returned_connects}
+                  onChange={(e) => setFormData({ ...formData, returned_connects: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  min="0"
+                  placeholder="0" />
+                
                 </div>
               </div>
 
@@ -914,26 +914,26 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Payment Status</label>
                   <select
-                    value={formData.payment_status}
-                    onChange={(e) => setFormData({ ...formData, payment_status: e.target.value })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  >
-                    {PAYMENT_STATUS_OPTIONS.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
+                  value={formData.payment_status}
+                  onChange={(e) => setFormData({ ...formData, payment_status: e.target.value })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus">
+                  
+                    {PAYMENT_STATUS_OPTIONS.map((status) =>
+                  <option key={status} value={status}>{status}</option>
+                  )}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Competition</label>
                   <select
-                    value={formData.competition_bucket}
-                    onChange={(e) => setFormData({ ...formData, competition_bucket: e.target.value })}
-                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                  >
+                  value={formData.competition_bucket}
+                  onChange={(e) => setFormData({ ...formData, competition_bucket: e.target.value })}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus">
+                  
                     <option value="">Select...</option>
-                    {COMPETITION_BUCKET_OPTIONS.map((b) => (
-                      <option key={b} value={b}>{b}</option>
-                    ))}
+                    {COMPETITION_BUCKET_OPTIONS.map((b) =>
+                  <option key={b} value={b}>{b}</option>
+                  )}
                   </select>
                 </div>
               </div>
@@ -941,11 +941,11 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Date Submitted</label>
                 <input
-                  type="date"
-                  value={formData.date_submitted}
-                  onChange={(e) => setFormData({ ...formData, date_submitted: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                />
+                type="date"
+                value={formData.date_submitted}
+                onChange={(e) => setFormData({ ...formData, date_submitted: e.target.value })}
+                className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus" />
+              
               </div>
 
               {/* At-Submission Metrics */}
@@ -955,34 +955,34 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">Invite Sent</label>
                     <input
-                      type="number"
-                      value={formData.invite_sent}
-                      onChange={(e) => setFormData({ ...formData, invite_sent: Number(e.target.value) })}
-                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                      min="0"
-                      placeholder="0"
-                    />
+                    type="number"
+                    value={formData.invite_sent}
+                    onChange={(e) => setFormData({ ...formData, invite_sent: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                    min="0"
+                    placeholder="0" />
+                  
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">Interviewing</label>
                     <input
-                      type="number"
-                      value={formData.interviewing_at_submission}
-                      onChange={(e) => setFormData({ ...formData, interviewing_at_submission: Number(e.target.value) })}
-                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                      min="0"
-                      placeholder="0"
-                    />
+                    type="number"
+                    value={formData.interviewing_at_submission}
+                    onChange={(e) => setFormData({ ...formData, interviewing_at_submission: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                    min="0"
+                    placeholder="0" />
+                  
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">Last Viewed</label>
                     <input
-                      type="text"
-                      value={formData.last_viewed_text}
-                      onChange={(e) => setFormData({ ...formData, last_viewed_text: e.target.value })}
-                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                      placeholder="e.g. 6 Min Ago"
-                    />
+                    type="text"
+                    value={formData.last_viewed_text}
+                    onChange={(e) => setFormData({ ...formData, last_viewed_text: e.target.value })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                    placeholder="e.g. 6 Min Ago" />
+                  
                   </div>
                 </div>
               </div>
@@ -992,14 +992,14 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                 <label className="flex items-center gap-3 cursor-pointer">
                   <div className="relative">
                     <input
-                      type="checkbox"
-                      checked={formData.boosted}
-                      onChange={(e) => setFormData({ ...formData, boosted: e.target.checked })}
-                      className="sr-only"
-                    />
+                    type="checkbox"
+                    checked={formData.boosted}
+                    onChange={(e) => setFormData({ ...formData, boosted: e.target.checked })}
+                    className="sr-only" />
+                  
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                      formData.boosted ? 'bg-primary border-primary' : 'border-border'
-                    }`}>
+                  formData.boosted ? 'bg-primary border-primary' : 'border-border'}`
+                  }>
                       {formData.boosted && <Check className="w-3 h-3 text-primary-foreground" />}
                     </div>
                   </div>
@@ -1008,14 +1008,14 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                 <label className="flex items-center gap-3 cursor-pointer">
                   <div className="relative">
                     <input
-                      type="checkbox"
-                      checked={formData.video_sent}
-                      onChange={(e) => setFormData({ ...formData, video_sent: e.target.checked })}
-                      className="sr-only"
-                    />
+                    type="checkbox"
+                    checked={formData.video_sent}
+                    onChange={(e) => setFormData({ ...formData, video_sent: e.target.checked })}
+                    className="sr-only" />
+                  
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                      formData.video_sent ? 'bg-primary border-primary' : 'border-border'
-                    }`}>
+                  formData.video_sent ? 'bg-primary border-primary' : 'border-border'}`
+                  }>
                       {formData.video_sent && <Check className="w-3 h-3 text-primary-foreground" />}
                     </div>
                   </div>
@@ -1024,14 +1024,14 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                 <label className="flex items-center gap-3 cursor-pointer">
                   <div className="relative">
                     <input
-                      type="checkbox"
-                      checked={formData.is_new_client}
-                      onChange={(e) => setFormData({ ...formData, is_new_client: e.target.checked })}
-                      className="sr-only"
-                    />
+                    type="checkbox"
+                    checked={formData.is_new_client}
+                    onChange={(e) => setFormData({ ...formData, is_new_client: e.target.checked })}
+                    className="sr-only" />
+                  
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                      formData.is_new_client ? 'bg-primary border-primary' : 'border-border'
-                    }`}>
+                  formData.is_new_client ? 'bg-primary border-primary' : 'border-border'}`
+                  }>
                       {formData.is_new_client && <Check className="w-3 h-3 text-primary-foreground" />}
                     </div>
                   </div>
@@ -1042,51 +1042,51 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
               {/* Expandable Full Form */}
               <div className="border-t border-border pt-4">
                 <button
-                  type="button"
-                  onClick={() => setShowFullForm(!showFullForm)}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
+                type="button"
+                onClick={() => setShowFullForm(!showFullForm)}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                
                   {showFullForm ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   {showFullForm ? 'Hide outcome & client details' : 'Show outcome & client details (deal value, refund, etc.)'}
                 </button>
 
-                {showFullForm && (
-                  <div className="mt-4 space-y-4 animate-fade-in">
+                {showFullForm &&
+              <div className="mt-4 space-y-4 animate-fade-in">
                     {/* Outcome fields */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Deal Value ($)</label>
                         <input
-                          type="number"
-                          value={formData.deal_value}
-                          onChange={(e) => setFormData({ ...formData, deal_value: Number(e.target.value) })}
-                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          min="0"
-                        />
+                      type="number"
+                      value={formData.deal_value}
+                      onChange={(e) => setFormData({ ...formData, deal_value: Number(e.target.value) })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                      min="0" />
+                    
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Refund Amount ($)</label>
                         <input
-                          type="number"
-                          value={formData.refund_amount}
-                          onChange={(e) => setFormData({ ...formData, refund_amount: Number(e.target.value) })}
-                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          min="0"
-                        />
+                      type="number"
+                      value={formData.refund_amount}
+                      onChange={(e) => setFormData({ ...formData, refund_amount: Number(e.target.value) })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                      min="0" />
+                    
                       </div>
                     </div>
 
                     {/* Win/Loss Attribution */}
-                    {(formData.status === 'won' || formData.status === 'lost') && (
-                      <div className="grid grid-cols-2 gap-4">
-                        {formData.status === 'lost' && (
-                          <div>
+                    {(formData.status === 'won' || formData.status === 'lost') &&
+                <div className="grid grid-cols-2 gap-4">
+                        {formData.status === 'lost' &&
+                  <div>
                             <label className="block text-sm font-medium text-foreground mb-2">Loss Reason</label>
                             <select
-                              value={formData.loss_reason}
-                              onChange={(e) => setFormData({ ...formData, loss_reason: e.target.value })}
-                              className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                            >
+                      value={formData.loss_reason}
+                      onChange={(e) => setFormData({ ...formData, loss_reason: e.target.value })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus">
+                      
                               <option value="">Select reason...</option>
                               <option value="Outbid">Outbid</option>
                               <option value="No Response">No Response</option>
@@ -1097,15 +1097,15 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                               <option value="Other">Other</option>
                             </select>
                           </div>
-                        )}
-                        {formData.status === 'won' && (
-                          <div>
+                  }
+                        {formData.status === 'won' &&
+                  <div>
                             <label className="block text-sm font-medium text-foreground mb-2">Win Factor</label>
                             <select
-                              value={formData.win_factor}
-                              onChange={(e) => setFormData({ ...formData, win_factor: e.target.value })}
-                              className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                            >
+                      value={formData.win_factor}
+                      onChange={(e) => setFormData({ ...formData, win_factor: e.target.value })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus">
+                      
                               <option value="">Select factor...</option>
                               <option value="Best Proposal">Best Proposal</option>
                               <option value="Fastest Response">Fastest Response</option>
@@ -1116,20 +1116,20 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                               <option value="Other">Other</option>
                             </select>
                           </div>
-                        )}
+                  }
                       </div>
-                    )}
+                }
 
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Client Hire Count</label>
                         <input
-                          type="number"
-                          value={formData.client_hire_count ?? ''}
-                          onChange={(e) => setFormData({ ...formData, client_hire_count: e.target.value ? Number(e.target.value) : null })}
-                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          min="0" placeholder="Previous hires"
-                        />
+                      type="number"
+                      value={formData.client_hire_count ?? ''}
+                      onChange={(e) => setFormData({ ...formData, client_hire_count: e.target.value ? Number(e.target.value) : null })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                      min="0" placeholder="Previous hires" />
+                    
                       </div>
                     </div>
 
@@ -1137,22 +1137,22 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Client Country</label>
                         <input
-                          type="text"
-                          value={formData.client_country}
-                          onChange={(e) => setFormData({ ...formData, client_country: e.target.value })}
-                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          placeholder="e.g. United States"
-                        />
+                      type="text"
+                      value={formData.client_country}
+                      onChange={(e) => setFormData({ ...formData, client_country: e.target.value })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                      placeholder="e.g. United States" />
+                    
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Client Rating</label>
                         <input
-                          type="number"
-                          value={formData.client_rating || ''}
-                          onChange={(e) => setFormData({ ...formData, client_rating: e.target.value ? Number(e.target.value) : null })}
-                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          min="0" max="5" step="0.1" placeholder="0-5"
-                        />
+                      type="number"
+                      value={formData.client_rating || ''}
+                      onChange={(e) => setFormData({ ...formData, client_rating: e.target.value ? Number(e.target.value) : null })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                      min="0" max="5" step="0.1" placeholder="0-5" />
+                    
                       </div>
                     </div>
 
@@ -1160,63 +1160,63 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Client Reviews</label>
                         <input
-                          type="number"
-                          value={formData.client_reviews || ''}
-                          onChange={(e) => setFormData({ ...formData, client_reviews: e.target.value ? Number(e.target.value) : null })}
-                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          min="0" placeholder="Number of reviews"
-                        />
+                      type="number"
+                      value={formData.client_reviews || ''}
+                      onChange={(e) => setFormData({ ...formData, client_reviews: e.target.value ? Number(e.target.value) : null })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                      min="0" placeholder="Number of reviews" />
+                    
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Client Total Spent ($)</label>
                         <input
-                          type="number"
-                          value={formData.client_total_spent || ''}
-                          onChange={(e) => setFormData({ ...formData, client_total_spent: e.target.value ? Number(e.target.value) : null })}
-                          className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
-                          min="0" placeholder="Total spent on platform"
-                        />
+                      type="number"
+                      value={formData.client_total_spent || ''}
+                      onChange={(e) => setFormData({ ...formData, client_total_spent: e.target.value ? Number(e.target.value) : null })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                      min="0" placeholder="Total spent on platform" />
+                    
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">Notes</label>
                       <textarea
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus resize-none"
-                        rows={3}
-                        placeholder="Add any notes..."
-                      />
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus resize-none"
+                    rows={3}
+                    placeholder="Add any notes..." />
+                  
                     </div>
                   </div>
-                )}
+              }
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  disabled={submitting}
-                >
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                disabled={submitting}>
+                
                   Cancel
                 </button>
-                {!editingProposal && (
-                  <button
-                    type="button"
-                    onClick={(e) => handleSubmit(e as unknown as React.FormEvent, true)}
-                    className="px-4 py-2 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors"
-                    disabled={submitting}
-                  >
+                {!editingProposal &&
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e as unknown as React.FormEvent, true)}
+                className="px-4 py-2 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors"
+                disabled={submitting}>
+                
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save & Add Another'}
                   </button>
-                )}
+              }
                 <button
-                  type="submit"
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
-                  disabled={submitting}
-                >
+                type="submit"
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                disabled={submitting}>
+                
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   {editingProposal ? 'Update' : 'Create'} Proposal
                 </button>
@@ -1224,7 +1224,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
             </form>
           </div>
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 };
