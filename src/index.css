@@ -61,6 +61,11 @@
     --warning: 38 92% 50%;
     --info: 199 89% 48%;
 
+    /* Chart tooltip */
+    --chart-tooltip-bg: 220 15% 11%;
+    --chart-tooltip-border: 220 15% 20%;
+    --chart-tooltip-text: 0 0% 98%;
+
     /* Table styling */
     --table-header: 220 15% 12%;
     --table-row-hover: 220 15% 14%;
@@ -107,6 +112,11 @@
     --input: 0 0% 100%;
     --ring: 72 100% 50%;
 
+    /* Chart tooltip - light mode */
+    --chart-tooltip-bg: 0 0% 100%;
+    --chart-tooltip-border: 48 15% 88%;
+    --chart-tooltip-text: 220 20% 15%;
+
     /* Sidebar - Dark like the website nav */
     --sidebar-background: 220 20% 12%;
     --sidebar-foreground: 0 0% 98%;
@@ -132,36 +142,39 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
     font-weight: 700;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-muted/30;
+    @apply bg-transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-full;
+    @apply bg-muted-foreground/20 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
+    @apply bg-muted-foreground/40;
   }
 }
 
 @layer components {
-  /* Metric card styles - clean white with subtle shadow */
+  /* Metric card styles - elevated glass morphism */
   .metric-card {
-    @apply bg-card border border-border rounded-xl p-5 transition-all duration-200 shadow-sm;
+    @apply bg-card border border-border rounded-xl p-5 transition-all duration-300;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   }
 
   .metric-card:hover {
-    @apply shadow-md border-primary/30;
+    @apply border-primary/30;
+    box-shadow: 0 4px 12px -2px hsl(var(--primary) / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.06);
+    transform: translateY(-1px);
   }
 
   /* Table styles */
@@ -170,41 +183,41 @@
   }
 
   .data-table th {
-    @apply p-3 text-xs font-bold text-muted-foreground uppercase tracking-wider bg-muted/50 border-b border-border;
+    @apply p-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/40 border-b-2 border-border;
     font-family: 'DM Sans', sans-serif;
   }
 
   .data-table td {
-    @apply p-3 text-sm border-b border-border;
+    @apply p-3 text-sm border-b border-border/60;
   }
 
   .data-table tbody tr {
-    @apply transition-colors duration-150;
+    @apply transition-colors duration-100;
   }
 
   .data-table tbody tr:hover {
-    @apply bg-muted/30;
+    @apply bg-primary/[0.03];
   }
 
-  /* Status badges - vibrant colors */
+  /* Status badges - vibrant with better contrast */
   .status-badge {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider;
   }
 
   .status-badge-success {
-    @apply bg-green-100 text-green-700;
+    @apply bg-green-500/15 text-green-600;
   }
 
   .status-badge-warning {
-    @apply bg-amber-100 text-amber-700;
+    @apply bg-amber-500/15 text-amber-600;
   }
 
   .status-badge-info {
-    @apply bg-blue-100 text-blue-700;
+    @apply bg-blue-500/15 text-blue-600;
   }
 
   .status-badge-error {
-    @apply bg-red-100 text-red-700;
+    @apply bg-red-500/15 text-red-600;
   }
 
   .status-badge-neutral {
@@ -226,13 +239,13 @@
 
   /* KPI Table specific */
   .kpi-section-header {
-    @apply bg-muted/50 text-xs font-extrabold text-foreground uppercase tracking-widest;
+    @apply bg-muted/40 text-[11px] font-extrabold text-foreground uppercase tracking-[0.15em];
     font-family: 'DM Sans', sans-serif;
   }
 
   /* Form input focus ring */
   .input-focus {
-    @apply focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all;
+    @apply focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all duration-200;
   }
 
   /* Lynx brand button */
@@ -256,6 +269,66 @@
     background: linear-gradient(to top, hsl(var(--primary)) 40%, transparent 40%);
     padding: 0 4px;
   }
+
+  /* Section card with consistent styling */
+  .section-card {
+    @apply bg-card border border-border rounded-xl overflow-hidden transition-all duration-200;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04);
+  }
+
+  .section-card-header {
+    @apply px-6 py-4 border-b border-border/60 flex items-center justify-between;
+  }
+
+  .section-card-body {
+    @apply p-6;
+  }
+
+  /* Sub-tab pill navigation */
+  .sub-tab-nav {
+    @apply flex gap-1 p-1 bg-muted/40 rounded-xl;
+  }
+
+  .sub-tab-btn {
+    @apply flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200;
+  }
+
+  .sub-tab-btn-active {
+    @apply bg-primary text-primary-foreground shadow-sm;
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.25);
+  }
+
+  .sub-tab-btn-inactive {
+    @apply text-muted-foreground hover:text-foreground hover:bg-card;
+  }
+
+  /* Chart tooltip - theme-aware */
+  .chart-tooltip {
+    background-color: hsl(var(--chart-tooltip-bg)) !important;
+    border: 1px solid hsl(var(--chart-tooltip-border)) !important;
+    border-radius: 10px !important;
+    color: hsl(var(--chart-tooltip-text)) !important;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.12) !important;
+    padding: 10px 14px !important;
+  }
+
+  /* Stats pill */
+  .stats-pill {
+    @apply flex items-center gap-2 px-3 py-2 bg-card rounded-lg border border-border/60;
+  }
+
+  /* Page header */
+  .page-header {
+    @apply px-6 py-5 border-b border-border bg-card/80 backdrop-blur-sm;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-foreground tracking-tight;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-muted-foreground mt-0.5;
+  }
 }
 
 @layer utilities {
@@ -275,7 +348,7 @@
   @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(-10px);
+      transform: translateY(-8px);
     }
     to {
       opacity: 1;
@@ -298,10 +371,25 @@
     }
   }
 
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
   /* Lynx brand background pattern - subtle warm tint */
   .bg-lynx-pattern {
     background-image: 
-      radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.05) 0%, transparent 50%);
+      radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.04) 0%, transparent 50%);
   }
 }

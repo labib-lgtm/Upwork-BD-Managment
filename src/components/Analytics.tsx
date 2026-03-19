@@ -7,7 +7,7 @@ import { ClientIntelligence } from '@/components/analytics/ClientIntelligence';
 import { BiddingAnalytics } from '@/components/analytics/BiddingAnalytics';
 import { ResponseTimeAnalytics } from '@/components/analytics/ResponseTimeAnalytics';
 import { ConnectROI } from '@/components/analytics/ConnectROI';
-import { Loader2, BarChart3, PieChart, Users, DollarSign, Clock, Zap } from 'lucide-react';
+import { Loader2, BarChart3, PieChart, Users, DollarSign, Zap } from 'lucide-react';
 import { AppSettings } from '@/types';
 
 interface AnalyticsProps {
@@ -40,24 +40,24 @@ export const Analytics: React.FC<AnalyticsProps> = ({ settings }) => {
     switch (activeSubTab) {
       case 'pipeline':
         return (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-fade-in">
             <PipelineFunnel proposals={proposals} />
             <WinLossAnalysis proposals={proposals} />
           </div>
         );
       case 'categories':
-        return <CategoryPerformance proposals={proposals} />;
+        return <div className="animate-fade-in"><CategoryPerformance proposals={proposals} /></div>;
       case 'clients':
-        return <ClientIntelligence proposals={proposals} />;
+        return <div className="animate-fade-in"><ClientIntelligence proposals={proposals} /></div>;
       case 'bidding':
         return (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-fade-in">
             <BiddingAnalytics proposals={proposals} />
             <ResponseTimeAnalytics proposals={proposals} />
           </div>
         );
       case 'connects':
-        return <ConnectROI proposals={proposals} connectCost={settings.connect_cost} />;
+        return <div className="animate-fade-in"><ConnectROI proposals={proposals} connectCost={settings.connect_cost} /></div>;
       default:
         return null;
     }
@@ -66,35 +66,41 @@ export const Analytics: React.FC<AnalyticsProps> = ({ settings }) => {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-border bg-card/50">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Analytics</h2>
-          <p className="text-sm text-muted-foreground">
-            Business intelligence from {proposals.length} proposals
-          </p>
+      <header className="page-header">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="page-title">Analytics</h2>
+            <p className="page-subtitle">
+              Business intelligence from {proposals.length} proposals
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+            Live data
+          </div>
         </div>
       </header>
 
       {/* Sub-tabs */}
-      <div className="px-6 py-3 border-b border-border bg-card/30 flex gap-1">
-        {SUB_TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveSubTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeSubTab === tab.id
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-            }`}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
+      <div className="px-6 py-3 border-b border-border">
+        <div className="sub-tab-nav">
+          {SUB_TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSubTab(tab.id)}
+              className={`sub-tab-btn ${
+                activeSubTab === tab.id ? 'sub-tab-btn-active' : 'sub-tab-btn-inactive'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 bg-lynx-pattern">
         {renderSubContent()}
       </div>
     </div>
