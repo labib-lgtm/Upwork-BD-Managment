@@ -53,6 +53,8 @@ interface LocalFormData {
   boosted_connects: number;
   returned_connects: number;
   notes: string;
+  loss_reason: string;
+  win_factor: string;
 }
 
 const getDefaultFormData = (profileName: string): LocalFormData => ({
