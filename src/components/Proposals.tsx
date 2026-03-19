@@ -657,7 +657,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                     <td className="text-right tabular-nums">${(proposal.budget || 0).toLocaleString()}</td>
                     <td className="text-right tabular-nums">${(proposal.proposed_amount || 0).toLocaleString()}</td>
                     <td className="text-center">
-                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${proposal.boosted ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground'}`}>
+                      <span className="text-black">
                         {proposal.connects_used}
                       </span>
                     </td>
