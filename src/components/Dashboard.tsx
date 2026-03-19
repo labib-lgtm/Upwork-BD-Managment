@@ -280,24 +280,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
       value: formatCurrency(totals.revenue),
       icon: <DollarSign className="w-5 h-5" />,
       trend: totals.revenue > 0,
+      sparkData: metrics.map((m) => ({ v: m.revenue })),
     },
     {
       label: 'ROAS',
       value: `${totals.roas.toFixed(1)}x`,
       icon: <TrendingUp className="w-5 h-5" />,
       trend: totals.roas >= settings.target_roas,
+      sparkData: metrics.map((m) => ({ v: m.roas })),
     },
     {
       label: 'Close Rate',
       value: formatPercent(totals.closeRate),
       icon: <Award className="w-5 h-5" />,
       trend: totals.closeRate > 10,
+      sparkData: metrics.map((m) => ({ v: m.closeRate })),
     },
     {
       label: 'View Rate',
       value: formatPercent(totals.viewRate),
       icon: <Eye className="w-5 h-5" />,
       trend: totals.viewRate > 30,
+      sparkData: metrics.map((m) => ({ v: m.viewRate })),
     },
   ];
 
