@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { BDProfile, AppSettings, KPIMetrics, UserRole, User } from '@/types';
 import { useProposals, Proposal } from '@/hooks/useProposals';
 import { useGoals } from '@/hooks/useGoals';
@@ -14,21 +15,21 @@ interface DashboardProps {
 
 // Calculate metrics from database proposals
 const calculateMetricsFromProposals = (
-proposals: Proposal[],
-selectedProfileNames: string[],
-fiscalYearStart: number,
-targetYear: number,
-settings: AppSettings)
-: KPIMetrics[] => {
+  proposals: Proposal[],
+  selectedProfileNames: string[],
+  fiscalYearStart: number,
+  targetYear: number,
+  settings: AppSettings
+): KPIMetrics[] => {
   const scopeProposals = proposals.filter((p) =>
-  selectedProfileNames.includes(p.profile_name)
+    selectedProfileNames.includes(p.profile_name)
   );
-
+  
   const months: KPIMetrics[] = [];
   const monthNames = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
   const fiscalMonthOrder: number[] = [];
 
   for (let i = 0; i < 12; i++) {
@@ -53,12 +54,12 @@ settings: AppSettings)
     const closes = proposalsInMonth.filter((p) => p.status === 'won').length;
     const newClients = proposalsInMonth.filter((p) => p.is_new_client).length;
 
-    const revenue = proposalsInMonth.
-    filter((p) => p.status === 'won').
-    reduce((sum, p) => sum + (p.deal_value || 0), 0);
-    const refunds = proposalsInMonth.
-    filter((p) => p.status === 'won').
-    reduce((sum, p) => sum + (p.refund_amount || 0), 0);
+    const revenue = proposalsInMonth
+      .filter((p) => p.status === 'won')
+      .reduce((sum, p) => sum + (p.deal_value || 0), 0);
+    const refunds = proposalsInMonth
+      .filter((p) => p.status === 'won')
+      .reduce((sum, p) => sum + (p.refund_amount || 0), 0);
     const spend = (connects - returnedConnects) * settings.connect_cost;
     const netRevenue = revenue - refunds;
 
@@ -71,22 +72,22 @@ settings: AppSettings)
       views,
       interviews,
       closes,
-      viewRate: sent > 0 ? views / sent * 100 : 0,
-      interviewRate: views > 0 ? interviews / views * 100 : 0,
-      closeRate: interviews > 0 ? closes / interviews * 100 : 0,
-      newClientRate: sent > 0 ? newClients / sent * 100 : 0,
+      viewRate: sent > 0 ? (views / sent) * 100 : 0,
+      interviewRate: views > 0 ? (interviews / views) * 100 : 0,
+      closeRate: interviews > 0 ? (closes / interviews) * 100 : 0,
+      newClientRate: sent > 0 ? (newClients / sent) * 100 : 0,
       spend,
       revenue: netRevenue,
       refunds,
       roas: spend > 0 ? netRevenue / spend : 0,
       aov: closes > 0 ? netRevenue / closes : 0,
-      aovNeeded: settings.target_roas > 0 && closes > 0 ?
-      spend * settings.target_roas / closes :
-      0,
+      aovNeeded: settings.target_roas > 0 && closes > 0 
+        ? (spend * settings.target_roas) / closes 
+        : 0,
       costPerProposal: sent > 0 ? spend / sent : 0,
       costPerView: views > 0 ? spend / views : 0,
       costPerInterview: interviews > 0 ? spend / interviews : 0,
-      costPerClose: closes > 0 ? spend / closes : 0
+      costPerClose: closes > 0 ? spend / closes : 0,
     });
   });
 
@@ -116,7 +117,7 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
     costPerProposal: 0,
     costPerView: 0,
     costPerInterview: 0,
-    costPerClose: 0
+    costPerClose: 0,
   };
 
   metrics.forEach((m) => {
@@ -134,11 +135,11 @@ const calculateTotals = (metrics: KPIMetrics[]): KPIMetrics => {
 
   // Calculate newClientRate from weighted average of monthly rates
   const totalNewClients = metrics.reduce((sum, m) => sum + Math.round(m.newClientRate * m.sent / 100), 0);
-  total.newClientRate = total.sent > 0 ? totalNewClients / total.sent * 100 : 0;
+  total.newClientRate = total.sent > 0 ? (totalNewClients / total.sent) * 100 : 0;
 
-  total.viewRate = total.sent > 0 ? total.views / total.sent * 100 : 0;
-  total.interviewRate = total.views > 0 ? total.interviews / total.views * 100 : 0;
-  total.closeRate = total.interviews > 0 ? total.closes / total.interviews * 100 : 0;
+  total.viewRate = total.sent > 0 ? (total.views / total.sent) * 100 : 0;
+  total.interviewRate = total.views > 0 ? (total.interviews / total.views) * 100 : 0;
+  total.closeRate = total.interviews > 0 ? (total.closes / total.interviews) * 100 : 0;
   total.roas = total.spend > 0 ? total.revenue / total.spend : 0;
   total.aov = total.closes > 0 ? total.revenue / total.closes : 0;
   total.costPerProposal = total.sent > 0 ? total.spend / total.sent : 0;
@@ -161,14 +162,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
   const [fiscalYear, setFiscalYear] = useState(() => {
     const now = new Date();
     const currentMonth = now.getMonth() + 1; // 1-indexed
-    return currentMonth >= settings.fiscal_year_start_month ?
-    now.getFullYear() + 1 :
-    now.getFullYear();
+    return currentMonth >= settings.fiscal_year_start_month
+      ? now.getFullYear() + 1
+      : now.getFullYear();
   });
 
   useEffect(() => {
     if (isRestricted && user.linked_profile_id) {
-      const linkedProfile = profiles.find((p) => p.id === user.linked_profile_id);
+      const linkedProfile = profiles.find(p => p.id === user.linked_profile_id);
       if (linkedProfile) {
         setSelectedProfileNames([linkedProfile.name]);
       }
@@ -177,15 +178,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
     }
   }, [user, profiles, isRestricted]);
 
-  const metrics = useMemo(() =>
-  calculateMetricsFromProposals(
-    proposals,
-    selectedProfileNames,
-    settings.fiscal_year_start_month,
-    fiscalYear,
-    settings
-  ),
-  [proposals, selectedProfileNames, settings, fiscalYear]
+  const metrics = useMemo(() => 
+    calculateMetricsFromProposals(
+      proposals,
+      selectedProfileNames,
+      settings.fiscal_year_start_month,
+      fiscalYear,
+      settings
+    ),
+    [proposals, selectedProfileNames, settings, fiscalYear]
   );
 
   const totals = useMemo(() => calculateTotals(metrics), [metrics]);
@@ -194,13 +195,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
   const recentActivity = useMemo(() => {
     const now = new Date();
     const ranges = [
-    { key: '1d' as const, label: 'Last 24 Hours', icon: <Clock className="w-4 h-4" />, ms: 24 * 60 * 60 * 1000 },
-    { key: '7d' as const, label: 'Last 7 Days', icon: <Calendar className="w-4 h-4" />, ms: 7 * 24 * 60 * 60 * 1000 },
-    { key: '14d' as const, label: 'Last 14 Days', icon: <CalendarDays className="w-4 h-4" />, ms: 14 * 24 * 60 * 60 * 1000 }];
-
+      { key: '1d' as const, label: 'Last 24 Hours', icon: <Clock className="w-4 h-4" />, ms: 24 * 60 * 60 * 1000 },
+      { key: '7d' as const, label: 'Last 7 Days', icon: <Calendar className="w-4 h-4" />, ms: 7 * 24 * 60 * 60 * 1000 },
+      { key: '14d' as const, label: 'Last 14 Days', icon: <CalendarDays className="w-4 h-4" />, ms: 14 * 24 * 60 * 60 * 1000 },
+    ];
 
     const scopeProposals = proposals.filter((p) =>
-    selectedProfileNames.includes(p.profile_name)
+      selectedProfileNames.includes(p.profile_name)
     );
 
     return ranges.map(({ key, label, icon, ms }) => {
@@ -219,28 +220,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
   const toggleProfile = (profileName: string) => {
     if (isRestricted) return;
     setSelectedProfileNames((prev) =>
-    prev.includes(profileName) ?
-    prev.filter((name) => name !== profileName) :
-    [...prev, profileName]
+      prev.includes(profileName)
+        ? prev.filter((name) => name !== profileName)
+        : [...prev, profileName]
     );
   };
 
   const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: settings.currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(value);
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: settings.currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
 
   const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 
   const renderRow = (
-  key: keyof KPIMetrics,
-  label: string,
-  format?: 'currency' | 'percent',
-  decimals = 0) =>
-  {
+    key: keyof KPIMetrics,
+    label: string,
+    format?: 'currency' | 'percent',
+    decimals = 0
+  ) => {
     return (
       <tr key={key} className="hover:bg-secondary/30 transition-colors">
         <td className="p-3 text-sm font-medium text-foreground sticky left-0 bg-card z-10 border-r border-border">
@@ -259,57 +260,61 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
           return (
             <td key={idx} className="p-3 text-sm text-center text-muted-foreground tabular-nums">
               {display}
-            </td>);
-
+            </td>
+          );
         })}
         <td className="p-3 text-sm text-center font-bold text-foreground bg-primary/5 tabular-nums">
-          {format === 'currency' ?
-          formatCurrency(totals[key] as number) :
-          format === 'percent' ?
-          formatPercent(totals[key] as number) :
-          (totals[key] as number).toFixed(decimals)}
+          {format === 'currency'
+            ? formatCurrency(totals[key] as number)
+            : format === 'percent'
+            ? formatPercent(totals[key] as number)
+            : (totals[key] as number).toFixed(decimals)}
         </td>
-      </tr>);
-
+      </tr>
+    );
   };
 
   const summaryCards = [
-  {
-    label: 'Total Revenue',
-    value: formatCurrency(totals.revenue),
-    icon: <DollarSign className="w-5 h-5" />,
-    trend: totals.revenue > 0
-  },
-  {
-    label: 'ROAS',
-    value: `${totals.roas.toFixed(1)}x`,
-    icon: <TrendingUp className="w-5 h-5" />,
-    trend: totals.roas >= settings.target_roas
-  },
-  {
-    label: 'Close Rate',
-    value: formatPercent(totals.closeRate),
-    icon: <Award className="w-5 h-5" />,
-    trend: totals.closeRate > 10
-  },
-  {
-    label: 'View Rate',
-    value: formatPercent(totals.viewRate),
-    icon: <Eye className="w-5 h-5" />,
-    trend: totals.viewRate > 30
-  }];
-
+    {
+      label: 'Total Revenue',
+      value: formatCurrency(totals.revenue),
+      icon: <DollarSign className="w-5 h-5" />,
+      trend: totals.revenue > 0,
+      sparkData: metrics.map((m) => ({ v: m.revenue })),
+    },
+    {
+      label: 'ROAS',
+      value: `${totals.roas.toFixed(1)}x`,
+      icon: <TrendingUp className="w-5 h-5" />,
+      trend: totals.roas >= settings.target_roas,
+      sparkData: metrics.map((m) => ({ v: m.roas })),
+    },
+    {
+      label: 'Close Rate',
+      value: formatPercent(totals.closeRate),
+      icon: <Award className="w-5 h-5" />,
+      trend: totals.closeRate > 10,
+      sparkData: metrics.map((m) => ({ v: m.closeRate })),
+    },
+    {
+      label: 'View Rate',
+      value: formatPercent(totals.viewRate),
+      icon: <Eye className="w-5 h-5" />,
+      trend: totals.viewRate > 30,
+      sparkData: metrics.map((m) => ({ v: m.viewRate })),
+    },
+  ];
 
   if (loading || goalsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>);
-
+      </div>
+    );
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
       {/* Header */}
       <header className="page-header">
         <div className="flex items-center justify-between">
@@ -324,8 +329,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
             <div className="flex items-center gap-1 bg-muted/40 rounded-xl p-1">
               <button
                 onClick={() => setFiscalYear((y) => y - 1)}
-                className="p-2 hover:bg-card rounded-lg transition-colors">
-                
+                className="p-2 hover:bg-card rounded-lg transition-colors"
+              >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <span className="px-3 text-sm font-semibold tabular-nums">
@@ -333,8 +338,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
               </span>
               <button
                 onClick={() => setFiscalYear((y) => y + 1)}
-                className="p-2 hover:bg-card rounded-lg transition-colors">
-                
+                className="p-2 hover:bg-card rounded-lg transition-colors"
+              >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -343,21 +348,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
 
         {/* Profile Filter */}
         <div className="mt-4 flex flex-wrap gap-2">
-          {profiles.slice(0, 4).map((profile) =>
-          <button
-            key={profile.id}
-            onClick={() => toggleProfile(profile.name)}
-            disabled={isRestricted}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-            selectedProfileNames.includes(profile.name) ?
-            'bg-primary text-primary-foreground shadow-sm' :
-            'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'} ${
-            isRestricted ? 'opacity-50 cursor-not-allowed' : ''}`}
-            style={selectedProfileNames.includes(profile.name) ? { boxShadow: '0 2px 6px hsl(72 100% 50% / 0.2)' } : undefined}>
-            
+          {profiles.slice(0, 4).map((profile) => (
+            <button
+              key={profile.id}
+              onClick={() => toggleProfile(profile.name)}
+              disabled={isRestricted}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                selectedProfileNames.includes(profile.name)
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+              } ${isRestricted ? 'opacity-50 cursor-not-allowed' : ''}`}
+              style={selectedProfileNames.includes(profile.name) ? { boxShadow: '0 2px 6px hsl(72 100% 50% / 0.2)' } : undefined}
+            >
               {profile.name}
             </button>
-          )}
+          ))}
         </div>
       </header>
 
@@ -368,18 +373,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
           metrics={metrics}
           fiscalYear={fiscalYear}
           fiscalYearStart={settings.fiscal_year_start_month}
-          currency={settings.currency} />
-        
+          currency={settings.currency}
+        />
       </div>
 
       {/* Recent Activity Cards */}
       <div className="px-6 py-4 grid grid-cols-3 gap-4">
-        {recentActivity.map((card) =>
-        <button
-          key={card.key}
-          onClick={() => onViewProposals?.(card.key)}
-          className="metric-card text-left cursor-pointer group">
-          
+        {recentActivity.map((card) => (
+          <button
+            key={card.key}
+            onClick={() => onViewProposals?.(card.key)}
+            className="metric-card text-left cursor-pointer group"
+          >
             <div className="flex items-center justify-between mb-3">
               <span className="text-muted-foreground">{card.icon}</span>
               <span className="text-[11px] font-medium text-muted-foreground group-hover:text-primary transition-colors">View →</span>
@@ -391,25 +396,42 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
               <span className="tabular-nums">Wins: <span className="font-semibold text-foreground">{card.wins}</span></span>
             </div>
           </button>
-        )}
+        ))}
       </div>
 
       {/* Summary Cards */}
       <div className="px-6 py-4 grid grid-cols-4 gap-4">
-        {summaryCards.map((card, idx) =>
-        <div key={idx} className="metric-card">
+        {summaryCards.map((card, idx) => (
+          <div key={idx} className="metric-card">
             <div className="flex items-center justify-between mb-2">
               <span className="text-muted-foreground">{card.icon}</span>
-              {card.trend ?
-            <TrendingUp className="w-4 h-4 text-primary" /> :
-
-            <TrendingDown className="w-4 h-4 text-destructive" />
-            }
+              {card.trend ? (
+                <TrendingUp className="w-4 h-4 text-primary" />
+              ) : (
+                <TrendingDown className="w-4 h-4 text-destructive" />
+              )}
             </div>
-            <p className="text-2xl font-bold text-black">{card.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-2xl font-bold text-foreground">{card.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+              </div>
+              <div className="w-20 h-10 flex-shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={card.sparkData}>
+                    <Line
+                      type="monotone"
+                      dataKey="v"
+                      stroke={card.trend ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'}
+                      strokeWidth={1.5}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
-        )}
+        ))}
       </div>
 
       {/* KPI Table */}
@@ -417,14 +439,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
         <div className="section-card">
           <div className="overflow-x-auto">
             <table className="data-table min-w-[1000px]">
-              <thead className="text-black">
+              <thead>
                 <tr>
                   <th className="sticky left-0 bg-muted/40 z-20 min-w-[150px]">Metric</th>
-                  {metrics.map((m, idx) =>
-                  <th key={idx} className="text-center min-w-[80px]">
+                  {metrics.map((m, idx) => (
+                    <th key={idx} className="text-center min-w-[80px]">
                       {m.periodLabel}
                     </th>
-                  )}
+                  ))}
                   <th className="text-center bg-primary/10 min-w-[100px] font-bold">TOTAL</th>
                 </tr>
               </thead>
@@ -488,6 +510,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
           </div>
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 };
