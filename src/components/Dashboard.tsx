@@ -435,7 +435,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
       </div>
 
       {/* KPI Table */}
-      <div className="flex-1 overflow-auto px-6 pb-6">
+      <div className="px-6 pb-6">
         <div className="section-card">
           <div className="overflow-x-auto">
             <table className="data-table min-w-[1000px]">
