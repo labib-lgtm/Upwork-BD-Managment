@@ -388,6 +388,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
       boosted_connects: proposal.boosted_connects ?? 0,
       returned_connects: proposal.returned_connects ?? 0,
       notes: proposal.notes || '',
+      loss_reason: (proposal as any).loss_reason || '',
+      win_factor: (proposal as any).win_factor || '',
     });
     setShowModal(true);
   };
