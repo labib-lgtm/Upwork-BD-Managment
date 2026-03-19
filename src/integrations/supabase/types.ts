@@ -166,6 +166,7 @@ export type Database = {
           job_title: string
           job_type: string
           last_viewed_text: string | null
+          loss_reason: string | null
           notes: string | null
           payment_status: string
           profile_name: string
@@ -177,6 +178,7 @@ export type Database = {
           updated_by: string | null
           user_id: string
           video_sent: boolean | null
+          win_factor: string | null
         }
         Insert: {
           boosted?: boolean | null
@@ -201,6 +203,7 @@ export type Database = {
           job_title: string
           job_type?: string
           last_viewed_text?: string | null
+          loss_reason?: string | null
           notes?: string | null
           payment_status?: string
           profile_name: string
@@ -212,6 +215,7 @@ export type Database = {
           updated_by?: string | null
           user_id: string
           video_sent?: boolean | null
+          win_factor?: string | null
         }
         Update: {
           boosted?: boolean | null
@@ -236,6 +240,7 @@ export type Database = {
           job_title?: string
           job_type?: string
           last_viewed_text?: string | null
+          loss_reason?: string | null
           notes?: string | null
           payment_status?: string
           profile_name?: string
@@ -247,6 +252,7 @@ export type Database = {
           updated_by?: string | null
           user_id?: string
           video_sent?: boolean | null
+          win_factor?: string | null
         }
         Relationships: []
       }
