@@ -34,6 +34,8 @@ export interface Proposal {
   boosted_connects: number;
   returned_connects: number;
   notes: string | null;
+  loss_reason: string | null;
+  win_factor: string | null;
   created_at: string;
   updated_at: string;
   created_by: string | null;
