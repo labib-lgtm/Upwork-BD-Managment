@@ -314,7 +314,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto">
       {/* Header */}
       <header className="page-header">
         <div className="flex items-center justify-between">
