@@ -5,6 +5,7 @@ import { useProposals, Proposal } from '@/hooks/useProposals';
 import { useGoals } from '@/hooks/useGoals';
 import { GoalProgressGrid } from '@/components/goals/GoalProgressGrid';
 import { TrendingUp, TrendingDown, DollarSign, Eye, Award, ChevronLeft, ChevronRight, Loader2, Clock, Calendar, CalendarDays } from 'lucide-react';
+import { FollowUpWidget } from '@/components/FollowUpWidget';
 
 interface DashboardProps {
   profiles: BDProfile[];
@@ -49,8 +50,8 @@ const calculateMetricsFromProposals = (
     const connects = proposalsInMonth.reduce((sum, p) => sum + (p.connects_used || 0), 0);
     const boostedConnects = proposalsInMonth.reduce((sum, p) => sum + (p.boosted_connects || 0), 0);
     const returnedConnects = proposalsInMonth.reduce((sum, p) => sum + (p.returned_connects || 0), 0);
-    const views = proposalsInMonth.filter((p) => p.status === 'viewed' || p.status === 'interviewed' || p.status === 'won').length;
-    const interviews = proposalsInMonth.filter((p) => p.status === 'interviewed' || p.status === 'won').length;
+    const views = proposalsInMonth.filter((p) => ['viewed', 'in_conversation', 'meeting_booked', 'interviewed', 'negotiating', 'won'].includes(p.status)).length;
+    const interviews = proposalsInMonth.filter((p) => ['interviewed', 'meeting_booked', 'negotiating', 'won'].includes(p.status)).length;
     const closes = proposalsInMonth.filter((p) => p.status === 'won').length;
     const newClients = proposalsInMonth.filter((p) => p.is_new_client).length;
 
@@ -375,6 +376,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
           fiscalYearStart={settings.fiscal_year_start_month}
           currency={settings.currency}
         />
+      </div>
+
+      {/* Follow-Up Widget + Recent Activity */}
+      <div className="px-6 py-4">
+        <FollowUpWidget />
       </div>
 
       {/* Recent Activity Cards */}

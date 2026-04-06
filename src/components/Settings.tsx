@@ -5,8 +5,9 @@ import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfileAccess } from '@/hooks/useProfileAccess';
 import { useRolePermissionsContext } from '@/contexts/RolePermissionsContext';
+import { useTelegramSettings } from '@/hooks/useTelegramSettings';
 import { GoalSettingsSection } from '@/components/goals/GoalSettingsSection';
-import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key, Lock } from 'lucide-react';
+import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key, Lock, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AppSettingsData {
@@ -20,6 +21,92 @@ interface SettingsProps {
   settings: AppSettings;
   onSettingsChange: (updates: Partial<AppSettingsData>) => Promise<void>;
 }
+
+const TelegramSettingsSection: React.FC = () => {
+  const { settings: tgSettings, loading: tgLoading, saveSettings } = useTelegramSettings();
+  const [chatId, setChatId] = useState(tgSettings?.chat_id || '');
+  const [digestEnabled, setDigestEnabled] = useState(tgSettings?.daily_digest_enabled || false);
+  const [alertsEnabled, setAlertsEnabled] = useState(tgSettings?.alerts_enabled || false);
+
+  useEffect(() => {
+    if (tgSettings) {
+      setChatId(tgSettings.chat_id || '');
+      setDigestEnabled(tgSettings.daily_digest_enabled);
+      setAlertsEnabled(tgSettings.alerts_enabled);
+    }
+  }, [tgSettings]);
+
+  const handleSave = async () => {
+    await saveSettings({
+      chat_id: chatId || null,
+      daily_digest_enabled: digestEnabled,
+      alerts_enabled: alertsEnabled,
+    });
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
+        <MessageCircle className="w-5 h-5 text-foreground" />
+        Telegram Notifications
+      </h3>
+      {tgLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">Telegram Chat ID</label>
+            <input
+              type="text"
+              value={chatId}
+              onChange={(e) => setChatId(e.target.value)}
+              className="w-full px-4 py-3 bg-input border border-border rounded-lg input-focus"
+              placeholder="Enter your Telegram chat ID"
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Message <strong>@userinfobot</strong> on Telegram to get your chat ID.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div className="relative">
+                <input type="checkbox" checked={digestEnabled} onChange={(e) => setDigestEnabled(e.target.checked)} className="sr-only" />
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${digestEnabled ? 'bg-primary border-primary' : 'border-border'}`}>
+                  {digestEnabled && <Check className="w-3 h-3 text-primary-foreground" />}
+                </div>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-foreground">Daily Digest</span>
+                <p className="text-xs text-muted-foreground">Get a daily summary of proposals, wins, and KPIs at 9 AM</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div className="relative">
+                <input type="checkbox" checked={alertsEnabled} onChange={(e) => setAlertsEnabled(e.target.checked)} className="sr-only" />
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${alertsEnabled ? 'bg-primary border-primary' : 'border-border'}`}>
+                  {alertsEnabled && <Check className="w-3 h-3 text-primary-foreground" />}
+                </div>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-foreground">Real-Time Alerts</span>
+                <p className="text-xs text-muted-foreground">Get notified instantly when a proposal is won or a big deal is lost</p>
+              </div>
+            </label>
+          </div>
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity text-sm"
+          >
+            <Save className="w-4 h-4" />
+            Save Telegram Settings
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }) => {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
@@ -522,6 +609,9 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               </p>
             </div>
           </div>
+
+          {/* Telegram Notifications */}
+          <TelegramSettingsSection />
 
           {/* Info Card */}
           <div className="bg-primary/10 border border-primary/20 rounded-lg p-6">
