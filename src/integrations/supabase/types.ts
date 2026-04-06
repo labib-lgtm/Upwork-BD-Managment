@@ -68,6 +68,47 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_ups: {
+        Row: {
+          created_at: string
+          follow_up_date: string
+          follow_up_type: string
+          id: string
+          notes: string | null
+          proposal_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          follow_up_date: string
+          follow_up_type?: string
+          id?: string
+          notes?: string | null
+          proposal_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          follow_up_date?: string
+          follow_up_type?: string
+          id?: string
+          notes?: string | null
+          proposal_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_ups_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           bd_profile_id: string | null
@@ -316,6 +357,74 @@ export type Database = {
           token?: string
           used_at?: string | null
           used_by?: string | null
+        }
+        Relationships: []
+      }
+      telegram_alert_log: {
+        Row: {
+          alert_type: string
+          id: string
+          message: string
+          proposal_id: string | null
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          id?: string
+          message: string
+          proposal_id?: string | null
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          id?: string
+          message?: string
+          proposal_id?: string | null
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_alert_log_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telegram_settings: {
+        Row: {
+          alert_types: Json
+          alerts_enabled: boolean
+          chat_id: string | null
+          created_at: string
+          daily_digest_enabled: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_types?: Json
+          alerts_enabled?: boolean
+          chat_id?: string | null
+          created_at?: string
+          daily_digest_enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_types?: Json
+          alerts_enabled?: boolean
+          chat_id?: string | null
+          created_at?: string
+          daily_digest_enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
