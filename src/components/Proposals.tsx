@@ -247,7 +247,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
     const totalReturned = fp.reduce((s, p) => s + (p.returned_connects || 0), 0);
     const netConnects = totalConnects - totalReturned;
     const wonCount = fp.filter((p) => p.status === 'won').length;
-    const viewedCount = fp.filter((p) => ['viewed', 'interviewed', 'won', 'lost'].includes(p.status)).length;
+    const viewedCount = fp.filter((p) => ['viewed', 'in_conversation', 'meeting_booked', 'interviewed', 'negotiating', 'won', 'lost'].includes(p.status)).length;
     const totalDealValue = fp.filter((p) => p.status === 'won').reduce((s, p) => s + (p.deal_value || 0), 0);
     const avgBudget = total > 0 ? fp.reduce((s, p) => s + (p.budget || 0), 0) / total : 0;
     return {
