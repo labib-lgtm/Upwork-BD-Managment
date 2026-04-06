@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BDProfile, User, UserRole } from '@/types';
 import { useProposals, Proposal, ProposalFormData } from '@/hooks/useProposals';
-import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown, CalendarIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown, CalendarIcon, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, subMonths, startOfQuarter, endOfQuarter } from 'date-fns';
 import {
   Pagination,
@@ -19,7 +20,7 @@ interface ProposalsProps {
   onClearDateFilter?: () => void;
 }
 
-const STATUS_OPTIONS = ['pending', 'viewed', 'interviewed', 'won', 'lost', 'archived'] as const;
+const STATUS_OPTIONS = ['pending', 'viewed', 'in_conversation', 'meeting_booked', 'interviewed', 'negotiating', 'won', 'lost', 'archived'] as const;
 const JOB_TYPE_OPTIONS = ['fixed', 'hourly'] as const;
 const PAYMENT_STATUS_OPTIONS = ['Verified', 'Unverified', 'Unknown'] as const;
 const COMPETITION_BUCKET_OPTIONS = ['<5', '5-10', '10-15', '20-50', '50+'] as const;
@@ -434,13 +435,96 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'won':return 'status-badge-success';
-      case 'lost':return 'status-badge-error';
-      case 'interviewed':return 'status-badge-info';
-      case 'archived':return 'status-badge-neutral';
-      default:return 'status-badge-warning';
+      case 'won': return 'status-badge-success';
+      case 'lost': return 'status-badge-error';
+      case 'interviewed': return 'status-badge-info';
+      case 'in_conversation': return 'status-badge-info';
+      case 'meeting_booked': return 'status-badge-info';
+      case 'negotiating': return 'status-badge-warning';
+      case 'archived': return 'status-badge-neutral';
+      default: return 'status-badge-warning';
     }
   };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'in_conversation': return 'In Conv.';
+      case 'meeting_booked': return 'Meeting';
+      case 'negotiating': return 'Negotiating';
+      default: return status;
+    }
+  };
+
+  // One-Tap Status Update
+  const [statusDropdownId, setStatusDropdownId] = useState<string | null>(null);
+  const [quickStatusPopup, setQuickStatusPopup] = useState<{ proposalId: string; status: 'won' | 'lost' } | null>(null);
+  const [quickStatusForm, setQuickStatusForm] = useState({ deal_value: 0, loss_reason: '', win_factor: '' });
+
+  const handleQuickStatusChange = async (proposalId: string, newStatus: string) => {
+    setStatusDropdownId(null);
+    if (newStatus === 'won' || newStatus === 'lost') {
+      setQuickStatusPopup({ proposalId, status: newStatus });
+      setQuickStatusForm({ deal_value: 0, loss_reason: '', win_factor: '' });
+      return;
+    }
+    await updateProposal(proposalId, { status: newStatus });
+  };
+
+  const handleQuickStatusSubmit = async () => {
+    if (!quickStatusPopup) return;
+    const updates: Partial<ProposalFormData> = { status: quickStatusPopup.status };
+    if (quickStatusPopup.status === 'won') {
+      updates.deal_value = quickStatusForm.deal_value;
+      updates.win_factor = quickStatusForm.win_factor || null;
+    } else {
+      updates.loss_reason = quickStatusForm.loss_reason || null;
+    }
+    await updateProposal(quickStatusPopup.proposalId, updates);
+    setQuickStatusPopup(null);
+  };
+
+  // Duplicate Proposal
+  const handleDuplicate = (proposal: Proposal) => {
+    setEditingProposal(null);
+    setShowFullForm(false);
+    setFormData({
+      ...getDefaultFormData(proposal.profile_name),
+      profile_name: proposal.profile_name,
+      job_type: proposal.job_type,
+      payment_status: proposal.payment_status,
+      budget: proposal.budget,
+      proposed_amount: proposal.proposed_amount,
+      connects_used: proposal.connects_used,
+      boosted: proposal.boosted,
+      video_sent: proposal.video_sent ?? false,
+      competition_bucket: proposal.competition_bucket || '',
+      client_country: proposal.client_country || '',
+      client_rating: proposal.client_rating,
+      client_reviews: proposal.client_reviews,
+      client_total_spent: proposal.client_total_spent,
+      is_new_client: proposal.is_new_client ?? false,
+      client_hire_count: proposal.client_hire_count ?? null,
+    });
+    setShowModal(true);
+    toast.info('Proposal duplicated — edit and save');
+  };
+
+  // Smart Defaults: save last-used values per profile
+  useEffect(() => {
+    if (formData.profile_name) {
+      const saved = localStorage.getItem(`bd_defaults_${formData.profile_name}`);
+      if (saved && !editingProposal && !showModal) {
+        try {
+          const defaults = JSON.parse(saved);
+          setFormData(prev => ({
+            ...prev,
+            job_type: defaults.job_type || prev.job_type,
+            payment_status: defaults.payment_status || prev.payment_status,
+          }));
+        } catch {}
+      }
+    }
+  }, [formData.profile_name]);
 
   if (loading) {
     return (
