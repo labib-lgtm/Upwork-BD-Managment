@@ -162,4 +162,4 @@ export interface CatalogAction {
   is_done: boolean;
 }
 
-export type NavigationTab = 'dashboard' | 'proposals' | 'analytics' | 'inbound' | 'catalogs' | 'settings';
+export type NavigationTab = 'overview' | 'dashboard' | 'proposals' | 'analytics' | 'inbound' | 'catalogs' | 'settings';
