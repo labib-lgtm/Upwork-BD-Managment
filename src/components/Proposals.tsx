@@ -337,6 +337,11 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
       success = await addProposal(proposalData);
       if (success) {
         setLastUsedProfile(formData.profile_name);
+        // Save smart defaults for this profile
+        localStorage.setItem(`bd_defaults_${formData.profile_name}`, JSON.stringify({
+          job_type: formData.job_type,
+          payment_status: formData.payment_status,
+        }));
       }
     }
 
