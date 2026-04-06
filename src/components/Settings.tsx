@@ -5,8 +5,9 @@ import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfileAccess } from '@/hooks/useProfileAccess';
 import { useRolePermissionsContext } from '@/contexts/RolePermissionsContext';
+import { useTelegramSettings } from '@/hooks/useTelegramSettings';
 import { GoalSettingsSection } from '@/components/goals/GoalSettingsSection';
-import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key, Lock } from 'lucide-react';
+import { Save, DollarSign, Target, Calendar, Users, Plus, Pencil, Trash2, X, Check, Loader2, Shield, UserCog, Key, Lock, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AppSettingsData {
@@ -522,6 +523,9 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange }
               </p>
             </div>
           </div>
+
+          {/* Telegram Notifications */}
+          <TelegramSettingsSection />
 
           {/* Info Card */}
           <div className="bg-primary/10 border border-primary/20 rounded-lg p-6">
