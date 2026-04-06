@@ -69,7 +69,7 @@ export const PipelineFunnel: React.FC<PipelineFunnelProps> = ({ proposals }) => 
           <span className="text-xs text-muted-foreground">{proposals.length} total proposals</span>
         </div>
         <div className="section-card-body">
-          <div className="h-[280px]">
+          <div className="h-[380px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={funnelData.slice(0, 7)} layout="vertical" margin={{ left: 80, right: 20 }}>
                 <XAxis type="number" {...axisStyle} />
