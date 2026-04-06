@@ -5,6 +5,7 @@ import { useProposals, Proposal } from '@/hooks/useProposals';
 import { useGoals } from '@/hooks/useGoals';
 import { GoalProgressGrid } from '@/components/goals/GoalProgressGrid';
 import { TrendingUp, TrendingDown, DollarSign, Eye, Award, ChevronLeft, ChevronRight, Loader2, Clock, Calendar, CalendarDays } from 'lucide-react';
+import { FollowUpWidget } from '@/components/FollowUpWidget';
 
 interface DashboardProps {
   profiles: BDProfile[];
@@ -375,6 +376,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, settings, user, 
           fiscalYearStart={settings.fiscal_year_start_month}
           currency={settings.currency}
         />
+      </div>
+
+      {/* Follow-Up Widget + Recent Activity */}
+      <div className="px-6 py-4">
+        <FollowUpWidget />
       </div>
 
       {/* Recent Activity Cards */}
