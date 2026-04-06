@@ -875,6 +875,82 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
         }
       </div>
 
+      {/* Quick Status Popup (Win/Loss attribution) */}
+      {quickStatusPopup && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-sm animate-fade-in p-6">
+            <h3 className="text-lg font-bold text-foreground mb-4">
+              {quickStatusPopup.status === 'won' ? '🎉 Mark as Won' : '❌ Mark as Lost'}
+            </h3>
+            {quickStatusPopup.status === 'won' ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Deal Value ($)</label>
+                  <input
+                    type="number"
+                    value={quickStatusForm.deal_value}
+                    onChange={(e) => setQuickStatusForm(prev => ({ ...prev, deal_value: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                    min="0"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Win Factor</label>
+                  <select
+                    value={quickStatusForm.win_factor}
+                    onChange={(e) => setQuickStatusForm(prev => ({ ...prev, win_factor: e.target.value }))}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  >
+                    <option value="">Select factor...</option>
+                    <option value="Best Proposal">Best Proposal</option>
+                    <option value="Fastest Response">Fastest Response</option>
+                    <option value="Optimal Price">Optimal Price</option>
+                    <option value="Portfolio Match">Portfolio Match</option>
+                    <option value="Past Relationship">Past Relationship</option>
+                    <option value="Video Intro">Video Intro</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Loss Reason</label>
+                <select
+                  value={quickStatusForm.loss_reason}
+                  onChange={(e) => setQuickStatusForm(prev => ({ ...prev, loss_reason: e.target.value }))}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg input-focus"
+                  autoFocus
+                >
+                  <option value="">Select reason...</option>
+                  <option value="Outbid">Outbid</option>
+                  <option value="No Response">No Response</option>
+                  <option value="Job Cancelled">Job Cancelled</option>
+                  <option value="Under-qualified">Under-qualified</option>
+                  <option value="Price Mismatch">Price Mismatch</option>
+                  <option value="Slow Response">Slow Response</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            )}
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setQuickStatusPopup(null)}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleQuickStatusSubmit}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal */}
       {showModal &&
       <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
