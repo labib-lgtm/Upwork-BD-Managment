@@ -99,6 +99,7 @@ const IndexContent = () => {
       case 'overview':
         return <Overview onNavigate={handleTabChange} />;
       case 'dashboard':
+        return (
           <Dashboard
             profiles={userAccessibleProfiles}
             settings={settings}
