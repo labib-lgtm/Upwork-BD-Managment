@@ -71,12 +71,12 @@ export const PipelineFunnel: React.FC<PipelineFunnelProps> = ({ proposals }) => 
         <div className="section-card-body">
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={funnelData.slice(0, 4)} layout="vertical" margin={{ left: 80, right: 20 }}>
+              <BarChart data={funnelData.slice(0, 7)} layout="vertical" margin={{ left: 80, right: 20 }}>
                 <XAxis type="number" {...axisStyle} />
                 <YAxis type="category" dataKey="name" {...axisStyle} width={80} />
                 <Tooltip contentStyle={getChartTooltipStyle()} formatter={(value: number) => [value, 'Count']} />
                 <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={32}>
-                  {funnelData.slice(0, 4).map((_, i) => (
+                  {funnelData.slice(0, 7).map((_, i) => (
                     <Cell key={i} fill={STAGE_COLORS[i]} />
                   ))}
                 </Bar>
@@ -92,7 +92,7 @@ export const PipelineFunnel: React.FC<PipelineFunnelProps> = ({ proposals }) => 
           <TrendingDown className="w-3.5 h-3.5" />
           Stage Drop-off
         </h4>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-5 gap-4">
           {dropoffData.map((d, i) => (
             <div key={i} className="metric-card">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
