@@ -11,6 +11,7 @@ import {
   LogOut,
   BarChart3,
 } from 'lucide-react';
+import { Info } from 'lucide-react';
 import lynxLogo from '@/assets/lynx-logo.png';
 
 interface SidebarProps {
@@ -22,6 +23,7 @@ interface SidebarProps {
 }
 
 const allNavItems: { id: NavigationTab; label: string; icon: React.ReactNode }[] = [
+  { id: 'overview', label: 'Overview', icon: <Info className="w-[18px] h-[18px]" /> },
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> },
   { id: 'proposals', label: 'Proposals', icon: <FileText className="w-[18px] h-[18px]" /> },
   { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-[18px] h-[18px]" /> },

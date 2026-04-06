@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Dashboard } from '@/components/Dashboard';
 import { Proposals } from '@/components/Proposals';
 import { Analytics } from '@/components/Analytics';
+import { Overview } from '@/components/Overview';
 import { Settings } from '@/components/Settings';
 import { PlaceholderView } from '@/components/PlaceholderView';
 import { NavigationTab, User, AppSettings, UserRole } from '@/types';
@@ -95,8 +96,9 @@ const IndexContent = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'overview':
+        return <Overview onNavigate={handleTabChange} />;
       case 'dashboard':
-        return (
           <Dashboard
             profiles={userAccessibleProfiles}
             settings={settings}
