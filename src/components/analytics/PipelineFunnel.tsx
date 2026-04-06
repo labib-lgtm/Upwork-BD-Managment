@@ -11,7 +11,10 @@ interface PipelineFunnelProps {
 const STAGE_COLORS = [
   CHART_COLORS.muted,
   CHART_COLORS.info,
+  '#6366f1', // in_conversation
+  '#8b5cf6', // meeting_booked
   CHART_COLORS.warning,
+  '#f59e0b', // negotiating
   CHART_COLORS.success,
   CHART_COLORS.destructive,
 ];
@@ -19,29 +22,39 @@ const STAGE_COLORS = [
 export const PipelineFunnel: React.FC<PipelineFunnelProps> = ({ proposals }) => {
   const funnelData = useMemo(() => {
     const total = proposals.length;
-    const viewed = proposals.filter(p => ['viewed', 'interviewed', 'won', 'lost'].includes(p.status)).length;
-    const interviewed = proposals.filter(p => ['interviewed', 'won'].includes(p.status)).length;
+    const viewed = proposals.filter(p => ['viewed', 'in_conversation', 'meeting_booked', 'interviewed', 'negotiating', 'won', 'lost'].includes(p.status)).length;
+    const inConversation = proposals.filter(p => ['in_conversation', 'meeting_booked', 'interviewed', 'negotiating', 'won'].includes(p.status)).length;
+    const meetingBooked = proposals.filter(p => ['meeting_booked', 'interviewed', 'negotiating', 'won'].includes(p.status)).length;
+    const interviewed = proposals.filter(p => ['interviewed', 'negotiating', 'won'].includes(p.status)).length;
+    const negotiating = proposals.filter(p => ['negotiating', 'won'].includes(p.status)).length;
     const won = proposals.filter(p => p.status === 'won').length;
     const lost = proposals.filter(p => p.status === 'lost').length;
 
     return [
       { name: 'Submitted', count: total, rate: 100 },
       { name: 'Viewed', count: viewed, rate: total > 0 ? (viewed / total) * 100 : 0 },
-      { name: 'Interviewed', count: interviewed, rate: viewed > 0 ? (interviewed / viewed) * 100 : 0 },
-      { name: 'Won', count: won, rate: interviewed > 0 ? (won / interviewed) * 100 : 0 },
+      { name: 'In Conv.', count: inConversation, rate: viewed > 0 ? (inConversation / viewed) * 100 : 0 },
+      { name: 'Meeting', count: meetingBooked, rate: inConversation > 0 ? (meetingBooked / inConversation) * 100 : 0 },
+      { name: 'Interviewed', count: interviewed, rate: meetingBooked > 0 ? (interviewed / meetingBooked) * 100 : 0 },
+      { name: 'Negotiating', count: negotiating, rate: interviewed > 0 ? (negotiating / interviewed) * 100 : 0 },
+      { name: 'Won', count: won, rate: negotiating > 0 ? (won / negotiating) * 100 : 0 },
       { name: 'Lost', count: lost, rate: interviewed > 0 ? (lost / interviewed) * 100 : 0 },
     ];
   }, [proposals]);
 
   const dropoffData = useMemo(() => {
     const total = proposals.length;
-    const viewed = proposals.filter(p => ['viewed', 'interviewed', 'won', 'lost'].includes(p.status)).length;
-    const interviewed = proposals.filter(p => ['interviewed', 'won'].includes(p.status)).length;
+    const viewed = proposals.filter(p => ['viewed', 'in_conversation', 'meeting_booked', 'interviewed', 'negotiating', 'won', 'lost'].includes(p.status)).length;
+    const inConv = proposals.filter(p => ['in_conversation', 'meeting_booked', 'interviewed', 'negotiating', 'won'].includes(p.status)).length;
+    const meeting = proposals.filter(p => ['meeting_booked', 'interviewed', 'negotiating', 'won'].includes(p.status)).length;
+    const interviewed = proposals.filter(p => ['interviewed', 'negotiating', 'won'].includes(p.status)).length;
     const won = proposals.filter(p => p.status === 'won').length;
 
     return [
       { stage: 'Submit → View', dropoff: total > 0 ? ((total - viewed) / total * 100).toFixed(1) : '0', lost: total - viewed },
-      { stage: 'View → Interview', dropoff: viewed > 0 ? ((viewed - interviewed) / viewed * 100).toFixed(1) : '0', lost: viewed - interviewed },
+      { stage: 'View → In Conv.', dropoff: viewed > 0 ? ((viewed - inConv) / viewed * 100).toFixed(1) : '0', lost: viewed - inConv },
+      { stage: 'In Conv. → Meeting', dropoff: inConv > 0 ? ((inConv - meeting) / inConv * 100).toFixed(1) : '0', lost: inConv - meeting },
+      { stage: 'Meeting → Interview', dropoff: meeting > 0 ? ((meeting - interviewed) / meeting * 100).toFixed(1) : '0', lost: meeting - interviewed },
       { stage: 'Interview → Won', dropoff: interviewed > 0 ? ((interviewed - won) / interviewed * 100).toFixed(1) : '0', lost: interviewed - won },
     ];
   }, [proposals]);

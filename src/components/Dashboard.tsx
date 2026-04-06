@@ -49,8 +49,8 @@ const calculateMetricsFromProposals = (
     const connects = proposalsInMonth.reduce((sum, p) => sum + (p.connects_used || 0), 0);
     const boostedConnects = proposalsInMonth.reduce((sum, p) => sum + (p.boosted_connects || 0), 0);
     const returnedConnects = proposalsInMonth.reduce((sum, p) => sum + (p.returned_connects || 0), 0);
-    const views = proposalsInMonth.filter((p) => p.status === 'viewed' || p.status === 'interviewed' || p.status === 'won').length;
-    const interviews = proposalsInMonth.filter((p) => p.status === 'interviewed' || p.status === 'won').length;
+    const views = proposalsInMonth.filter((p) => ['viewed', 'in_conversation', 'meeting_booked', 'interviewed', 'negotiating', 'won'].includes(p.status)).length;
+    const interviews = proposalsInMonth.filter((p) => ['interviewed', 'meeting_booked', 'negotiating', 'won'].includes(p.status)).length;
     const closes = proposalsInMonth.filter((p) => p.status === 'won').length;
     const newClients = proposalsInMonth.filter((p) => p.is_new_client).length;
 
