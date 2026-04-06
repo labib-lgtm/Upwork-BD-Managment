@@ -110,7 +110,7 @@ export const PipelineFunnel: React.FC<PipelineFunnelProps> = ({ proposals }) => 
       </div>
 
       {/* Stage counts grid */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
         {funnelData.map((stage, i) => (
           <div key={i} className="text-center p-4 rounded-xl bg-card border border-border/60">
             <div className="w-3 h-3 rounded-full mx-auto mb-2" style={{ backgroundColor: STAGE_COLORS[i] }} />
