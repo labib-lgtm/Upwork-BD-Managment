@@ -737,10 +737,26 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                     <span className="text-muted-foreground/40">-</span>
                     }
                     </td>
-                    <td>
-                      <span className={`status-badge ${getStatusBadgeClass(proposal.status)}`}>
-                        {proposal.status}
-                      </span>
+                    <td className="relative">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setStatusDropdownId(statusDropdownId === proposal.id ? null : proposal.id); }}
+                        className={`status-badge ${getStatusBadgeClass(proposal.status)} cursor-pointer hover:opacity-80 transition-opacity`}
+                      >
+                        {getStatusLabel(proposal.status)}
+                      </button>
+                      {statusDropdownId === proposal.id && (
+                        <div className="absolute z-30 top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-xl py-1 min-w-[140px] animate-fade-in">
+                          {STATUS_OPTIONS.map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => handleQuickStatusChange(proposal.id, s)}
+                              className={`w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors ${proposal.status === s ? 'font-bold text-primary' : 'text-foreground'}`}
+                            >
+                              {getStatusLabel(s)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td className="text-muted-foreground">{proposal.job_type}</td>
                     <td className="text-right tabular-nums">${(proposal.budget || 0).toLocaleString()}</td>
@@ -779,15 +795,22 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                     <td>
                       <div className="flex items-center justify-center gap-1">
                         <button
-                        onClick={() => handleEdit(proposal)}
-                        className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground">
-                        
+                          onClick={() => handleDuplicate(proposal)}
+                          className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+                          title="Duplicate"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(proposal)}
+                          className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+                        >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                        onClick={() => handleDelete(proposal.id)}
-                        className="p-2 hover:bg-destructive/20 rounded-lg transition-colors text-muted-foreground hover:text-destructive">
-                        
+                          onClick={() => handleDelete(proposal.id)}
+                          className="p-2 hover:bg-destructive/20 rounded-lg transition-colors text-muted-foreground hover:text-destructive"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
