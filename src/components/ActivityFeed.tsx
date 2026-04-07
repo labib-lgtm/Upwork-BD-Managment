@@ -55,9 +55,10 @@ export const ActivityFeed: React.FC = () => {
 
   const dateRange = useMemo(() => {
     if (customRange?.from && customRange?.to) {
-      return { from: startOfDay(customRange.from), to: endOfDay(customRange.to) };
+      return { start: startOfDay(customRange.from), end: endOfDay(customRange.to) };
     }
-    return getQuickFilterRange(activeQuickFilter);
+    const qf = getQuickFilterRange(activeQuickFilter);
+    return { start: qf.from, end: qf.to };
   }, [activeQuickFilter, customRange]);
 
   const handleQuickFilter = (key: QuickFilterKey) => {
