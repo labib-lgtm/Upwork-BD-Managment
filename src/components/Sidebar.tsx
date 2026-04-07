@@ -10,8 +10,9 @@ import {
   ChevronDown,
   LogOut,
   BarChart3,
+  Clock,
+  Info,
 } from 'lucide-react';
-import { Info } from 'lucide-react';
 import lynxLogo from '@/assets/lynx-logo.png';
 
 interface SidebarProps {
@@ -27,6 +28,7 @@ const allNavItems: { id: NavigationTab; label: string; icon: React.ReactNode }[]
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> },
   { id: 'proposals', label: 'Proposals', icon: <FileText className="w-[18px] h-[18px]" /> },
   { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-[18px] h-[18px]" /> },
+  { id: 'activity', label: 'Activity', icon: <Clock className="w-[18px] h-[18px]" /> },
   { id: 'inbound', label: 'Inbound', icon: <Inbox className="w-[18px] h-[18px]" /> },
   { id: 'catalogs', label: 'Catalogs', icon: <Package className="w-[18px] h-[18px]" /> },
   { id: 'settings', label: 'Settings', icon: <Settings className="w-[18px] h-[18px]" /> },

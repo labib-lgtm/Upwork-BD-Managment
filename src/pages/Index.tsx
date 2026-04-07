@@ -7,6 +7,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { Proposals } from '@/components/Proposals';
 import { Analytics } from '@/components/Analytics';
 import { Overview } from '@/components/Overview';
+import { ActivityFeed } from '@/components/ActivityFeed';
 import { Settings } from '@/components/Settings';
 import { PlaceholderView } from '@/components/PlaceholderView';
 import { NavigationTab, User, AppSettings, UserRole } from '@/types';
@@ -118,6 +119,8 @@ const IndexContent = () => {
         );
       case 'analytics':
         return <Analytics settings={settings} />;
+      case 'activity':
+        return <ActivityFeed />;
       case 'inbound':
         return (
           <PlaceholderView
