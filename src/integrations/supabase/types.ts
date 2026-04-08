@@ -68,6 +68,200 @@ export type Database = {
         }
         Relationships: []
       }
+      catalog_actions: {
+        Row: {
+          action_type: Database["public"]["Enums"]["catalog_action_type"]
+          catalog_id: string
+          created_at: string
+          id: string
+          is_done: boolean
+          month_name: string
+          updated_at: string
+          week_label: string
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["catalog_action_type"]
+          catalog_id: string
+          created_at?: string
+          id?: string
+          is_done?: boolean
+          month_name: string
+          updated_at?: string
+          week_label: string
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["catalog_action_type"]
+          catalog_id?: string
+          created_at?: string
+          id?: string
+          is_done?: boolean
+          month_name?: string
+          updated_at?: string
+          week_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_actions_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "catalogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalog_competitors: {
+        Row: {
+          catalog_id: string
+          competitor_delivery_days: number
+          competitor_price: number
+          competitor_rating: number | null
+          competitor_title: string
+          created_at: string
+          date_logged: string
+          id: string
+          notes: string | null
+          seller_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          catalog_id: string
+          competitor_delivery_days?: number
+          competitor_price?: number
+          competitor_rating?: number | null
+          competitor_title: string
+          created_at?: string
+          date_logged?: string
+          id?: string
+          notes?: string | null
+          seller_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          catalog_id?: string
+          competitor_delivery_days?: number
+          competitor_price?: number
+          competitor_rating?: number | null
+          competitor_title?: string
+          created_at?: string
+          date_logged?: string
+          id?: string
+          notes?: string | null
+          seller_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_competitors_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "catalogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalog_orders: {
+        Row: {
+          amount: number
+          buyer_name: string | null
+          catalog_id: string
+          created_at: string
+          fulfillment_status: Database["public"]["Enums"]["fulfillment_status"]
+          id: string
+          notes: string | null
+          order_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          buyer_name?: string | null
+          catalog_id: string
+          created_at?: string
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
+          id?: string
+          notes?: string | null
+          order_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          buyer_name?: string | null
+          catalog_id?: string
+          created_at?: string
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
+          id?: string
+          notes?: string | null
+          order_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_orders_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "catalogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalogs: {
+        Row: {
+          base_price: number
+          bd_profile_id: string
+          created_at: string
+          date_created: string
+          delivery_days: number
+          description: string | null
+          id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["catalog_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          base_price?: number
+          bd_profile_id: string
+          created_at?: string
+          date_created?: string
+          delivery_days?: number
+          description?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["catalog_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          base_price?: number
+          bd_profile_id?: string
+          created_at?: string
+          date_created?: string
+          delivery_days?: number
+          description?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["catalog_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogs_bd_profile_id_fkey"
+            columns: ["bd_profile_id"]
+            isOneToOne: false
+            referencedRelation: "bd_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follow_ups: {
         Row: {
           created_at: string
@@ -149,6 +343,165 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "goals_bd_profile_id_fkey"
+            columns: ["bd_profile_id"]
+            isOneToOne: false
+            referencedRelation: "bd_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbound_ab_tests: {
+        Row: {
+          bd_profile_id: string
+          created_at: string
+          end_date: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          start_date: string
+          test_type: Database["public"]["Enums"]["ab_test_type"]
+          updated_at: string
+          user_id: string
+          variation_name: string
+        }
+        Insert: {
+          bd_profile_id: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          start_date: string
+          test_type: Database["public"]["Enums"]["ab_test_type"]
+          updated_at?: string
+          user_id: string
+          variation_name: string
+        }
+        Update: {
+          bd_profile_id?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          start_date?: string
+          test_type?: Database["public"]["Enums"]["ab_test_type"]
+          updated_at?: string
+          user_id?: string
+          variation_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_ab_tests_bd_profile_id_fkey"
+            columns: ["bd_profile_id"]
+            isOneToOne: false
+            referencedRelation: "bd_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbound_invite_sources: {
+        Row: {
+          count: number
+          created_at: string
+          id: string
+          inbound_metric_id: string
+          source: Database["public"]["Enums"]["invite_source"]
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          id?: string
+          inbound_metric_id: string
+          source: Database["public"]["Enums"]["invite_source"]
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          id?: string
+          inbound_metric_id?: string
+          source?: Database["public"]["Enums"]["invite_source"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_invite_sources_inbound_metric_id_fkey"
+            columns: ["inbound_metric_id"]
+            isOneToOne: false
+            referencedRelation: "inbound_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbound_metrics: {
+        Row: {
+          bd_profile_id: string
+          boosted_clicks: number
+          closes: number
+          connects_available_now: number
+          connects_used_boost: number
+          conversations: number
+          created_at: string
+          fiscal_year: number
+          id: string
+          impressions: number
+          invites: number
+          manual_spend: number
+          month_name: string
+          notes: string | null
+          period_type: string
+          profile_views: number
+          total_sales: number
+          updated_at: string
+          user_id: string
+          week_label: string | null
+        }
+        Insert: {
+          bd_profile_id: string
+          boosted_clicks?: number
+          closes?: number
+          connects_available_now?: number
+          connects_used_boost?: number
+          conversations?: number
+          created_at?: string
+          fiscal_year: number
+          id?: string
+          impressions?: number
+          invites?: number
+          manual_spend?: number
+          month_name: string
+          notes?: string | null
+          period_type?: string
+          profile_views?: number
+          total_sales?: number
+          updated_at?: string
+          user_id: string
+          week_label?: string | null
+        }
+        Update: {
+          bd_profile_id?: string
+          boosted_clicks?: number
+          closes?: number
+          connects_available_now?: number
+          connects_used_boost?: number
+          conversations?: number
+          created_at?: string
+          fiscal_year?: number
+          id?: string
+          impressions?: number
+          invites?: number
+          manual_spend?: number
+          month_name?: string
+          notes?: string | null
+          period_type?: string
+          profile_views?: number
+          total_sales?: number
+          updated_at?: string
+          user_id?: string
+          week_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_metrics_bd_profile_id_fkey"
             columns: ["bd_profile_id"]
             isOneToOne: false
             referencedRelation: "bd_profiles"
@@ -522,7 +875,22 @@ export type Database = {
       }
     }
     Enums: {
+      ab_test_type: "headline" | "photo" | "description" | "portfolio"
       app_role: "admin" | "manager" | "bd_member"
+      catalog_action_type:
+        | "optimize_title"
+        | "update_thumbnail"
+        | "revise_pricing"
+        | "add_extras"
+        | "update_description"
+      catalog_status: "draft" | "published" | "optimizing" | "archived"
+      fulfillment_status: "pending" | "in_progress" | "delivered" | "cancelled"
+      invite_source:
+        | "search"
+        | "recommendation"
+        | "boosted"
+        | "direct"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -650,7 +1018,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ab_test_type: ["headline", "photo", "description", "portfolio"],
       app_role: ["admin", "manager", "bd_member"],
+      catalog_action_type: [
+        "optimize_title",
+        "update_thumbnail",
+        "revise_pricing",
+        "add_extras",
+        "update_description",
+      ],
+      catalog_status: ["draft", "published", "optimizing", "archived"],
+      fulfillment_status: ["pending", "in_progress", "delivered", "cancelled"],
+      invite_source: ["search", "recommendation", "boosted", "direct", "other"],
     },
   },
 } as const

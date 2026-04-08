@@ -10,6 +10,8 @@ import { Overview } from '@/components/Overview';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { Settings } from '@/components/Settings';
 import { PlaceholderView } from '@/components/PlaceholderView';
+import { InboundTracking } from '@/components/InboundTracking';
+import { CatalogManagement } from '@/components/CatalogManagement';
 import { NavigationTab, User, AppSettings, UserRole } from '@/types';
 import { useBDProfiles, useAccessibleProfiles } from '@/hooks/useBDProfiles';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -122,21 +124,9 @@ const IndexContent = () => {
       case 'activity':
         return <ActivityFeed />;
       case 'inbound':
-        return (
-          <PlaceholderView
-            title="Inbound Tracking"
-            description="Track profile impressions, invites, and inbound conversions from your Upwork profile visibility."
-            icon="inbox"
-          />
-        );
+        return <InboundTracking />;
       case 'catalogs':
-        return (
-          <PlaceholderView
-            title="Catalog Management"
-            description="Manage your project catalog items, track performance, and optimize listings."
-            icon="package"
-          />
-        );
+        return <CatalogManagement />;
       case 'settings':
         return (
           <Settings
