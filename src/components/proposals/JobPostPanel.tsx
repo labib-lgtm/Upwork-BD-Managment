@@ -43,12 +43,12 @@ export const JobPostPanel: React.FC<JobPostPanelProps> = ({
       <div className="flex flex-col items-center justify-center h-full text-center p-6 gap-4">
         <FileText className="w-12 h-12 text-muted-foreground/30" />
         <div>
-          <p className="text-sm text-foreground font-medium mb-1">Job post not yet fetched</p>
-          <p className="text-xs text-muted-foreground mb-4">Click below to scrape the job details from Upwork</p>
+          <p className="text-sm text-foreground font-medium mb-1">Job post data not available</p>
+          <p className="text-xs text-muted-foreground mb-4">Data is fetched automatically when a proposal is created. Click below to fetch now.</p>
         </div>
         <Button onClick={() => onScrape()} size="sm">
           <RefreshCw className="w-4 h-4 mr-2" />
-          Fetch Job Post
+          Fetch Now
         </Button>
       </div>
     );
