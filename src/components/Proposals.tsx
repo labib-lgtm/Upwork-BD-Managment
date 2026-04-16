@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BDProfile, User, UserRole } from '@/types';
 import { useProposals, Proposal, ProposalFormData } from '@/hooks/useProposals';
-import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown, CalendarIcon, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown, CalendarIcon, Copy, Eye } from 'lucide-react';
+import { ProposalComparisonView } from '@/components/proposals/ProposalComparisonView';
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, subMonths, startOfQuarter, endOfQuarter } from 'date-fns';
 import {
@@ -98,6 +99,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
   const isRestricted = user.role === UserRole.BD_MEMBER && !!user.linked_profile_id;
   const [showModal, setShowModal] = useState(false);
   const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
+  const [comparisonProposal, setComparisonProposal] = useState<Proposal | null>(null);
   const [showFullForm, setShowFullForm] = useState(false);
   const [lastUsedProfile, setLastUsedProfile] = useState<string>(profiles[0]?.name || '');
   const [submitting, setSubmitting] = useState(false);
@@ -706,7 +708,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                   <th className="w-12 text-center">Vid</th>
                   <th className="w-12 text-center">New</th>
                   <th className="w-24 text-center">Last Viewed</th>
-                  <th className="w-24 text-center">Actions</th>
+                  <th className="w-32 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -726,7 +728,13 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                       </span>
                     </td>
                     <td>
-                      <span className="truncate max-w-[200px] block">{proposal.job_title}</span>
+                      <button
+                        onClick={() => setComparisonProposal(proposal)}
+                        className="truncate max-w-[200px] block text-left hover:text-primary hover:underline transition-colors cursor-pointer"
+                        title="Click to view comparison"
+                      >
+                        {proposal.job_title}
+                      </button>
                     </td>
                     <td className="text-center">
                       {proposal.job_link ?
@@ -794,6 +802,13 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                     </td>
                     <td>
                       <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => setComparisonProposal(proposal)}
+                          className="p-2 hover:bg-primary/10 rounded-lg transition-colors text-muted-foreground hover:text-primary"
+                          title="View Comparison"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => handleDuplicate(proposal)}
                           className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
@@ -1413,6 +1428,17 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
           </div>
         </div>
       }
+
+      {/* Comparison View */}
+      <ProposalComparisonView
+        proposal={comparisonProposal}
+        open={!!comparisonProposal}
+        onClose={() => setComparisonProposal(null)}
+        onEdit={(p) => {
+          setComparisonProposal(null);
+          handleEdit(p);
+        }}
+      />
     </div>);
 
 };
