@@ -99,6 +99,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
   const isRestricted = user.role === UserRole.BD_MEMBER && !!user.linked_profile_id;
   const [showModal, setShowModal] = useState(false);
   const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
+  const [comparisonProposal, setComparisonProposal] = useState<Proposal | null>(null);
   const [showFullForm, setShowFullForm] = useState(false);
   const [lastUsedProfile, setLastUsedProfile] = useState<string>(profiles[0]?.name || '');
   const [submitting, setSubmitting] = useState(false);
