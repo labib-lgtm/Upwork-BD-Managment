@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BDProfile, User, UserRole } from '@/types';
 import { useProposals, Proposal, ProposalFormData } from '@/hooks/useProposals';
-import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown, CalendarIcon, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown, CalendarIcon, Copy, Eye } from 'lucide-react';
+import { ProposalComparisonView } from '@/components/proposals/ProposalComparisonView';
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, subMonths, startOfQuarter, endOfQuarter } from 'date-fns';
 import {
