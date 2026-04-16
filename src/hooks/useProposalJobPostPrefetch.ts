@@ -4,8 +4,6 @@ import { Proposal } from '@/hooks/useProposals';
 import { logger } from '@/lib/logger';
 
 const queuedJobLinks = new Set<string>();
-const PREFETCH_BATCH_SIZE = 6;
-
 export const useProposalJobPostPrefetch = (proposals: Proposal[]) => {
   useEffect(() => {
     const links = Array.from(
@@ -37,9 +35,7 @@ export const useProposalJobPostPrefetch = (proposals: Proposal[]) => {
       }
 
       const cachedLinks = new Set((data || []).map((row) => row.job_link));
-      const missingLinks = uncheckedLinks
-        .filter((link) => !cachedLinks.has(link))
-        .slice(0, PREFETCH_BATCH_SIZE);
+      const missingLinks = uncheckedLinks.filter((link) => !cachedLinks.has(link));
 
       missingLinks.forEach((link) => queuedJobLinks.add(link));
 
