@@ -797,6 +797,13 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                     <td>
                       <div className="flex items-center justify-center gap-1">
                         <button
+                          onClick={() => setComparisonProposal(proposal)}
+                          className="p-2 hover:bg-primary/10 rounded-lg transition-colors text-muted-foreground hover:text-primary"
+                          title="View Comparison"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleDuplicate(proposal)}
                           className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
                           title="Duplicate"
