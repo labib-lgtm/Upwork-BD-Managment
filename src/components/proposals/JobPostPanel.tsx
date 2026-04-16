@@ -43,18 +43,12 @@ export const JobPostPanel: React.FC<JobPostPanelProps> = ({
 
   if (!jobPost && !error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-4">
-        <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center">
-          <FileText className="w-7 h-7 text-muted-foreground/40" />
-        </div>
+      <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-3">
+        <Loader2 className="w-7 h-7 animate-spin text-primary" />
         <div>
-          <p className="text-sm font-medium text-foreground mb-1">Job post not cached yet</p>
-          <p className="text-xs text-muted-foreground">Click below to fetch it now</p>
+          <p className="text-sm font-medium text-foreground mb-1">Preparing job post…</p>
+          <p className="text-xs text-muted-foreground">This usually takes a few seconds</p>
         </div>
-        <Button onClick={() => onScrape()} size="sm">
-          <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-          Fetch Now
-        </Button>
       </div>
     );
   }

@@ -3,14 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { normalizeJobLink } from '@/lib/normalizeJobLink';
 
-const scrapeJobPostInBackground = (jobLink: string) => {
-  if (!jobLink) return;
+const scrapeJobPostInBackground = (jobLink: string | null) => {
+  const normalized = normalizeJobLink(jobLink);
+  if (!normalized) return;
   supabase.functions
-    .invoke('scrape-job-post', { body: { job_link: jobLink } })
+    .invoke('scrape-job-post', { body: { job_link: normalized } })
     .then(({ error }) => {
       if (error) logger.error('Background job scrape failed:', error);
-      else logger.log('Background job scrape completed for:', jobLink);
+      else logger.log('Background job scrape completed for:', normalized);
     })
     .catch((err) => logger.error('Background job scrape error:', err));
 };

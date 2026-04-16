@@ -2,15 +2,18 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Proposal } from '@/hooks/useProposals';
 import { logger } from '@/lib/logger';
+import { normalizeJobLink } from '@/lib/normalizeJobLink';
 
-const queuedJobLinks = new Set<string>();
+type PrefetchState = 'queued' | 'in-flight' | 'done' | 'failed';
+const prefetchState = new Map<string, PrefetchState>();
+
 export const useProposalJobPostPrefetch = (proposals: Proposal[]) => {
   useEffect(() => {
     const links = Array.from(
       new Set(
         proposals
-          .map((proposal) => proposal.job_link?.trim())
-          .filter((jobLink): jobLink is string => Boolean(jobLink))
+          .map((p) => normalizeJobLink(p.job_link))
+          .filter((l): l is string => Boolean(l))
       )
     );
 
@@ -18,47 +21,56 @@ export const useProposalJobPostPrefetch = (proposals: Proposal[]) => {
 
     let cancelled = false;
 
-    const prefetchMissingJobPosts = async () => {
-      const uncheckedLinks = links.filter((link) => !queuedJobLinks.has(link));
-      if (!uncheckedLinks.length) return;
+    const run = async () => {
+      const unchecked = links.filter((l) => {
+        const state = prefetchState.get(l);
+        return state !== 'done' && state !== 'in-flight' && state !== 'queued';
+      });
+      if (!unchecked.length) return;
+
+      unchecked.forEach((l) => prefetchState.set(l, 'queued'));
 
       const { data, error } = await supabase
         .from('job_post_cache')
         .select('job_link')
-        .in('job_link', uncheckedLinks);
+        .in('job_link', unchecked);
 
       if (cancelled) return;
 
       if (error) {
         logger.error('Failed to check job post cache before prefetch:', error);
+        unchecked.forEach((l) => prefetchState.delete(l));
         return;
       }
 
-      const cachedLinks = new Set((data || []).map((row) => row.job_link));
-      const missingLinks = uncheckedLinks.filter((link) => !cachedLinks.has(link));
+      const cached = new Set((data || []).map((row) => row.job_link));
+      cached.forEach((l) => prefetchState.set(l, 'done'));
 
-      missingLinks.forEach((link) => queuedJobLinks.add(link));
+      const missing = unchecked.filter((l) => !cached.has(l));
 
-      // Throttle sequentially to avoid edge function cold-start storms (BOOT_ERROR/503)
-      for (const jobLink of missingLinks) {
+      // Sequential throttle to avoid edge function cold-start storms
+      for (const link of missing) {
         if (cancelled) return;
+        prefetchState.set(link, 'in-flight');
         try {
           const { error: invokeError } = await supabase.functions.invoke('scrape-job-post', {
-            body: { job_link: jobLink },
+            body: { job_link: link },
           });
           if (invokeError) {
-            queuedJobLinks.delete(jobLink);
+            prefetchState.set(link, 'failed');
             logger.error('Silent job post prefetch failed:', invokeError);
+          } else {
+            prefetchState.set(link, 'done');
           }
         } catch (invokeError) {
-          queuedJobLinks.delete(jobLink);
+          prefetchState.set(link, 'failed');
           logger.error('Silent job post prefetch error:', invokeError);
         }
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((r) => setTimeout(r, 400));
       }
     };
 
-    prefetchMissingJobPosts();
+    run();
 
     return () => {
       cancelled = true;
