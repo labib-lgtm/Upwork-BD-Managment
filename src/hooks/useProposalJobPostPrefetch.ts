@@ -39,20 +39,23 @@ export const useProposalJobPostPrefetch = (proposals: Proposal[]) => {
 
       missingLinks.forEach((link) => queuedJobLinks.add(link));
 
-      missingLinks.forEach((jobLink) => {
-        supabase.functions
-          .invoke('scrape-job-post', { body: { job_link: jobLink } })
-          .then(({ error: invokeError }) => {
-            if (invokeError) {
-              queuedJobLinks.delete(jobLink);
-              logger.error('Silent job post prefetch failed:', invokeError);
-            }
-          })
-          .catch((invokeError) => {
-            queuedJobLinks.delete(jobLink);
-            logger.error('Silent job post prefetch error:', invokeError);
+      // Throttle sequentially to avoid edge function cold-start storms (BOOT_ERROR/503)
+      for (const jobLink of missingLinks) {
+        if (cancelled) return;
+        try {
+          const { error: invokeError } = await supabase.functions.invoke('scrape-job-post', {
+            body: { job_link: jobLink },
           });
-      });
+          if (invokeError) {
+            queuedJobLinks.delete(jobLink);
+            logger.error('Silent job post prefetch failed:', invokeError);
+          }
+        } catch (invokeError) {
+          queuedJobLinks.delete(jobLink);
+          logger.error('Silent job post prefetch error:', invokeError);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
     };
 
     prefetchMissingJobPosts();
