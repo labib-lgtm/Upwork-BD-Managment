@@ -3,7 +3,7 @@ import { JobPostData } from '@/hooks/useJobPostCache';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, RefreshCw, ExternalLink, FileText } from 'lucide-react';
+import { Loader2, RefreshCw, ExternalLink, FileText, DollarSign, Briefcase, MapPin, Star, ShieldCheck, Calendar, Code2 } from 'lucide-react';
 
 interface JobPostPanelProps {
   jobPost: JobPostData | null;
@@ -22,9 +22,12 @@ export const JobPostPanel: React.FC<JobPostPanelProps> = ({
 }) => {
   if (!jobLink) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-6">
-        <FileText className="w-12 h-12 text-muted-foreground/30 mb-3" />
-        <p className="text-sm text-muted-foreground">No job link provided for this proposal</p>
+      <div className="flex flex-col items-center justify-center h-full text-center p-8">
+        <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+          <FileText className="w-7 h-7 text-muted-foreground/40" />
+        </div>
+        <p className="text-sm font-medium text-muted-foreground">No job link provided</p>
+        <p className="text-xs text-muted-foreground/60 mt-1">Add a job link to the proposal to enable comparison</p>
       </div>
     );
   }
@@ -32,22 +35,24 @@ export const JobPostPanel: React.FC<JobPostPanelProps> = ({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Fetching job post...</p>
+        <Loader2 className="w-7 h-7 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Fetching job post…</p>
       </div>
     );
   }
 
   if (!jobPost && !error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-6 gap-4">
-        <FileText className="w-12 h-12 text-muted-foreground/30" />
+      <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-4">
+        <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center">
+          <FileText className="w-7 h-7 text-muted-foreground/40" />
+        </div>
         <div>
-          <p className="text-sm text-foreground font-medium mb-1">Job post data not available</p>
-          <p className="text-xs text-muted-foreground mb-4">Data is fetched automatically when a proposal is created. Click below to fetch now.</p>
+          <p className="text-sm font-medium text-foreground mb-1">Job post not cached yet</p>
+          <p className="text-xs text-muted-foreground">Click below to fetch it now</p>
         </div>
         <Button onClick={() => onScrape()} size="sm">
-          <RefreshCw className="w-4 h-4 mr-2" />
+          <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
           Fetch Now
         </Button>
       </div>
@@ -56,16 +61,16 @@ export const JobPostPanel: React.FC<JobPostPanelProps> = ({
 
   if (error && !jobPost) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-6 gap-4">
-        <p className="text-sm text-destructive">{error}</p>
+      <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-4">
+        <p className="text-sm text-destructive font-medium">{error}</p>
         <div className="flex gap-2">
           <Button onClick={() => onScrape(true)} size="sm" variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
             Retry
           </Button>
           <Button asChild size="sm" variant="outline">
             <a href={jobLink} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="w-4 h-4 mr-2" />
+              <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
               Open on Upwork
             </a>
           </Button>
@@ -77,12 +82,12 @@ export const JobPostPanel: React.FC<JobPostPanelProps> = ({
   return (
     <ScrollArea className="h-full">
       <div className="p-5 space-y-5">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-base font-semibold text-foreground leading-tight">
+        {/* Title */}
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-base font-semibold text-foreground leading-snug">
             {jobPost?.title || 'Untitled Job'}
           </h3>
-          <div className="flex gap-1.5 shrink-0">
+          <div className="flex gap-1 shrink-0">
             <Button onClick={() => onScrape(true)} size="sm" variant="ghost" className="h-7 w-7 p-0" title="Refresh">
               <RefreshCw className="w-3.5 h-3.5" />
             </Button>
@@ -94,92 +99,99 @@ export const JobPostPanel: React.FC<JobPostPanelProps> = ({
           </div>
         </div>
 
-        {/* Budget & Type */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Budget & Pricing</h4>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <span className="text-muted-foreground text-xs">Budget</span>
-              <p className="font-medium">{jobPost?.budget_text || 'Not specified'}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground text-xs">Type</span>
-              <p className="font-medium capitalize">{jobPost?.job_type || 'N/A'}</p>
-            </div>
+        {/* Budget & Type — aligned with Proposal "Our Bid" */}
+        <Section title="Budget & Pricing" icon={DollarSign}>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <Field label="Budget" value={jobPost?.budget_text || 'Not specified'} />
+            <Field label="Type" value={jobPost?.job_type || 'N/A'} capitalize />
           </div>
-        </div>
+        </Section>
 
-        {/* Requirements */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Requirements</h4>
+        {/* Requirements — aligned with Proposal "What We Offered" */}
+        <Section title="Requirements" icon={Briefcase}>
           {jobPost?.experience_level && (
-            <div className="text-sm">
-              <span className="text-muted-foreground text-xs">Experience</span>
-              <p className="font-medium">{jobPost.experience_level}</p>
-            </div>
+            <Field label="Experience" value={jobPost.experience_level} />
           )}
           {jobPost?.skills && jobPost.skills.length > 0 && (
             <div>
-              <span className="text-muted-foreground text-xs block mb-1">Skills</span>
+              <span className="text-muted-foreground text-xs block mb-1.5">Skills</span>
               <div className="flex flex-wrap gap-1.5">
                 {jobPost.skills.map((skill, i) => (
-                  <Badge key={i} variant="secondary" className="text-xs">
+                  <Badge key={i} variant="secondary" className="text-xs font-normal">
                     {skill}
                   </Badge>
                 ))}
               </div>
             </div>
           )}
-        </div>
+        </Section>
 
-        {/* Client Info */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Client Info (from post)</h4>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-            <div>
-              <span className="text-muted-foreground text-xs">Location</span>
-              <p className="font-medium">{jobPost?.client_location || 'N/A'}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground text-xs">Total Spent</span>
-              <p className="font-medium">{jobPost?.client_total_spent || 'N/A'}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground text-xs">Hires</span>
-              <p className="font-medium">{jobPost?.client_hire_count || 'N/A'}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground text-xs">Rating</span>
-              <p className="font-medium">
-                {jobPost?.client_rating || 'N/A'}
-                {jobPost?.client_reviews ? ` (${jobPost.client_reviews} reviews)` : ''}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground text-xs">Payment</span>
-              <p className="font-medium">
-                {jobPost?.client_payment_verified === true ? '✓ Verified' : jobPost?.client_payment_verified === false ? '✗ Unverified' : 'N/A'}
-              </p>
-            </div>
+        {/* Client Info — aligned with Proposal "Client Info" */}
+        <Section title="Client Info (from post)" icon={Star}>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <Field label="Location" value={jobPost?.client_location || 'N/A'} />
+            <Field label="Total Spent" value={jobPost?.client_total_spent || 'N/A'} />
+            <Field label="Hires" value={jobPost?.client_hire_count || 'N/A'} />
+            <Field
+              label="Rating"
+              value={`${jobPost?.client_rating || 'N/A'}${jobPost?.client_reviews ? ` (${jobPost.client_reviews} reviews)` : ''}`}
+            />
+            <Field
+              label="Payment"
+              value={
+                jobPost?.client_payment_verified === true
+                  ? '✓ Verified'
+                  : jobPost?.client_payment_verified === false
+                  ? '✗ Unverified'
+                  : 'N/A'
+              }
+            />
             {jobPost?.posted_date && (
-              <div>
-                <span className="text-muted-foreground text-xs">Posted</span>
-                <p className="font-medium">{jobPost.posted_date}</p>
-              </div>
+              <Field label="Posted" value={jobPost.posted_date} />
             )}
           </div>
-        </div>
+        </Section>
 
         {/* Description */}
         {jobPost?.description && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Full Description</h4>
+          <Section title="Full Description" icon={Code2}>
             <div className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed bg-muted/30 rounded-lg p-3 max-h-[300px] overflow-y-auto">
               {jobPost.description}
             </div>
-          </div>
+          </Section>
         )}
       </div>
     </ScrollArea>
   );
 };
+
+/* ---- Shared sub-components ---- */
+
+const Section: React.FC<{
+  title: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+}> = ({ title, icon: Icon, children }) => (
+  <div className="space-y-2.5">
+    <div className="flex items-center gap-1.5">
+      <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</h4>
+    </div>
+    {children}
+  </div>
+);
+
+const Field: React.FC<{
+  label: string;
+  value: string | number;
+  capitalize?: boolean;
+  children?: React.ReactNode;
+}> = ({ label, value, capitalize, children }) => (
+  <div>
+    <span className="text-muted-foreground text-xs">{label}</span>
+    <p className={`font-medium text-sm flex items-center gap-1 ${capitalize ? 'capitalize' : ''}`}>
+      {value}
+      {children}
+    </p>
+  </div>
+);
