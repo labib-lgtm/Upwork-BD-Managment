@@ -1422,6 +1422,17 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
           </div>
         </div>
       }
+
+      {/* Comparison View */}
+      <ProposalComparisonView
+        proposal={comparisonProposal}
+        open={!!comparisonProposal}
+        onClose={() => setComparisonProposal(null)}
+        onEdit={(p) => {
+          setComparisonProposal(null);
+          handleEdit(p);
+        }}
+      />
     </div>);
 
 };
