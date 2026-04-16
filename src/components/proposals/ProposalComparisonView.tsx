@@ -6,6 +6,7 @@ import { ProposalPanel } from './ProposalPanel';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -38,15 +39,20 @@ export const ProposalComparisonView: React.FC<ProposalComparisonViewProps> = ({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0 flex flex-col gap-0 overflow-hidden">
         {/* Header */}
-        <DialogHeader className="px-5 py-3.5 border-b border-border shrink-0">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-base font-semibold">
-              Proposal vs Job Post
-            </DialogTitle>
+        <DialogHeader className="px-5 py-3.5 pr-14 border-b border-border shrink-0">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <DialogTitle className="text-base font-semibold">
+                Proposal vs Job Post
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                Compare the scraped job post details with your submitted proposal.
+              </DialogDescription>
+            </div>
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs"
+              className="h-8 text-xs shrink-0"
               onClick={() => {
                 onClose();
                 onEdit(proposal);
