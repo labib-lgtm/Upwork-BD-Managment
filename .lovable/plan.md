@@ -1,91 +1,89 @@
 
 
-# Inbound Tracking & Catalog Management — Full Build
+# Proposal vs Job Post Comparison View
 
-## Overview
+## Problem
+The current edit modal shows proposal fields in a form, but there's no way to compare what the proposal says against what the job actually asked for. You want to see them side-by-side so you can evaluate if BD members are targeting the right jobs with the right proposals.
 
-Build both modules from placeholder to fully functional, with all four enhancements included: A/B test tracking for Inbound, invite source breakdown, catalog order tracking, and competitor benchmarking.
+## Solution: Comparison-Focused Two-Panel Layout
 
----
+Instead of a generic "details left, job right" layout, the view is organized around **comparison points** — matching fields are placed at the same visual level so discrepancies jump out immediately.
 
-## Module 1: Inbound Tracking
+```text
+┌──────────────────────────────────────────────────────────────────────┐
+│  Proposal vs Job Post Comparison                                 [X] │
+├─────────────────────────────┬────────────────────────────────────────┤
+│  📄 JOB POST (scraped)     │  📝 OUR PROPOSAL                      │
+│                             │                                        │
+│  Title:                     │  Job Title (what BD entered):          │
+│  Amazon PPC & Catalog Mgmt  │  Amazon PPC & Catalog Mgmt             │
+│                             │                                        │
+│  ── Budget & Pricing ──     │  ── Our Bid ──                         │
+│  Budget: $500 – $1,000      │  Proposed: $10  ⚠️ (mismatch?)        │
+│  Type: Fixed-price          │  Type: Fixed                           │
+│                             │  Deal Value: $0                        │
+│                             │                                        │
+│  ── Requirements ──         │  ── What We Offered ──                 │
+│  Skills: Amazon PPC,        │  Profile: Labib Profile                │
+│    Product Listing, SEO     │  Connects: 27 (boosted: 0)            │
+│  Experience: Expert         │  Video Sent: No                        │
+│  Description:               │                                        │
+│  "Looking for experienced   │  ── Cover Letter / Notes ──           │
+│   PPC specialist to..."     │  "Perfect, I can fully manage          │
+│  [full description below]   │   your Amazon catalog and PPC..."      │
+│                             │                                        │
+│  ── Client Info (from post)─│  ── Client Info (our records) ──      │
+│  Location: United States    │  Country: US  ✓                        │
+│  Total Spent: $18,000       │  Total Spent: $18,000  ✓               │
+│  Hire Rate: 84 hires        │  Hire Count: 84  ✓                     │
+│  Rating: 5.0 (7 reviews)   │  Rating: 5.0 (7 reviews)  ✓            │
+│  Payment: Verified          │  Payment: Verified  ✓                  │
+│                             │                                        │
+│  ── Full Job Description ── │  ── Status & Outcome ──               │
+│  [scrollable markdown]      │  Status: pending                       │
+│                             │  Competition: 10-15                    │
+│                             │  Interviewing: 0                       │
+│                             │                                        │
+│  [Refresh] [Open on Upwork↗]│  [Edit Proposal]                      │
+├─────────────────────────────┴────────────────────────────────────────┤
+│                                                   [Close] [Update]   │
+└──────────────────────────────────────────────────────────────────────┘
+```
 
-**Data tables needed:**
-- `inbound_metrics` — weekly/monthly profile performance (impressions, boosted clicks, profile views, invites, conversations, closes, sales, boost spend)
-- `inbound_invite_sources` — per-metric breakdown of invite origins (search, recommendations, boosted visibility, direct)
-- `inbound_ab_tests` — track profile variations (headline, photo, description) with start/end dates, and link to metrics for comparison
+Key design decisions:
+- **Job post on the LEFT** (the reference/source of truth) and **proposal on the RIGHT** (what we submitted) — natural reading order for evaluation
+- **Matching sections aligned horizontally** — Budget vs Bid, Job Requirements vs What We Offered, Client Info comparison with match/mismatch indicators (checkmarks and warnings)
+- **Mismatch highlighting** — when our proposed amount is far from the job budget, or when client data doesn't match, show visual warnings
+- **Edit mode toggle** — proposal side switches from read-only summary to inline editable fields
 
-**UI sections:**
-1. **KPI Summary Cards** — Total impressions, profile views, invites, conversations, closes, conversion rate, boost ROI for selected period
-2. **Metrics Data Table** — CRUD table for weekly/monthly inbound metrics with inline editing, date range filter, profile filter
-3. **Invite Source Breakdown** — Stacked bar or pie chart showing where invites come from per period
-4. **A/B Test Tracker** — Table of profile variations being tested, with side-by-side metric comparison (e.g., Headline A vs B: which drove more invites?)
+## Implementation
 
----
+### 1. Database: `job_post_cache` table
+Store scraped job data so we don't re-fetch every time.
+- Columns: `id`, `job_link` (unique), `title`, `description`, `budget_text`, `job_type`, `skills` (text[]), `experience_level`, `client_location`, `client_total_spent`, `client_hire_count`, `client_rating`, `client_reviews`, `client_payment_verified`, `posted_date`, `scraped_at`, `raw_data` (jsonb)
+- RLS: authenticated users can read/insert
 
-## Module 2: Catalog Management
+### 2. Edge Function: `scrape-job-post`
+- Takes an Upwork job URL
+- Uses Firecrawl to scrape the page content
+- Extracts structured fields from the markdown using AI (Lovable AI gateway with gemini-2.5-flash)
+- Returns structured job data and caches it
+- Requires Firecrawl connector
 
-**Data tables needed:**
-- `catalogs` — service listings (title, status, base price, delivery days, tier/extras, bd_profile_id)
-- `catalog_actions` — optimization task checklist per catalog item (action type, week, done/not)
-- `catalog_orders` — orders received per catalog (order date, buyer, amount, fulfillment status)
-- `catalog_competitors` — competitor listings (title, price, delivery days, seller rating, date logged)
+### 3. New Components
+| File | Purpose |
+|------|---------|
+| `src/components/proposals/ProposalComparisonView.tsx` | Full-width Sheet with two-panel comparison layout |
+| `src/components/proposals/JobPostPanel.tsx` | Left panel: scraped job post data with refresh button |
+| `src/components/proposals/ProposalPanel.tsx` | Right panel: proposal details with edit toggle |
+| `src/components/proposals/ComparisonIndicator.tsx` | Small component for match/mismatch badges |
+| `src/hooks/useJobPostCache.ts` | Hook to fetch from cache or trigger scrape |
 
-**UI sections:**
-1. **Catalog List** — Card or table view of all catalog items with status badges, price, delivery time
-2. **Optimization Actions** — Checklist panel per catalog item (optimize title, update thumbnail, etc.) with progress tracking
-3. **Order Tracking** — Table of orders per catalog: date, buyer info, amount, fulfillment status (pending/in-progress/delivered/cancelled)
-4. **Competitor Benchmarking** — Table to log and compare competitor catalog items: their price, delivery, rating vs yours
+### 4. Modify `Proposals.tsx`
+- Row click or edit button opens the comparison Sheet instead of the current edit modal
+- Keep the Add Proposal modal as-is (no comparison needed for new proposals)
 
----
-
-## Database Migrations
-
-Eight new tables total, all with RLS policies scoped to authenticated users with profile access or admin:
-
-1. `inbound_metrics` — period metrics per BD profile
-2. `inbound_invite_sources` — FK to inbound_metrics, source enum (search/recommendation/boosted/direct), count
-3. `inbound_ab_tests` — variation name, type (headline/photo/description), active flag, date range, bd_profile_id
-4. `catalogs` — title, status enum, base_price, delivery_days, bd_profile_id, user_id
-5. `catalog_actions` — FK to catalogs, action_type enum, week_label, is_done
-6. `catalog_orders` — FK to catalogs, order_date, buyer_name, amount, fulfillment_status enum
-7. `catalog_competitors` — FK to catalogs, competitor_title, competitor_price, competitor_delivery_days, competitor_rating, date_logged
-
-Update `role_permissions` check constraint and seed permissions for `inbound` and `catalogs` tabs.
-
----
-
-## Files to Create/Modify
-
-| File | Action |
-|------|--------|
-| Migration SQL | Create 7 tables + RLS + permission seeds |
-| `src/hooks/useInboundMetrics.ts` | CRUD hook for inbound_metrics |
-| `src/hooks/useInboundInviteSources.ts` | Hook for invite source data |
-| `src/hooks/useInboundABTests.ts` | Hook for A/B test entries |
-| `src/hooks/useCatalogs.ts` | CRUD hook for catalogs |
-| `src/hooks/useCatalogActions.ts` | Hook for optimization tasks |
-| `src/hooks/useCatalogOrders.ts` | Hook for order tracking |
-| `src/hooks/useCatalogCompetitors.ts` | Hook for competitor data |
-| `src/components/InboundTracking.tsx` | Main inbound page component |
-| `src/components/inbound/InboundMetricsTable.tsx` | Metrics data table |
-| `src/components/inbound/InviteSourceChart.tsx` | Source breakdown chart |
-| `src/components/inbound/ABTestTracker.tsx` | A/B test comparison UI |
-| `src/components/CatalogManagement.tsx` | Main catalog page component |
-| `src/components/catalog/CatalogList.tsx` | Catalog items table/cards |
-| `src/components/catalog/CatalogActions.tsx` | Optimization checklist |
-| `src/components/catalog/OrderTracking.tsx` | Orders table |
-| `src/components/catalog/CompetitorBenchmark.tsx` | Competitor comparison table |
-| `src/pages/Index.tsx` | Wire up both tabs in renderContent |
-| `src/types/index.ts` | Add new interfaces/enums for orders, sources, AB tests, competitors |
-
----
-
-## Technical Notes
-
-- All tables use `user_id` referencing the logged-in user (no FK to auth.users)
-- RLS: users see own data or data for profiles they have access to; admins see all
-- Recharts for invite source charts
-- Inline editing for metrics and catalog items using shadcn Dialog forms
-- Date range filtering reuses the pattern from ActivityFeed
+### Prerequisites
+- Firecrawl connector must be connected for job scraping
+- If not connected, the left panel shows a "Connect Firecrawl to auto-fetch job posts" message with a fallback "Open on Upwork" link
 
