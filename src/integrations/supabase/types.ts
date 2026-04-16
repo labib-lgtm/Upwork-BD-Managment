@@ -509,6 +509,72 @@ export type Database = {
           },
         ]
       }
+      job_post_cache: {
+        Row: {
+          budget_text: string | null
+          client_hire_count: string | null
+          client_location: string | null
+          client_payment_verified: boolean | null
+          client_rating: string | null
+          client_reviews: string | null
+          client_total_spent: string | null
+          created_at: string
+          description: string | null
+          experience_level: string | null
+          id: string
+          job_link: string
+          job_type: string | null
+          posted_date: string | null
+          raw_data: Json | null
+          scraped_at: string
+          skills: string[] | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          budget_text?: string | null
+          client_hire_count?: string | null
+          client_location?: string | null
+          client_payment_verified?: boolean | null
+          client_rating?: string | null
+          client_reviews?: string | null
+          client_total_spent?: string | null
+          created_at?: string
+          description?: string | null
+          experience_level?: string | null
+          id?: string
+          job_link: string
+          job_type?: string | null
+          posted_date?: string | null
+          raw_data?: Json | null
+          scraped_at?: string
+          skills?: string[] | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          budget_text?: string | null
+          client_hire_count?: string | null
+          client_location?: string | null
+          client_payment_verified?: boolean | null
+          client_rating?: string | null
+          client_reviews?: string | null
+          client_total_spent?: string | null
+          created_at?: string
+          description?: string | null
+          experience_level?: string | null
+          id?: string
+          job_link?: string
+          job_type?: string | null
+          posted_date?: string | null
+          raw_data?: Json | null
+          scraped_at?: string
+          skills?: string[] | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
