@@ -4,6 +4,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 
+const scrapeJobPostInBackground = (jobLink: string) => {
+  if (!jobLink) return;
+  supabase.functions
+    .invoke('scrape-job-post', { body: { url: jobLink } })
+    .then(({ error }) => {
+      if (error) logger.error('Background job scrape failed:', error);
+      else logger.log('Background job scrape completed for:', jobLink);
+    })
+    .catch((err) => logger.error('Background job scrape error:', err));
+};
+
 export interface Proposal {
   id: string;
   user_id: string;
@@ -114,6 +125,7 @@ export const useProposals = () => {
     }
 
     toast.success('Proposal added successfully');
+    if (formData.job_link) scrapeJobPostInBackground(formData.job_link);
     return true;
   };
 
@@ -135,6 +147,7 @@ export const useProposals = () => {
     }
 
     toast.success('Proposal updated successfully');
+    if (formData.job_link) scrapeJobPostInBackground(formData.job_link);
     return true;
   };
 

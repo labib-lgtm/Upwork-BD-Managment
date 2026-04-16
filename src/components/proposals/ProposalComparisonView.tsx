@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Proposal } from '@/hooks/useProposals';
 import { useJobPostCache } from '@/hooks/useJobPostCache';
 import { JobPostPanel } from './JobPostPanel';
@@ -29,12 +29,6 @@ export const ProposalComparisonView: React.FC<ProposalComparisonViewProps> = ({
     proposal?.job_link || null
   );
 
-  // Auto-fetch when opening if there's a link but no cached data
-  useEffect(() => {
-    if (open && proposal?.job_link && !jobPost && !loading) {
-      scrapeJobPost();
-    }
-  }, [open, proposal?.job_link]);
 
   if (!proposal) return null;
 
