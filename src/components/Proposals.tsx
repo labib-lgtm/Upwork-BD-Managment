@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BDProfile, User, UserRole } from '@/types';
 import { useProposals, Proposal, ProposalFormData } from '@/hooks/useProposals';
+import { useProposalJobPostPrefetch } from '@/hooks/useProposalJobPostPrefetch';
 import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, Loader2, Search, Download, ExternalLink, Video, ArrowUpDown, ArrowUp, ArrowDown, CalendarIcon, Copy, Eye } from 'lucide-react';
 import { ProposalComparisonView } from '@/components/proposals/ProposalComparisonView';
 import { toast } from 'sonner';
@@ -270,6 +271,8 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
     (currentPage - 1) * ROWS_PER_PAGE,
     currentPage * ROWS_PER_PAGE
   );
+
+  useProposalJobPostPrefetch(paginatedProposals);
 
   useEffect(() => {
     setCurrentPage(1);
