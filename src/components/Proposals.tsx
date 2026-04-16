@@ -708,7 +708,7 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                   <th className="w-12 text-center">Vid</th>
                   <th className="w-12 text-center">New</th>
                   <th className="w-24 text-center">Last Viewed</th>
-                  <th className="w-24 text-center">Actions</th>
+                  <th className="w-32 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
