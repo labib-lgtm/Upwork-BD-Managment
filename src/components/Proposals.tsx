@@ -728,7 +728,13 @@ export const Proposals: React.FC<ProposalsProps> = ({ profiles, user, dateFilter
                       </span>
                     </td>
                     <td>
-                      <span className="truncate max-w-[200px] block">{proposal.job_title}</span>
+                      <button
+                        onClick={() => setComparisonProposal(proposal)}
+                        className="truncate max-w-[200px] block text-left hover:text-primary hover:underline transition-colors cursor-pointer"
+                        title="Click to view comparison"
+                      >
+                        {proposal.job_title}
+                      </button>
                     </td>
                     <td className="text-center">
                       {proposal.job_link ?
