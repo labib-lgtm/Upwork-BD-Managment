@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -26,27 +26,71 @@ export const useJobPostCache = (jobLink: string | null) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadCachedJobPost = useCallback(async () => {
+    if (!jobLink) return null;
+
+    const { data } = await supabase
+      .from('job_post_cache')
+      .select('*')
+      .eq('job_link', jobLink)
+      .maybeSingle();
+
+    if (data) {
+      const cachedJobPost = data as unknown as JobPostData;
+      setJobPost(cachedJobPost);
+      setError(null);
+      return cachedJobPost;
+    }
+
+    return null;
+  }, [jobLink]);
+
   // Try cache first on mount
   useEffect(() => {
     if (!jobLink) {
       setJobPost(null);
+      setError(null);
+      setLoading(false);
       return;
     }
 
-    const checkCache = async () => {
-      const { data } = await supabase
-        .from('job_post_cache')
-        .select('*')
-        .eq('job_link', jobLink)
-        .maybeSingle();
+    setJobPost(null);
+    loadCachedJobPost();
+  }, [jobLink, loadCachedJobPost]);
 
-      if (data) {
-        setJobPost(data as unknown as JobPostData);
+  useEffect(() => {
+    if (!jobLink || jobPost || error) return;
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let attempts = 0;
+    const maxAttempts = 6;
+
+    const pollCache = async () => {
+      if (cancelled) return;
+
+      attempts += 1;
+      setLoading(true);
+
+      const cachedJobPost = await loadCachedJobPost();
+
+      if (cancelled) return;
+
+      if (cachedJobPost || attempts >= maxAttempts) {
+        setLoading(false);
+        return;
       }
+
+      timeoutId = setTimeout(pollCache, 1500);
     };
 
-    checkCache();
-  }, [jobLink]);
+    pollCache();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [jobLink, jobPost, error, loadCachedJobPost]);
 
   const scrapeJobPost = async (forceRefresh = false) => {
     if (!jobLink) return;
