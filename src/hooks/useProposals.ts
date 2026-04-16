@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger';
 const scrapeJobPostInBackground = (jobLink: string) => {
   if (!jobLink) return;
   supabase.functions
-    .invoke('scrape-job-post', { body: { url: jobLink } })
+    .invoke('scrape-job-post', { body: { job_link: jobLink } })
     .then(({ error }) => {
       if (error) logger.error('Background job scrape failed:', error);
       else logger.log('Background job scrape completed for:', jobLink);
